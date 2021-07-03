@@ -1,0 +1,147 @@
+#!/bin/bash
+#
+# Run WPS preprocessing for the met forecast
+#Nadya Moisseeva (nadya.moisseeva@hawaii.edu)
+#July 2021
+
+
+
+### Inputs ###
+#TODO update these automatically
+#WPS_DIR=""
+#IBC_DIR=""
+#RUN_DIR=""
+#MAX_DOM=""
+MAX_DOM=2
+WPS_DIR="/home/moisseev/opt/WRF-SFIRE/WPS"
+IBC_DIR="/home/moisseev/data/wrf_ibc/nam"
+VOG_ROOT="/home/moisseev/dev/vog-pipeline"
+
+### Functions ###
+
+function usage() {
+    echo "Run WPS"
+    echo
+    echo "Usage: $0 [-d YYYYMMDD] INIT"
+    echo "where: INIT = two-digit initialization time i.e. 00, 06, etc"
+    echo "       -d = (optional) date to download, default is current date"
+}
+
+function log_msg() {
+    # Print log message with datetime stamp
+    local msg="$1"
+    echo "[`/bin/date +"%F %T %Z"`] ${msg}"
+}
+
+function link_grib() {
+    echo "Linking grib files into local run directory"
+    ${WPS_DIR}/link_grib.csh ${IBC_DIR}/${DATE}${HH}/* . 
+}
+
+function link_tables() {
+    echo "Linking WPS tables into local run directory"
+    #ungrib
+    ln -s ${WPS_DIR}/ungrib/Variable_Tables/Vtable.NAM ./Vtable 
+    ln -s ${WPS_DIR}/ungrib.exe .
+
+    #geogrid
+    ln -s ${WPS_DIR}/geogrid/GEOGRID.TBL.ARW ./GEOGRID.TBL
+    ln -s ${WPS_DIR}/geogrid.exe .
+
+    #metgrid    
+    ln -s ${WPS_DIR}/metgrid/METGRID.TBL.ARW ./METGRID.TBL
+    ln -s ${WPS_DIR}/metgrid.exe .
+}
+
+function config_namelist() {
+    echo "Configuring namelist.wps"
+    #copy namelist.wps template
+    cp ${VOG_ROOT}/config/namelist.wps .
+
+    #edit start and end times of the run
+    fcst_start=$(date -d "${DATE} ${HH}" +"%Y-%m-%d_%H")
+    fcst_end=$(date -d "${DATE} ${HH} UTC+60hours" +"%Y-%m-%d_%H")
+    sed -i s/"sYYYY-MM-DD_HH"/${fcst_start}/g namelist.wps
+    sed -i s/"eYYYY-MM-DD_HH"/${fcst_end}/g namelist.wps
+
+}
+
+# Initialize variables
+DATE=$(date +"%Y%m%d")
+year=""
+HH=""
+
+# Parse optional arguments
+while getopts "d:h" opt; do
+    case "$opt" in
+    d)  DATE=$OPTARG
+        ;;
+    h)  usage
+        exit 0
+        ;;
+    *)  usage
+        exit 1
+        ;;
+    esac
+done
+
+# Parse mandatory arguments
+shift $((OPTIND-1))
+if [[ -z "$@" ]]; then
+    echo "You must supply an initialization time."
+    echo
+    usage
+    exit 1
+else
+    HH="$@"
+fi
+
+
+###  Main  ###
+echo
+log_msg "Starting $0 ..."
+
+#create forecast label
+datetime="${DATE}${HH}"
+
+#set up and navigate to main run directory
+run_dir="${VOG_ROOT}/run/${datetime}/wrf"
+#[[ ! -d ${run_dir} ]] || rm -r ${run_dir}
+#mkdir -pv ${run_dir}
+cd ${run_dir}
+
+
+#check that the IBCs are available
+if [ ! -f ../IBC.OK ]
+then
+    echo "ERROR: IBC's are missing! Aborting"
+    exit 1
+fi
+
+#prep for wps run
+link_grib
+link_tables
+config_namelist
+
+#run ungrib
+log_msg "Running ungrib $0 ..."
+#./ungrib.exe
+[ -f FILE:${fcst_end} ] && touch ungrib.OK
+
+#run geogrid
+log_msg "Running geogrid $0 ..."
+#./geogrid.exe
+[ $(ls -l geo_em* | wc -l) -eq ${MAX_DOM} ] && touch geogrid.OK
+
+#run metgrid
+log_msg "Running metgrid $0 ..."
+#./metgrid.exe
+[ $(ls -l met_em*${fcst_end}* | wc -l) -eq ${MAX_DOM} ] && touch metgrid.OK
+
+
+# Clean up & exit
+[ -e ungrib.OK -a -e geogrid.OK -a -e metgrid.OK ] && touch ../WPS.OK
+log_msg "$0 is done."
+echo
+exit 0
+

@@ -1,0 +1,134 @@
+#!/bin/bash -l
+#
+# Download the NAM forecast for use as initial & boundary conditions
+# Based on code provided by T.Chui (UBC)
+#
+# N.Moisseeva (nadya.moisseeva@hawaii.edu)
+# July 2021
+
+
+
+function usage() {
+    echo "Download NAM forecast"
+    echo
+    echo "Usage: $0 [-d YYYYMMDD] INIT"
+    echo "where: INIT = two-digit initialization time i.e. 00, 06, etc"
+    echo "       -d = (optional) date to download, default is current date"
+}
+function log_msg() {
+    # Print log message with datetime stamp
+    local msg="$1"
+    echo "[`/bin/date +"%F %T %Z"`] ${msg}"
+}
+function get_file() {
+    # Download the file from the remote host
+    local url="$1"
+    local file="$2"
+    username=$(whoami)@$(hostname -s)
+    if [ ! -e ${file} ]; then
+        count=0
+        while [ ! -e ${file} ]; do
+            wget -nc -v ${url}/${file} || rm -f ${file}
+            # TODO implement counter to give up after 5 min
+            test -e ${file} || sleep 60
+            count=$((count+1))
+            if [[ $count -eq 10 ]]; then
+                warn_string="File $file has not been found for $count minutes."
+                echo $warn_string
+                #/nfs/mgmt6/fcst/scripts/slack.sh -c "wrf_slack_test" -u "$username" -t "Cloud IBCS download taking too long" "${warn_string}"
+            fi
+
+        done
+    else
+        echo "${file} already exists, skipping"
+    fi
+}
+
+# Initialize constants
+#DEST_ROOT=$IBC_PATH
+#TODO this needs to be automatically parsed from config files
+DEST_ROOT="/home/moisseev/data/wrf_ibc/nam/"
+STEPS=$(seq 0 1 60)
+
+# Initialize variables
+date=$(date +"%Y%m%d")
+year=""
+hour=""
+
+# Parse optional arguments
+while getopts "d:h" opt; do
+    case "$opt" in
+    d)  date=$OPTARG
+        ;;
+    h)  usage
+        exit 0
+        ;;
+    *)  usage
+        exit 1
+        ;;
+    esac
+done
+
+# Parse mandatory arguments
+shift $((OPTIND-1))
+if [[ -z "$@" ]]; then
+    echo "You must supply an initialization time."
+    echo
+    usage
+    exit 1
+else
+    hour="$@"
+fi
+
+###  Main  ###
+echo
+log_msg "Starting $0 ..."
+
+# Set date & time of forecast to download
+year=${date:0:4}
+datetime="${date}${hour}"
+
+ncep_dir=/pub/data/nccf/com/nam/prod/nam.$date
+SRCE_ROOT=$ncep_dir
+#ncep_srv=ftpprd.ncep.noaa.gov
+ncep_srv=ftp.ncep.noaa.gov
+
+# Build source & destination directories
+srce_dir=ftp://${ncep_srv}${ncep_dir}
+dest_dir="${DEST_ROOT}/${datetime}"
+[[ ! -d ${dest_dir} ]] || rm -r ${dest_dir}
+
+mkdir -pv ${dest_dir}
+cd ${dest_dir}
+
+# Check that remote host is up
+# TODO implement counter to give up after 10 min
+#if [[ ! $(/usr/bin/wget -O /dev/null -q ${SRCE_ROOT} && echo $?) ]]; then
+#    title="NAM remote host is not available"
+#    body="wget can not reach ${SRCE_ROOT}\nScript = $0\nHost = $(whoami)@$(hostname -s)"
+#    /nfs/mgmt6/fcst/scripts/slack.sh -c "#wrf_slack_test" -u "$(whoami)@$(hostname -s)" -s HIGH -t "${title}" "${body}"
+#    echo "ERROR - ${SRCE_ROOT} is not available."
+#    log_msg "$0 halted, exiting."
+#    echo
+#    exit 1
+#fi
+
+# Get the files
+for step in ${STEPS[@]}; do
+    pad_step2=$(printf "%02d\n" $step)
+    rnam=nam.t${hour}z.hawaiinest.hiresf${pad_step2}.tm00.grib2
+    #pad_step3=$(printf "%03d\n" $step)
+    #lnam=nam.t${hour}z.awip32.f${pad_step3}
+    log_msg "Downloading files for hour ${step}"
+    #wget -v $srce_dir/$rnam
+    get_file $srce_dir $rnam
+    #mv $rnam $lnam
+    touch $lnam.OK
+done
+
+# Clean up & exit
+touch IC.OK
+log_msg "$0 is done."
+echo
+exit 0
+
