@@ -4,19 +4,6 @@
 #Nadya Moisseeva (nadya.moisseeva@hawaii.edu)
 #July 2021
 
-
-
-### Inputs ###
-#TODO update these automatically
-#WPS_DIR=""
-#IBC_DIR=""
-#RUN_DIR=""
-#MAX_DOM=""
-MAX_DOM=2
-WPS_DIR="/home/moisseev/opt/WRF-SFIRE/WPS"
-IBC_DIR="/home/moisseev/data/wrf_ibc/nam"
-VOG_ROOT="/home/moisseev/dev/vog-pipeline"
-
 ### Functions ###
 
 function usage() {
@@ -35,28 +22,28 @@ function log_msg() {
 
 function link_grib() {
     echo "Linking grib files into local run directory"
-    ${WPS_DIR}/link_grib.csh ${IBC_DIR}/${DATE}${HH}/* . 
+    ${wps_path}/link_grib.csh ${ibc_path}/${DATE}${HH}/* . 
 }
 
 function link_tables() {
     echo "Linking WPS tables into local run directory"
     #ungrib
-    ln -s ${WPS_DIR}/ungrib/Variable_Tables/Vtable.NAM ./Vtable 
-    ln -s ${WPS_DIR}/ungrib.exe .
+    ln -s ${wps_path}/ungrib/Variable_Tables/Vtable.NAM ./Vtable 
+    ln -s ${wps_path}/ungrib.exe .
 
     #geogrid
-    ln -s ${WPS_DIR}/geogrid/GEOGRID.TBL.ARW ./GEOGRID.TBL
-    ln -s ${WPS_DIR}/geogrid.exe .
+    ln -s ${wps_path}/geogrid/GEOGRID.TBL.ARW ./GEOGRID.TBL
+    ln -s ${wps_path}/geogrid.exe .
 
     #metgrid    
-    ln -s ${WPS_DIR}/metgrid/METGRID.TBL.ARW ./METGRID.TBL
-    ln -s ${WPS_DIR}/metgrid.exe .
+    ln -s ${wps_path}/metgrid/METGRID.TBL.ARW ./METGRID.TBL
+    ln -s ${wps_path}/metgrid.exe .
 }
 
 function config_namelist() {
     echo "Configuring namelist.wps"
     #copy namelist.wps template
-    cp ${VOG_ROOT}/config/namelist.wps .
+    cp ${vog_root}/config/namelist.wps .
 
     #edit start and end times of the run
     fcst_start=$(date -d "${DATE} ${HH}" +"%Y-%m-%d_%H")
@@ -105,14 +92,14 @@ log_msg "Starting $0 ..."
 datetime="${DATE}${HH}"
 
 #set up and navigate to main run directory
-run_dir="${VOG_ROOT}/run/${datetime}/wrf"
+run_dir="${run_dir}/${datetime}/wrf"
 #[[ ! -d ${run_dir} ]] || rm -r ${run_dir}
-#mkdir -pv ${run_dir}
+mkdir -pv ${run_dir}
 cd ${run_dir}
 
 
 #check that the IBCs are available
-if [ ! -f ../IBC.OK ]
+if [ ! -f ${ibc_path}/${DATE}${HH}/IBC.OK ]
 then
     echo "ERROR: IBC's are missing! Aborting"
     exit 1
@@ -131,12 +118,12 @@ log_msg "Running ungrib $0 ..."
 #run geogrid
 log_msg "Running geogrid $0 ..."
 #./geogrid.exe
-[ $(ls -l geo_em* | wc -l) -eq ${MAX_DOM} ] && touch geogrid.OK
+[ $(ls -l geo_em* | wc -l) -eq ${max_dom} ] && touch geogrid.OK
 
 #run metgrid
 log_msg "Running metgrid $0 ..."
 #./metgrid.exe
-[ $(ls -l met_em*${fcst_end}* | wc -l) -eq ${MAX_DOM} ] && touch metgrid.OK
+[ $(ls -l met_em*${fcst_end}* | wc -l) -eq ${max_dom} ] && touch metgrid.OK
 
 
 # Clean up & exit

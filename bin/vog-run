@@ -31,6 +31,7 @@ if __name__ == "__main__":
 		rundate = datetime.datetime.now().strftime('%Y%m%d')	
 		print("Performing real-time run for: %s%s" %(rundate,args.cycle))	
 	forecast = '%s%s' %(rundate,args.cycle)
+	os.environ["forecast"] = forecast
 
 	#load configuration settings
 	settings = read_config(config_path)
@@ -50,12 +51,10 @@ if __name__ == "__main__":
 	#create storage folders
 	create_run_dir(forecast)
 	
-
-
 	#download initial conditions
-	os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
+	#os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
 	#subprocess.Popen(['./get_nam','-d %s' %rundate, '%s' %args.cycle], shell=True, executable="/bin/bash")
 	
 	#run wps
-
+	os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
 	
