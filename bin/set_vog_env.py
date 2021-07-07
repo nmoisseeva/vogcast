@@ -62,11 +62,10 @@ def create_run_dir(forecast):
 	"""
 	Set up working directory for the forecast run
 	"""
-	run_dir = os.environ["vog_root"] + '/run/' + forecast
-	print("Creating working directory: %s" %run_dir)
-	if not os.path.exists(run_dir):
-    		os.makedirs(run_dir)
+	run_path = os.environ["run_dir"] + '/' + forecast
+	print("Creating working directory: %s" %run_path)
 	
+	os.system('mkdir -p %s' %run_path)	
 	return
 	
 

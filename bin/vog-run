@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.7
+
 # Setup environment for the vog model run
 #
 __author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
@@ -35,6 +37,7 @@ if __name__ == "__main__":
 
 	#set shared environmental variables
 	set_env_var(settings, "vog_root")
+	set_env_var(settings, "run_dir")
 	set_env_var(settings, "runhrs")
 
 	#set variables for met modules
@@ -50,7 +53,7 @@ if __name__ == "__main__":
 
 
 	#download initial conditions
-	#os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
+	os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
 	#subprocess.Popen(['./get_nam','-d %s' %rundate, '%s' %args.cycle], shell=True, executable="/bin/bash")
 	
 	#run wps
