@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/bin/bash
 #
 # Download the NAM forecast for use as initial & boundary conditions
 # Based on code provided by T.Chui (UBC)
@@ -45,11 +45,7 @@ function get_file() {
 }
 
 # Initialize constants
-#DEST_ROOT=$IBC_PATH
-#TODO this needs to be automatically parsed from config files
-DEST_ROOT="/home/moisseev/data/wrf_ibc/nam/"
-STEPS=$(seq 0 1 60)
-
+STEPS=$(seq 0 1 $runhrs)
 # Initialize variables
 date=$(date +"%Y%m%d")
 year=""
@@ -95,7 +91,7 @@ ncep_srv=ftp.ncep.noaa.gov
 
 # Build source & destination directories
 srce_dir=ftp://${ncep_srv}${ncep_dir}
-dest_dir="${DEST_ROOT}/${datetime}"
+dest_dir="$ibc_path/${datetime}"
 [[ ! -d ${dest_dir} ]] || rm -r ${dest_dir}
 
 mkdir -pv ${dest_dir}
