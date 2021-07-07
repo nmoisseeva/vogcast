@@ -123,7 +123,7 @@ for step in ${STEPS[@]}; do
 done
 
 # Clean up & exit
-touch IC.OK
+touch IBC.OK
 log_msg "$0 is done."
 echo
 exit 0

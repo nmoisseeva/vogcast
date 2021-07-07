@@ -22,7 +22,7 @@ function log_msg() {
 
 function link_grib() {
     echo "Linking grib files into local run directory"
-    ${wps_path}/link_grib.csh ${ibc_path}/${DATE}${HH}/* . 
+    ${wps_path}/link_grib.csh ${ibc_path}/${DATE}${HH}/*.grib2 . 
 }
 
 function link_tables() {
@@ -91,16 +91,16 @@ log_msg "Starting $0 ..."
 #create forecast label
 datetime="${DATE}${HH}"
 
-#set up and navigate to main run directory
-run_dir="${run_dir}/${datetime}/wrf"
-#[[ ! -d ${run_dir} ]] || rm -r ${run_dir}
-mkdir -pv ${run_dir}
-cd ${run_dir}
-
+#set up and navigate to main run directoryi
+cd ${run_dir}/${datetime}
+[[ ! -d wrf ]] || rm -r wrf
+mkdir -pv wrf
+cd wrf
 
 #check that the IBCs are available
 if [ ! -f ${ibc_path}/${DATE}${HH}/IBC.OK ]
 then
+    echo ${ibc_path}/${DATE}${HH}/IBC.OK
     echo "ERROR: IBC's are missing! Aborting"
     exit 1
 fi
@@ -112,17 +112,17 @@ config_namelist
 
 #run ungrib
 log_msg "Running ungrib $0 ..."
-#./ungrib.exe
+./ungrib.exe
 [ -f FILE:${fcst_end} ] && touch ungrib.OK
 
 #run geogrid
 log_msg "Running geogrid $0 ..."
-#./geogrid.exe
+./geogrid.exe
 [ $(ls -l geo_em* | wc -l) -eq ${max_dom} ] && touch geogrid.OK
 
 #run metgrid
 log_msg "Running metgrid $0 ..."
-#./metgrid.exe
+./metgrid.exe
 [ $(ls -l met_em*${fcst_end}* | wc -l) -eq ${max_dom} ] && touch metgrid.OK
 
 
