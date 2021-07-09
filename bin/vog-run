@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python
 
 # Setup environment for the vog model run
 #
@@ -8,19 +8,18 @@ __date__="July 2021"
 ### Inputs ###
 config_path = '../vog.config' 		#json config file
 
-#import supporint modules
-from set_vog_env import *
+#import supporting modules
 import sys
+sys.path.append(".")
+from set_vog_env import *
 import subprocess
-import datetime
 import os
-
+import logging
 
 ### Main ###
 if __name__ == "__main__":
 	
-	print("============BEGIN VOG PIPELINE RUN=============")
-	print(datetime.datetime.utcnow())
+	logging.info("============BEGIN VOG PIPELINE RUN=============")
 	
 	#read date input and determine run typ
 	args = parse_inputs()				
@@ -49,12 +48,14 @@ if __name__ == "__main__":
 	set_env_var(settings['met'], "wrf_path")
 
 	#create storage folders
-	create_run_dir(forecast)
+	#create_run_dir(forecast)
 	
 	#download initial conditions
 	#os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
 	#subprocess.Popen(['./get_nam','-d %s' %rundate, '%s' %args.cycle], shell=True, executable="/bin/bash")
 	
 	#run wps
-	os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
-	
+	#os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
+
+	#run wrf
+	os.system('bash ./run_wrf -d %s %s' %(rundate,args.cycle))	

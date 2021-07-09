@@ -127,7 +127,7 @@ log_msg "Running metgrid $0 ..."
 
 
 # Clean up & exit
-[ -e ungrib.OK -a -e geogrid.OK -a -e metgrid.OK ] && touch ../WPS.OK
+[ -e ungrib.OK -a -e geogrid.OK -a -e metgrid.OK ] && touch wps.OK
 log_msg "$0 is done."
 echo
 exit 0

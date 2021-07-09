@@ -1,0 +1,150 @@
+#!/bin/bash
+
+# Perform the main WRF run for the met forecast
+#Nadya Moisseeva (nadya.moisseeva@hawaii.edu)
+#July 2021
+
+### Functions ###
+
+function usage() {
+    echo "Run WRF"
+    echo
+    echo "Usage: $0 [-d YYYYMMDD] INIT"
+    echo "where: INIT = two-digit initialization time i.e. 00, 06, etc"
+    echo "       -d = (optional) date to download, default is current date"
+}
+
+function log_msg() {
+    # Print log message with datetime stamp
+    local msg="$1"
+    echo "[`/bin/date +"%F %T %Z"`] ${msg}"
+}
+
+
+function link_wrf_files() {
+    echo "Linking supporting files into local run directory"
+    #link tables
+    ln -s ${wrf_path}/run/GENPARM.TBL .
+    ln -s ${wrf_path}/run/LANDUSE.TBL .
+    ln -s ${wrf_path}/run/SOILPARM.TBL .
+    ln -s ${wrf_path}/run/VEGPARM.TBL .
+
+    #physics packages data
+    ln -s ${wrf_path}/run/RRTM_DATA .
+    ln -s ${wrf_path}/run/RRTMG_LW_DATA .
+    ln -s ${wrf_path}/run/RRTMG_SW_DATA .
+    ln -s ${wrf_path}/run/ozone.formatted .
+    ln -s ${wrf_path}/run/ozone_lat.formatted .
+    ln -s ${wrf_path}/run/ozone_plev.formatted .
+    ln -s ${wrf_path}/run/CCN_ACTIVATE.BIN .
+
+    #link executables
+    ln -s ${wrf_path}/main/real.exe .
+    ln -s ${wrf_path}/main/wrf.exe .
+}
+
+function config_namelist() {
+
+    echo "Configuring namelist.input"
+    #copy namelist.input template
+    cp ${vog_root}/config/namelist.input .
+
+    #edit start and end times of the run, run length
+    sYYYY=$(date -d "${DATE} ${HH}" +"%Y")
+    sMM=$(date -d "${DATE} ${HH}" +"%m")
+    sDD=$(date -d "${DATE} ${HH}" +"%d")
+    sHH=$(date -d "${DATE} ${HH}" +"%H")
+
+    eYYYY=$(date -d "${DATE} ${HH} UTC+60hours" +"%Y")
+    eMM=$(date -d "${DATE} ${HH} UTC+60hours" +"%m")
+    eDD=$(date -d "${DATE} ${HH} UTC+60hours" +"%d")
+    eHH=$(date -d "${DATE} ${HH} UTC+60hours" +"%H")
+
+    sed -i s/"sYYYY"/${sYYYY}/g namelist.input
+    sed -i s/"sMM"/${sMM}/g namelist.input
+    sed -i s/"sDD"/${sDD}/g namelist.input
+    sed -i s/"sHH"/${sHH}/g namelist.input
+
+    sed -i s/"eYYYY"/${eYYYY}/g namelist.input
+    sed -i s/"eMM"/${eMM}/g namelist.input
+    sed -i s/"eDD"/${eDD}/g namelist.input
+    sed -i s/"eHH"/${eHH}/g namelist.input
+
+    sed -i s/"runhrs"/${runhrs}/g namelist.input
+
+    #configure i/o
+    ln -s ${vog_root}/config/removefields.txt .
+
+    #copy slurm setup
+    ln -s ${vog_root}/config/wrf.slurm .
+}
+
+# Initialize variables
+DATE=$(date +"%Y%m%d")
+year=""
+HH=""
+
+# Parse optional arguments
+while getopts "d:h" opt; do
+    case "$opt" in
+    d)  DATE=$OPTARG
+        ;;
+    h)  usage
+        exit 0
+        ;;
+    *)  usage
+        exit 1
+        ;;
+    esac
+done
+
+# Parse mandatory arguments
+shift $((OPTIND-1))
+if [[ -z "$@" ]]; then
+    echo "You must supply an initialization time."
+    echo
+    usage
+    exit 1
+else
+    HH="$@"
+fi
+
+
+###  Main  ###
+echo
+log_msg "Starting $0 ..."
+
+#create forecast label
+datetime="${DATE}${HH}"
+
+#navigate to main run directory
+cd ${run_dir}/${datetime}/wrf
+
+#check that the WPS completed ok
+if [ ! -f wps.OK ]
+then
+    echo "ERROR: wps.OK is missing! Check that WPS completed successfully.  Aborting"
+    exit 1
+fi
+
+#prep for wrf run
+link_wrf_files
+config_namelist
+
+#run real.exe
+log_msg "Starting real.exe $0 ..."
+#./real.exe
+[ $(ls -l wrfinput* | wc -l) -eq ${max_dom} ] && touch real.OK
+
+#run main wrf
+log_msg "Starting wrf.exe $0 ..."
+sbatch -W wrf.slurm
+[ $(ls -l wrfout_d01** | wc -l) -eq ${runhrs} ] && touch wrf.OK
+
+
+# Clean up & exit
+[ -e real.OK -a -e wrf.OK ] && touch ../met.OK
+log_msg "$0 is done."
+echo
+exit 0
+

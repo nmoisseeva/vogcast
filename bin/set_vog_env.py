@@ -7,6 +7,7 @@ import os
 import json
 import sys, getopt
 import argparse
+import logging
 
  ### Fucntions ###
 
@@ -32,10 +33,10 @@ def set_env_var(settingdict,key):
 
 	#check if key exists
 	if key not in settingdict.keys():
-		print("WARNING: $%s not specified in vog.config. Setting to None." %key)
+		logging.warning("$%s not specified in vog.config. Setting to None." %key)
 		return
 
-	print("Setting $%s environmental variable to: %s" %(key,settingdict[key]))
+	logging.debug("Setting $%s environmental variable to: %s" %(key,settingdict[key]))
 
 	#set environment
 	os.environ[key] = str(settingdict[key])
@@ -63,29 +64,10 @@ def create_run_dir(forecast):
 	Set up working directory for the forecast run
 	"""
 	run_path = os.environ["run_dir"] + '/' + forecast
-	print("Creating working directory: %s" %run_path)
+	logging.info("Creating working directory: %s" %run_path)
 	
 	os.system('mkdir -p %s' %run_path)	
 	return
 	
-
 	
 	
- ### Main ###
-
-"""
-#load settings
-settings = read_config(config_path)
-
-#set shared environmental variables
-set_env_var(settings, "vog_root")
-set_env_var(settings, "runhrs")
-
-#set variables for met modules
-# includes: get_nam, run_wps,
-set_env_var(settings['met'], "max_dom")
-set_env_var(settings['met'], "ibc_path")
-set_env_var(settings['met'], "wps_path")
-set_env_var(settings['met'], "wrf_path")
-
-"""
