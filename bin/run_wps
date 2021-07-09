@@ -43,7 +43,7 @@ function link_tables() {
 function config_namelist() {
     echo "Configuring namelist.wps"
     #copy namelist.wps template
-    cp ${vog_root}/config/namelist.wps .
+    cp ${vog_root}/config/wps/namelist.wps .
 
     #edit start and end times of the run
     fcst_start=$(date -d "${DATE} ${HH}" +"%Y-%m-%d_%H")
@@ -98,9 +98,9 @@ mkdir -pv wrf
 cd wrf
 
 #check that the IBCs are available
-if [ ! -f ${ibc_path}/${DATE}${HH}/IBC.OK ]
+if [ ! -f ${ibc_path}/${DATE}${HH}/ibc.OK ]
 then
-    echo ${ibc_path}/${DATE}${HH}/IBC.OK
+    echo ${ibc_path}/${DATE}${HH}/ibc.OK
     echo "ERROR: IBC's are missing! Aborting"
     exit 1
 fi

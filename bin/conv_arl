@@ -1,0 +1,54 @@
+#!/usr/bin/python3.7
+ 
+#Script converst wrf output to hysplit arl format
+
+__author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
+__date__="July 2021"
+
+import os
+import sys
+from pathlib import Path
+import logging
+
+ ### Fucntions ###
+
+def create_hys_dir():
+	'''
+	Set up and navigate to hyslit subdirectory within main run folder
+	'''
+	#get run directory
+	run_path = os.path.join(os.environ['run_dir'],forecast)
+	os.chdir(run_path)
+
+	#create subdirectory for hysplit files
+	Path('./hysplit').mkdir(exist_ok=True)
+	os.chdir('./hysplit')
+	
+	return
+	
+def link_hys_files():
+	'''
+	Link necessary hysplit files
+	'''
+	arw2arl = os.path.join(os.environ['hys_path'],'exec','arw2arl')
+	print(arw2arl)
+	os.symlink(arw2arl,'.')
+
+	return
+
+def main():
+        '''
+        Perform all the conversion steps
+        '''
+	#check for met completion
+
+        #set up hysplit directory
+        create_hys_dir()
+        link_hys_files()
+	
+	return
+
+ ### Main ###
+
+if __name__ == '__main__':
+	main()		

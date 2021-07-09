@@ -63,9 +63,9 @@ def create_run_dir(forecast):
 	"""
 	Set up working directory for the forecast run
 	"""
-	run_path = os.environ["run_dir"] + '/' + forecast
+        #run_path = os.environ["run_dir"] + '/' + forecast
+	run_path = os.path.join(os.environ["run_dir"],forecast)
 	logging.info("Creating working directory: %s" %run_path)
-	
 	os.system('mkdir -p %s' %run_path)	
 	return
 	
