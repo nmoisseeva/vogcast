@@ -12,9 +12,9 @@ import logging
  ### Fucntions ###
 
 def read_config(config_path):
-	"""
+	'''
 	Read main configuration json file
-	"""
+	'''
 	#open json file
 	f = open(config_path)
 
@@ -27,9 +27,9 @@ def read_config(config_path):
 
 
 def set_env_var(settingdict,key):
-	"""
+	'''
 	Set enviornment variable using the given dictionary key
-	"""
+	'''
 
 	#check if key exists
 	if key not in settingdict.keys():
@@ -44,9 +44,9 @@ def set_env_var(settingdict,key):
 	return
 
 def parse_inputs():
-	"""
+	'''
 	Reads command line inputs to deterine dates and run type
-	"""
+	'''
 	parser = argparse.ArgumentParser()
 	
 	#get mandatory input (initialization time)
@@ -59,15 +59,30 @@ def parse_inputs():
 	return args
 
 
-def create_run_dir(forecast):
-	"""
+def create_run_dir():
+	'''
 	Set up working directory for the forecast run
-	"""
-        #run_path = os.environ["run_dir"] + '/' + forecast
-	run_path = os.path.join(os.environ["run_dir"],forecast)
+	'''
+	run_path = os.path.join(os.environ['run_dir'],os.environ['forecast'])
 	logging.info("Creating working directory: %s" %run_path)
 	os.system('mkdir -p %s' %run_path)	
 	return
 	
 	
+def create_run_json(config_path):
+	'''
+	Create a new json file for controlling the run
+	'''
+	#get user-defined settings
+	user_defined = read_config(config_path)
+
+	#set up copy user data to pipieline-generated json
+	pipeline_json = {}
+	pipeline_json['user_defined'] = user_defined
+
+	#save pipeline json to the run path
+	json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
+	with open(json_path, 'w') as f:
+		f.write(json.dumps(pipeline_json, indent=4))
 	
+	return	

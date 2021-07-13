@@ -89,12 +89,19 @@ SRCE_ROOT=$ncep_dir
 #ncep_srv=ftpprd.ncep.noaa.gov
 ncep_srv=ftp.ncep.noaa.gov
 
-# Build source & destination directories
+# Build source & destination directories, check if data is already downloaded
 srce_dir=ftp://${ncep_srv}${ncep_dir}
 dest_dir="$ibc_path/${datetime}"
-[[ ! -d ${dest_dir} ]] || rm -r ${dest_dir}
+if [ -d ${dest_dir} -a -f ${dest_dir}/ibc.OK ]
+then
+	echo "IBCs have been previously downloaded and ibc.OK exists"
+else
+	mkdir -pv ${dest_dir}
+	echo "Creating directory for storing IBCs: ${dest_dir}"
+fi
 
-mkdir -pv ${dest_dir}
+#[[ ! -d ${dest_dir} ]] || rm -r ${dest_dir}
+#mkdir -pv ${dest_dir}
 cd ${dest_dir}
 
 # Check that remote host is up

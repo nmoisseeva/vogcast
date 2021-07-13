@@ -27,6 +27,9 @@ function link_grib() {
 
 function link_tables() {
     echo "Linking WPS tables into local run directory"
+    #clean old links
+    find -type l -delete
+
     #ungrib
     ln -s ${wps_path}/ungrib/Variable_Tables/Vtable.NAM ./Vtable 
     ln -s ${wps_path}/ungrib.exe .
@@ -43,7 +46,7 @@ function link_tables() {
 function config_namelist() {
     echo "Configuring namelist.wps"
     #copy namelist.wps template
-    cp ${vog_root}/config/wps/namelist.wps .
+    cp ${vog_root}/config/wrf/namelist.wps .
 
     #edit start and end times of the run
     fcst_start=$(date -d "${DATE} ${HH}" +"%Y-%m-%d_%H")

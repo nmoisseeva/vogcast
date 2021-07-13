@@ -24,7 +24,7 @@ function log_msg() {
 function link_wrf_files() {
     echo "Linking supporting files into local run directory"
     #clean broken links
-    find . -xtype l -delete	
+    find -type l -delete
 
     #link tables
     ln -s ${wrf_path}/run/GENPARM.TBL .

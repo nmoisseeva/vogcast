@@ -14,6 +14,7 @@ sys.path.append('.')
 from set_vog_env import *
 import os
 import logging
+import conv_arl, get_hvo_emissions
 
 #set up logging
 logging.basicConfig(level=logging.INFO,format='%(asctime)s %(message)s', datefmt='[%Y-%m-%d %H:%M:%S %Z]')
@@ -41,6 +42,9 @@ if __name__ == '__main__':
 	set_env_var(settings, 'vog_root')
 	set_env_var(settings, 'run_dir')
 	set_env_var(settings, 'runhrs')
+	
+	#set full run path
+	os.environ['run_path'] = os.path.join(os.environ['run_dir'],forecast)
 
 	#set variables for met modules
 	# includes: get_nam, run_wps, run_wrf
@@ -51,20 +55,36 @@ if __name__ == '__main__':
 
 	#set vertiables for dispersion
 	#includes: conv_arl
-        set_env_var(settings['dispersion'], 'hys_path')
-        set_env_var(settings['dispersion'], 'spinup')
+	set_env_var(settings['dispersion'], 'hys_path')
+	set_env_var(settings['dispersion'], 'spinup')
 	
-	#create storage folders
-	create_run_dir(forecast)
-	
+	#create storage folders and pipeline json
+	create_run_dir()
+	create_run_json(config_path)
+
 	#download initial conditions
 	os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
+	logging.info('Completed IBC download')
 	
 	#run wps
-	os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
+	#os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
+	logging.info('Completed WPS run')
 
 	#run wrf
-	os.system('bash ./run_wrf -d %s %s' %(rundate,args.cycle))
+	#os.system('bash ./run_wrf -d %s %s' %(rundate,args.cycle))
+	logging.info('Completed WRF run')
 
 	#convert wrf to arl files
 	#conv_arl.main()	
+
+	#update emissions
+	get_hvo_emissions.main()
+
+	
+	#run plume rise 
+
+	#run dispersion
+
+	#run graphics
+
+	#run archiving
