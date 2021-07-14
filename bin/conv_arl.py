@@ -45,7 +45,7 @@ def convert_to_arl():
 	hys_rundir = os.path.join(os.environ['run_path'],'hysplit')
 
 	#loop through all domains
-	for d in os.environ['max_dom']:
+	for d in range(1,os.environ['met']['max_dom']+1):
 		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d))
 		print('found %s' %nc_file)
 		arl_file = hys_rundir + '/d0' + str(d) + '.arl'
