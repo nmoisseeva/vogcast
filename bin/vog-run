@@ -17,7 +17,7 @@ import logging
 import conv_arl, run_plumerise, get_hvo_emissions
 
 #set up logging
-logging.basicConfig(level=logging.INFO,format='%(asctime)s %(message)s', datefmt='[%Y-%m-%d %H:%M:%S %Z]')
+logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='[%Y-%m-%d %H:%M:%S %Z]')
 
 
 ### Main ###
@@ -62,7 +62,8 @@ if __name__ == '__main__':
 	
 	#create storage folders and pipeline json
 	create_run_dir()
-	create_run_json(config_path)
+	json_path = create_run_json(config_path)
+	os.environ['json_path'] = json_path
 
 	#download initial conditions
 	os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
@@ -77,13 +78,13 @@ if __name__ == '__main__':
 	logging.info('Completed WRF run')
 
 	#convert wrf to arl files
-	#conv_arl.main()	
-
-	#calculate plume rise
-	#run_plumerise.main()
+	#conv_arl.main()
 
 	#update emissions
 	get_hvo_emissions.main()
+
+	#calculate plume rise
+	run_plumerise.main()
 
 	
 

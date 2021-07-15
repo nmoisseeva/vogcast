@@ -85,4 +85,4 @@ def create_run_json(config_path):
 	with open(json_path, 'w') as f:
 		f.write(json.dumps(pipeline_json, indent=4))
 	
-	return	
+	return json_path
