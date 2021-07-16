@@ -86,3 +86,21 @@ def create_run_json(config_path):
 		f.write(json.dumps(pipeline_json, indent=4))
 	
 	return json_path
+
+def read_run_json():
+	'''
+	Open run json
+	'''
+	with open(os.environ['json_path'], 'r') as f:
+		json_data = json.load(f)
+
+	return json_data
+
+def update_run_json(json_data):
+	'''
+	Update run json
+	'''
+	with open(os.environ['json_path'], 'w') as f:
+		f.write(json.dumps(json_data, indent=4))
+
+	return

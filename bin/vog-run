@@ -14,7 +14,7 @@ sys.path.append('.')
 from set_vog_env import *
 import os
 import logging
-import conv_arl, run_plumerise, get_hvo_emissions
+import conv_arl, run_plumerise, get_hvo_emissions, run_dispersion
 
 #set up logging
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='[%Y-%m-%d %H:%M:%S %Z]')
@@ -56,9 +56,11 @@ if __name__ == '__main__':
 
 
 	#set vertiables for dispersion
-	#includes: conv_arl
+	#includes: conv_arl, run_dispersion
 	set_env_var(settings['dispersion'], 'hys_path')
 	set_env_var(settings['dispersion'], 'spinup')
+	#set_env_var(settings['dispersion'], 'num_emit')
+	os.environ['hys_rundir'] = os.path.join(os.environ['run_path'],'hysplit')
 	
 	#create storage folders and pipeline json
 	create_run_dir()
@@ -86,10 +88,8 @@ if __name__ == '__main__':
 	#calculate plume rise
 	run_plumerise.main()
 
-	
-
 	#run dispersion
-
+	run_dispersion.main()
 	#run graphics
 
 	#run archiving

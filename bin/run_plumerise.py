@@ -18,7 +18,7 @@ def locate_source():
 	'''
 	#locate the most high-resolution domain
 	wrf_rundir = os.path.join(os.environ['run_path'],'wrf')
-	nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(os.environ['met']['max_dom']) + '*')	
+	nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(os.environ['max_dom']) + '*')	
 	logging.debug('Plumerise met: %s ' %nc_file)
 
 	#get location
@@ -49,22 +49,22 @@ def static_plumerise(settings):
 
 	### main ###
 	#load main run json 
-	with open(os.environ['json_path'], 'r') as f:
-		json_data = json.load(f)
-	
+	json_data = read_run_json()
+
 	#distribute the emissions vertically
 	lines = ''
 	lat, lon = str(settings['plumerise']['source_lat']), str(settings['plumerise']['source_lon'])
 	for i in range(len(levels)):
 		so2 = distribution[i] * bias * json_data['emissions']['so2']
-		lines = lines + lat  + ' ' + lon + ' ' + str(levels[i]) + ' ' + str(so2) + ' ' + str (area) + '\n'
+		lines = lines + lat  + ' ' + lon + ' ' + str(levels[i]) + ' ' + str(so2) + ' ' + str (area) + '\\n'
 	logging.debug('Distributing emissions vertically...\n%s' %lines)
+
+	#remove newline character from the last line
+	lines = lines[:-3]
 	
 	#append main run json with vertical line source data
-	json_data['plumerise'] = {'sources': lines}
-
-	with open(os.environ['json_path'], 'w') as f:
-		f.write(json.dumps(json_data, indent=4))
+	json_data['plumerise'] = {'sources': lines, 'src_cnt' : len(levels)}
+	update_run_json(json_data)
 
 	logging.debug('Run json updated with source data')
 	return
@@ -79,11 +79,10 @@ def main():
 	#get configuration settings
 	settings = read_config(os.environ['config_path'])
 		
-
 	
 	#steps for current static operational ("ops") model
 	if settings['plumerise']['pr_model']=='ops':
-		#do static stuff
+
 		logging.debug('Running static %s plumerise model' %settings['plumerise']['pr_model'])
 		static_plumerise(settings)
 	else:

@@ -17,12 +17,9 @@ def create_hys_dir():
 	'''
 	Set up and navigate to hyslit subdirectory within main run folder
 	'''
-	#go to run directory
-	os.chdir(os.environ['run_path'])
-
 	#create subdirectory for hysplit files, clean up
-	Path('./hysplit').mkdir(exist_ok=True)
-	os.chdir('./hysplit')
+	Path(os.environ['hys_rundir']).mkdir(exist_ok=True)
+	os.chdir(os.environ['hys_rundir'])
 	os.system('find -type l -delete')
 	
 	return
@@ -42,13 +39,12 @@ def convert_to_arl():
 	'''	
 	#get local subdirectories within run folder
 	wrf_rundir = os.path.join(os.environ['run_path'],'wrf')
-	hys_rundir = os.path.join(os.environ['run_path'],'hysplit')
 
 	#loop through all domains
 	for d in range(1,os.environ['met']['max_dom']+1):
 		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d))
 		print('found %s' %nc_file)
-		arl_file = hys_rundir + '/d0' + str(d) + '.arl'
+		arl_file = os.environ['hys_rundir'] + '/d0' + str(d) + '.arl'
 		print('saving as: %s' %arl_file)
 
 		#run the conversion
