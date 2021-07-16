@@ -50,40 +50,39 @@ def edit_hys_config():
 	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
 	hys_date = fc_date + dt.timedelta(hours=int(os.environ['spinup']))
 	hys_date_str = hys_date.strftime('%Y %m %d %H')
-	sed_cmd = sed_command('{YYYY MM DD HH}', hys_date_str, 'CONTROL')
-	os.system(sed_cmd)
+	sed_command('{YYYY MM DD HH}', hys_date_str, 'CONTROL')
 	logging.debug('Dispersion start set to: %s' %hys_date_str)
 	#edit CONTROL:source count
 	src_cnt = str(json_data['plumerise']['src_cnt'])
-	sed_cmd = sed_command('{src_cnt}', src_cnt, 'CONTROL')
-	os.system(sed_cmd)
+	sed_command('{src_cnt}', src_cnt, 'CONTROL')
 	logging.debug('Source count set to: %s' %src_cnt)
 	#edit CONTROL: hysplit run hours
-	hys_hrs = str(json_data['user_defined']['runhrs'] - json_data['user_defined']['dispersion']['spinup'])
-	sed_cmd = sed_command('{hys_hrs}', hys_hrs, 'CONTROL')
-	os.system(sed_cmd)
+	hys_hrs = str(json_data['user_defined']['runhrs'] - int(os.environ['spinup']))
+	sed_command('{hys_hrs}', hys_hrs, 'CONTROL')
 	logging.debug('Hysplit run hours set to: %s ' %hys_hrs)
 	#edit CONTROL max domain
-	sed_cmd = sed_command('{max_dom}', os.environ['max_dom'], 'CONTROL')
-	os.system(sed_cmd)
-	#TODO: automate arl paths as well (write from json like sources)
-
+	sed_command('{max_dom}', os.environ['max_dom'], 'CONTROL')
+	#TODO: automate arl paths as well (write from json, like sources)
 	#copy all sources into CONTROL
 	sources = json_data['plumerise']['sources']
-	logging.debug(sources)
-	sed_cmd = sed_command('{sources}', sources, 'CONTROL')
-	os.system(sed_cmd)
+	sed_command('{sources}', sources, 'CONTROL')
 
+	#edit SETUP.CFG
+	sed_command('{spinup}', os.environ['spinup'], 'SETUP.CFG')
+	
 	return
 	
 def sed_command(old_str, new_str, filename):
 	'''
-	Constructs a shell sed command for replacing config tags
+	Constructs and runs shell sed command for replacing config tags
 	'''
-	
+	#construct the command
 	sed_cmd = 'sed -i "s/' + old_str + '/' + new_str + '/g" ' + filename
 
-	return sed_cmd
+	#run the command
+	os.system(sed_cmd)
+
+	return
 
 
 #append main run json with vertical line source data

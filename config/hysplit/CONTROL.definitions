@@ -1,0 +1,63 @@
+21 06 21 12
+10							&number of source locations
+19.4055 -155.2811 50.0 2.328E+06 500.0			&lat lon height AGL concen? virtual area?
+19.4055 -155.2812 150.0 2.328E+06 500.0
+19.4055 -155.2813 300.0 2.328E+06 500.0
+19.4055 -155.2814 350.0 2.328E+06 500.0
+19.4055 -155.2815 400.0 2.328E+06 500.0
+19.4055 -155.2816 450.0 2.328E+06 500.0
+19.4055 -155.2817 550.0 2.328E+06 500.0
+19.4055 -155.2818 600.0 2.328E+06 500.0
+19.4055 -155.2819 650.0 4.656E+06 500.0
+19.4055 -155.282 700.0 2.095E+08 500.0
+60							&simulation hours
+1							&vertical motion, default = 0 (use met), 1 = isobaric, WHY?
+10000.0							&model top
+8							&number of input data grids
+/export/alaia2/VMAP/Kilauea/wrfout/2021062112/
+wrf4.5km_2021062112
+/export/alaia2/VMAP/Kilauea/wrfout/2021062112/
+wrf4.5km_2021062212
+/export/alaia2/VMAP/Kilauea/wrfout/2021062112/
+wrf4.5km_2021062312
+/export/alaia2/VMAP/Kilauea/wrfout/2021062112/
+wrf4.5km_2021062412
+/export/alaia2/VMAP/Kilauea/wrfout/2021062112/
+wrf0.9km_2021062112
+/export/alaia2/VMAP/Kilauea/wrfout/2021062112/
+wrf0.9km_2021062212
+/export/alaia2/VMAP/Kilauea/wrfout/2021062112/
+wrf0.9km_2021062312
+/export/alaia2/VMAP/Kilauea/wrfout/2021062112/
+wrf0.9km_2021062412
+2							&number of pollutants
+SO2							&4-characeter label
+1.0							&emission rate per hour; for custom runs set to 0 https://www.ready.noaa.gov/documents/Tutorial/html/cust_emit.html
+59.0							&hours of emission
+00 00 00 00 00						&release start time YMDHM 
+SO4
+0.0
+59.0
+00 00 00 00 00						&note on emissions: should do read-from-file approach https://www.ready.noaa.gov/hysplitusersguide/S312.htm
+1							&numeber of simulataneous concentration grids	
+20.5 -156.5						&center lat lon
+0.01 0.01						&grid spacing in degrees lat lon
+15.0 15.0						&grid span (total in each direction)
+./							&default output direction
+cdump							&default file name
+2							&number of vertical concentration levels, including ground if deposition is required
+0 100							&heights of vertical concentration levels
+00 00 00 00 00						&sampling start time
+00 00 00 00 00						&sampling end time
+00 01 00						&sampling interval (type hour minute) 0 = averaging, 
+2							&number of pollutants depositing
+0.0 0.0 0.0						&particle parameters (diameter density shape) 0 assumes gas
+0.0048 0.0 0.0 0.0 0.0		&Deposition velocity (m/s), Pollutant molecular weight (Gram/Mole), Surface Reactivity Ratio, Diffusivity Ratio, Effective Henry's Constant
+1.24 0.0 0.0			&Wet Removal: Actual Henry's constant, In-cloud (GT 1 =L/L; LT 1 =1/s), Below-cloud (1/s)			
+0.0							&radioactive decay
+0.0							&polltant resuspension
+1.0 1.0 1.0
+0.0025 0.0 0.0 0.0 0.0
+0.0 3.2E+05 5.0E-05
+0.0
+0.0

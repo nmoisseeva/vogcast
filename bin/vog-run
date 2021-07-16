@@ -59,7 +59,6 @@ if __name__ == '__main__':
 	#includes: conv_arl, run_dispersion
 	set_env_var(settings['dispersion'], 'hys_path')
 	set_env_var(settings['dispersion'], 'spinup')
-	#set_env_var(settings['dispersion'], 'num_emit')
 	os.environ['hys_rundir'] = os.path.join(os.environ['run_path'],'hysplit')
 	
 	#create storage folders and pipeline json
