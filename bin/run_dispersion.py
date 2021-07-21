@@ -62,7 +62,9 @@ def edit_hys_config():
 	logging.debug('Hysplit run hours set to: %s ' %hys_hrs)
 	#edit CONTROL max domain
 	sed_command('{max_dom}', os.environ['max_dom'], 'CONTROL')
-	#TODO: automate arl paths as well (write from json, like sources)
+	#copy arl path data into CONTROL
+	logging.debug(json_data['arl'])
+	sed_command('{arl_paths}', json_data['arl'], 'CONTROL')
 	#copy all sources into CONTROL
 	sources = json_data['plumerise']['sources']
 	sed_command('{sources}', sources, 'CONTROL')

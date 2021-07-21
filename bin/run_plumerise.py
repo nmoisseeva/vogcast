@@ -22,7 +22,8 @@ def locate_source():
 	logging.debug('Plumerise met: %s ' %nc_file)
 
 	#get location
-	lat, lon = os.environ['source_lat'], os.environ['source_lon']
+	#TODO add functionality for multiple sources
+	lat, lon = os.environ['lat'], os.environ['lon']
 	x, y = wrf.ll_to_xy(nc_file, lat, lon, timeidx=wrf.ALL_TIMES)
 
 	return nc_file, x, y
@@ -53,14 +54,14 @@ def static_plumerise(settings):
 
 	#distribute the emissions vertically
 	lines = ''
-	lat, lon = str(settings['plumerise']['source_lat']), str(settings['plumerise']['source_lon'])
+	lat, lon = str(settings['source']['lat']), str(settings['source']['lon'])
 	for i in range(len(levels)):
 		so2 = distribution[i] * bias * json_data['emissions']['so2']
 		lines = lines + lat  + ' ' + lon + ' ' + str(levels[i]) + ' ' + str(so2) + ' ' + str (area) + '\\n'
 	logging.debug('Distributing emissions vertically...\n%s' %lines)
 
 	#remove newline character from the last line
-	lines = lines[:-3]
+	lines = lines[:-2]
 	
 	#append main run json with vertical line source data
 	json_data['plumerise'] = {'sources': lines, 'src_cnt' : len(levels)}
@@ -81,9 +82,9 @@ def main():
 		
 	
 	#steps for current static operational ("ops") model
-	if settings['plumerise']['pr_model']=='ops':
+	if settings['source']['pr_model']=='ops':
 
-		logging.debug('Running static %s plumerise model' %settings['plumerise']['pr_model'])
+		logging.debug('Running static %s plumerise model' %settings['source']['pr_model'])
 		static_plumerise(settings)
 	else:
 		#TODO: NOT TESTED FROM HERE ON

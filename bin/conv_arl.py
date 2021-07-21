@@ -45,13 +45,15 @@ def convert_to_arl():
 	for d in range(1,int(os.environ['max_dom'])+1):
 		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d) + '*')[0]
 		logging.debug('Wrfout file: %s' %nc_file)
-		arl_file = os.environ['hys_rundir'] + '/d0' + str(d) + '.arl'
-		logging.debug('Saving arl as: %s' %arl_file)
+		arl_file = 'd0' + str(d) + '.arl'
 
 		#run the conversion
-		os.system('./arw2arl -i%s -o%s -c1 > arw2arl.log' %(nc_file, arl_file))
+		os.system('./arw2arl -i%s -o%s -c1 > arw2arl.log' %(nc_file, os.path.join(os.environ['hys_rundir'],  arl_file)))
 		
-		lines = lines + wrf_rundir + '\\n' + arl_file + '\\n'
+		lines = lines + '.\/\\n' + arl_file + '\\n'
+
+	#remove newline character from the last line
+	lines = lines[:-2]
 
 	#append run json with arl file information
 	json_data = read_run_json()
