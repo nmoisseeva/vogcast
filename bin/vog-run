@@ -1,12 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/python3.7
 
 # Setup environment for the vog model run
 #
 __author__='Nadya Moisseeva (nadya.moisseeva@hawaii.edu)'
 __date__='July 2021'
 
-### Inputs ###
-config_path = '../vog.config' 		#json config file
+ ### Inputs ###
+#TODO This CANNOT be hardcoded!
+config_path = '../vog.config' 		#json config file (assumed vog_root location)
 
 #import supporting modules
 import sys
@@ -34,7 +35,6 @@ if __name__ == '__main__':
 		logging.info('Performing real-time run for: %s%s' %(rundate,args.cycle))	
 	forecast = '%s%s' %(rundate,args.cycle)
 	os.environ['forecast'] = forecast
-	os.environ['config_path'] = config_path
 
 	#load configuration settings
 	settings = read_config(config_path)
@@ -43,7 +43,8 @@ if __name__ == '__main__':
 	set_env_var(settings, 'vog_root')
 	set_env_var(settings, 'run_dir')
 	set_env_var(settings, 'runhrs')
-	
+	os.environ['config_path'] = os.path.join(os.environ['vog_root'], 'vog.config')
+
 	#set full run path
 	os.environ['run_path'] = os.path.join(os.environ['run_dir'],forecast)
 
@@ -73,13 +74,13 @@ if __name__ == '__main__':
 	#run wps
 	#os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
 	logging.info('Completed WPS run')
-
+	
 	#run wrf
 	#os.system('bash ./run_wrf -d %s %s' %(rundate,args.cycle))
 	logging.info('Completed WRF run')
 
 	#convert wrf to arl files
-	#conv_arl.main()
+	conv_arl.main()
 
 	#update emissions
 	get_hvo_emissions.main()

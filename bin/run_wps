@@ -109,8 +109,8 @@ then
 fi
 
 #prep for wps run
-link_grib
 link_tables
+link_grib
 config_namelist
 
 #run ungrib

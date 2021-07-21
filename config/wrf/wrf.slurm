@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=vog-pipeline-wrf
+#SBATCH --job-name=vp-wrf
 #SBATCH --account=vmap
 #SBATCH --partition=vmap
 #SBATCH --time=0-06:00:00 ## time format is DD-HH:MM:SS
@@ -7,12 +7,12 @@
 
 #SBATCH --ntasks=128
 ##SBATCH --cpus-per-task=1
-##SBATCH --mem-per-cpu=4G
+#SBATCH --mem-per-cpu=6G
 
 #SBATCH --exclude=node-[0021,0269]
 #SBATCH --nodes=8
 #SBATCH --ntasks-per-node=16
-#SBATCH --mem=64G
+##SBATCH --mem=64G
 
 
 ## All options and environment variables found on schedMD site: http://slurm.schedmd.com/sbatch.html

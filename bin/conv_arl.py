@@ -10,10 +10,11 @@ import sys
 from pathlib import Path
 import logging
 import glob
+from set_vog_env import *
 
  ### Fucntions ###
 
-def create_hys_dir():
+def setup_hys_dir():
 	'''
 	Set up and navigate to hyslit subdirectory within main run folder
 	'''
@@ -21,18 +22,16 @@ def create_hys_dir():
 	Path(os.environ['hys_rundir']).mkdir(exist_ok=True)
 	os.chdir(os.environ['hys_rundir'])
 	os.system('find -type l -delete')
+	os.remove('WRFDATA.CFG')
+	os.remove('ARLDATA.CFG')
+	#TODO check if existing arl files are a problem for overwriting	
 	
-	return
-	
-def link_hys_files():
-	'''
-	Link necessary hysplit files
-	'''
+	#link necessary executables
 	arw2arl = os.path.join(os.environ['hys_path'],'exec','arw2arl')
 	os.symlink(arw2arl,'./arw2arl')
 
 	return
-
+	
 def convert_to_arl():
 	'''
 	Run the conversion to arl
@@ -41,14 +40,25 @@ def convert_to_arl():
 	wrf_rundir = os.path.join(os.environ['run_path'],'wrf')
 
 	#loop through all domains
-	for d in range(1,os.environ['met']['max_dom']+1):
-		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d))
-		print('found %s' %nc_file)
+	#lines to write to run json for auto-config of hysplit CONTROL
+	lines = ''
+	for d in range(1,int(os.environ['max_dom'])+1):
+		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d) + '*')[0]
+		logging.debug('Wrfout file: %s' %nc_file)
 		arl_file = os.environ['hys_rundir'] + '/d0' + str(d) + '.arl'
-		print('saving as: %s' %arl_file)
+		logging.debug('Saving arl as: %s' %arl_file)
 
 		#run the conversion
-		os.system('./arw2arl -i%s -o%s -c1' %(nc_file, arl_file))
+		os.system('./arw2arl -i%s -o%s -c1 > arw2arl.log' %(nc_file, arl_file))
+		
+		lines = lines + wrf_rundir + '\\n' + arl_file + '\\n'
+
+	#append run json with arl file information
+	json_data = read_run_json()
+	json_data['arl'] = lines
+	update_run_json(json_data)
+
+	return
 
 def main():
 	'''
@@ -59,15 +69,14 @@ def main():
 	#TODO: figure out a more elegant way to deal with ITS environment modules
 	os.system('source ~/.bash_profile')
 
-
 	#check for met completion
 	if not os.path.isfile(os.path.join(os.environ['run_path'],'wrf','met.OK')):
+		loggin.debug(os.path.join(os.environ['run_path'],'wrf','met.OK'))
 		logging.critical("Missing met.OK file: ensure meteorology has completed. Aborting.")
 		sys.exit()
 		
 	#set up hysplit directory
-	create_hys_dir()
-	link_hys_files()
+	setup_hys_dir()
 
 	#convert
 	convert_to_arl()
