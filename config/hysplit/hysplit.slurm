@@ -7,10 +7,11 @@
 #SBATCH --error=vp-hysplit.%A_%a.err 		## %A - filled with jobid
 #SBATCH --output=vp-hysplit.%A_%a.out 		## %A - filled with jobid
 #SBATCH --ntasks=1
-#SBATCH --mem=4G
+#SBATCH --mem-per-cpu=6G
 #SBATCH --cpus-per-task=1
 
 # usage: sbatch hysplit.slurm #ensemblemember
+source ~/.bash_profile
 
 ./hycs_ens ${SLURM_ARRAY_TASK_ID}
 touch hys_member.${SLURM_ARRAY_TASK_ID}.OK

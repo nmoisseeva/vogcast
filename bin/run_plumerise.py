@@ -56,7 +56,7 @@ def static_plumerise(settings):
 	lines = ''
 	lat, lon = str(settings['source']['lat']), str(settings['source']['lon'])
 	for i in range(len(levels)):
-		so2 = distribution[i] * bias * json_data['emissions']['so2']
+		so2 = int(distribution[i] * bias * json_data['emissions']['so2'])
 		lines = lines + lat  + ' ' + lon + ' ' + str(levels[i]) + ' ' + str(so2) + ' ' + str (area) + '\\n'
 	logging.debug('Distributing emissions vertically...\n%s' %lines)
 

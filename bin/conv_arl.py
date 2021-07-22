@@ -22,10 +22,15 @@ def setup_hys_dir():
 	Path(os.environ['hys_rundir']).mkdir(exist_ok=True)
 	os.chdir(os.environ['hys_rundir'])
 	os.system('find -type l -delete')
-	os.remove('WRFDATA.CFG')
-	os.remove('ARLDATA.CFG')
-	#TODO check if existing arl files are a problem for overwriting	
-	
+	try:
+		os.remove('ARLDATA.CFG')
+	except:
+		pass
+
+	#link conversion table
+	wrfcfg = os.path.join(os.environ['vog_root'],'config','hysplit','WRFDATA.CFG')	
+	os.symlink(wrfcfg, 'WRFDATA.CFG')
+
 	#link necessary executables
 	arw2arl = os.path.join(os.environ['hys_path'],'exec','arw2arl')
 	os.symlink(arw2arl,'./arw2arl')
@@ -43,12 +48,16 @@ def convert_to_arl():
 	#lines to write to run json for auto-config of hysplit CONTROL
 	lines = ''
 	for d in range(1,int(os.environ['max_dom'])+1):
+		#clean up old config
+		if d > 1:
+			os.remove('ARLDATA.CFG')
+		
 		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d) + '*')[0]
 		logging.debug('Wrfout file: %s' %nc_file)
 		arl_file = 'd0' + str(d) + '.arl'
 
 		#run the conversion
-		os.system('./arw2arl -i%s -o%s -c1 > arw2arl.log' %(nc_file, os.path.join(os.environ['hys_rundir'],  arl_file)))
+		os.system('./arw2arl -i%s -o%s -c1 > arw2arl_d0%s.log' %(nc_file, os.path.join(os.environ['hys_rundir'],  arl_file), d))
 		
 		lines = lines + '.\/\\n' + arl_file + '\\n'
 

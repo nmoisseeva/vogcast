@@ -6,7 +6,7 @@ __author__='Nadya Moisseeva (nadya.moisseeva@hawaii.edu)'
 __date__='July 2021'
 
  ### Inputs ###
-#TODO This CANNOT be hardcoded!
+#TODO This CANNOT be hardcoded: provide as mandatory input option
 config_path = '../vog.config' 		#json config file (assumed vog_root location)
 
 #import supporting modules
@@ -50,6 +50,7 @@ if __name__ == '__main__':
 
 	#set variables for met modules
 	# includes: get_nam, run_wps, run_wrf
+	#TODO: combine into single python met module
 	set_env_var(settings['met'], 'max_dom')
 	set_env_var(settings['met'], 'ibc_path')
 	set_env_var(settings['met'], 'wps_path')
@@ -72,11 +73,11 @@ if __name__ == '__main__':
 	logging.info('Completed IBC download')
 	
 	#run wps
-	#os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
+	os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
 	logging.info('Completed WPS run')
 	
 	#run wrf
-	#os.system('bash ./run_wrf -d %s %s' %(rundate,args.cycle))
+	os.system('bash ./run_wrf -d %s %s' %(rundate,args.cycle))
 	logging.info('Completed WRF run')
 
 	#convert wrf to arl files
