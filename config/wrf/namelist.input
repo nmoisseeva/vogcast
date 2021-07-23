@@ -25,7 +25,7 @@
 /
 
  &domains
- time_step                           = 18,
+ time_step                           = 15,
  max_dom                             = 2,
  e_we                                = 230, 121,
  e_sn                                = 150, 111,	
@@ -84,7 +84,7 @@
  kvdif                               = 0.05,
  smdiv                               = 0.1,
  emdiv                               = 0.01,
- epssm                               = 0.1,
+ epssm                               = 0.3,
  time_step_sound                     = 0,
  h_mom_adv_order                     = 5,
  v_mom_adv_order                     = 3,

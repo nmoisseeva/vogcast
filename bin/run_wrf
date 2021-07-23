@@ -22,7 +22,6 @@ function log_msg() {
 
 
 function link_wrf_files() {
-    echo "Linking supporting files into local run directory"
     #clean broken links
     find -type l -delete
 
@@ -48,7 +47,6 @@ function link_wrf_files() {
 
 function config_namelist() {
 
-    echo "Configuring namelist.input"
     #copy namelist.input template
     cp ${vog_root}/config/wrf/namelist.input .
 
@@ -126,7 +124,7 @@ cd ${run_dir}/${datetime}/wrf
 #check that the WPS completed ok
 if [ ! -f wps.OK ]
 then
-    echo "ERROR: wps.OK is missing! Check that WPS completed successfully.  Aborting"
+    log_msg "ERROR: wps.OK is missing! Check that WPS completed successfully.  Aborting"
     exit 1
 fi
 
@@ -135,12 +133,12 @@ link_wrf_files
 config_namelist
 
 #run real.exe
-log_msg "Starting real.exe $0 ..."
+log_msg "Starting real.exe"
 ./real.exe
 [ $(ls -l wrfinput* | wc -l) -eq ${max_dom} ] && touch real.OK
 
 #run main wrf
-log_msg "Starting wrf.exe $0 ..."
+log_msg "Starting wrf.exe"
 sbatch -W wrf.slurm
 [ $(ls -l wrfout_d01** | wc -l) -eq ${runhrs} ] && touch wrf.OK
 

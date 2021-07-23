@@ -34,5 +34,5 @@ export FI_PSM_UUID=`uuidgen`
 ###### ######## ###### ##
 
 # EXECUTE WRF
-srun -n 128 ./wrf.exe 
-
+#srun -n 128 ./wrf.exe 
+srun ./wrf.exe

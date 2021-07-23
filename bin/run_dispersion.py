@@ -11,6 +11,7 @@ import logging
 from set_vog_env import *
 import glob
 import datetime as dt
+from random import randrange
 
  ### Fucntions ###
 
@@ -42,6 +43,7 @@ def link_hysplit():
 	#link executable
 	hycs_ens = os.path.join(os.environ['hys_path'],'exec','hycs_ens')
 	os.symlink(hycs_ens,'./hycs_ens')
+
 
 	return
 
@@ -87,6 +89,17 @@ def edit_hys_config():
 	sed_command('{spinup}', os.environ['spinup'], 'SETUP.CFG')
 	sed_command('{min_zi}', str(user['dispersion']['min_zi']), 'SETUP.CFG')
 
+	#link carryover vog
+	#TODO: remove hardcoding for forecast cyle!!!!
+	co_date = fc_date - dt.timedelta(hours=12)
+	co_date_str = co_date.strftime('%Y%m%d%H')
+	carryover_file = os.path.join(user['dispersion']['carryover_path'],'PARINIT.{}'.format(co_date_str))
+	try:
+		os.symlink(carryover_file, 'PARINIT')
+		logging.debug('Linking carryover vog from: %s' %carryover_file)
+	except:
+		logging.warning('WARNING: No carryover found from previous cycle')
+		pass
 	return
 	
 def sed_command(old_str, new_str, filename):
@@ -111,9 +124,28 @@ def run_ensemble():
 	os.system('sbatch -W hysplit.slurm')
 
 	#make sure all members completed
+	#TODO: needs correction - this doesn't actually ensure successful completion
 	member_cnt = len(glob.glob('./hys_member*.OK'))
 	if member_cnt == 27:
 		os.system('touch dispersion.OK')
+
+def save_carryover():
+	'''
+	Save carryover smoke for next run cycle
+	'''
+	
+	#get user-defined location for saving
+	json_data = read_run_json()
+
+	#randomly select a PARDUMP file for carryover smoke
+	irand = randrange(1, 27)
+	parfile = 'PARDUMP.{:03d}'.format(irand)
+	savefile = 'PARINIT.{}'.format(os.environ['forecast'])
+	save_path = os.path.join(json_data['user_defined']['dispersion']['carryover_path'], savefile)
+
+	#make a copy
+	os.system('cp {} {}'.format(parfile,save_path))
+	logging.debug('Saving carryover: %s as %s' %(parfile, save_path))
 
 	return
 
@@ -129,11 +161,11 @@ def main():
 	#edit config for the run
 	edit_hys_config()
 	
-	#TODO: link carryover vog from previous cycle
-	#link_carryover()
-
 	#start the run
 	run_ensemble()
+
+	#save carryover smoke
+	save_carryover()
 
 	logging.info('Ensemble dispersion run complete')
 

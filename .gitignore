@@ -2,3 +2,4 @@ run/**
 venv/**
 __pycache__/
 bin/get_hvo_emissions.py
+**/*.out

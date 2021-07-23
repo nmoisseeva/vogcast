@@ -114,17 +114,17 @@ link_grib
 config_namelist
 
 #run ungrib
-log_msg "Running ungrib $0 ..."
-./ungrib.exe
+log_msg "Running ungrib"
+./ungrib.exe > /dev/null
 [ -f FILE:${fcst_end} ] && touch ungrib.OK
 
 #run geogrid
-log_msg "Running geogrid $0 ..."
+log_msg "Running geogrid"
 ./geogrid.exe
 [ $(ls -l geo_em* | wc -l) -eq ${max_dom} ] && touch geogrid.OK
 
 #run metgrid
-log_msg "Running metgrid $0 ..."
+log_msg "Running metgrid"
 ./metgrid.exe
 [ $(ls -l met_em*${fcst_end}* | wc -l) -eq ${max_dom} ] && touch metgrid.OK
 
