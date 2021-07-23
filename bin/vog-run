@@ -73,7 +73,7 @@ if __name__ == '__main__':
 	logging.info('Completed IBC download')
 	
 	#run wps
-	os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
+	#os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
 	logging.info('Completed WPS run')
 	
 	#run wrf
@@ -91,6 +91,7 @@ if __name__ == '__main__':
 
 	#run dispersion
 	run_dispersion.main()
+	
 	#run graphics
 
 	#run archiving

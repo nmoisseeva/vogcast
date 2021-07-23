@@ -28,14 +28,14 @@ def link_hysplit():
 	os.system('cp ' + hys_config_path + '/CONTROL .')
 	os.system('cp ' + hys_config_path + '/SETUP.CFG .')
 
-	#link static confic files
+	#link static config files
 	os.symlink(hys_config_path + '/CHEMRATE.TXT', 'CHEMRATE.TXT')
 	os.symlink(hys_config_path + '/hysplit.slurm', 'hysplit.slurm')
 
 	#link bdyfiles
 	#TODO get from wrf: https://www.ready.noaa.gov/documents/TutorialX/html/emit_fine.html
-	bdy_path = os.path.join(os.environ['hys_path'],'bdyfiles','bdyfiles0p1')
 	os.symlink(hys_config_path + '/ASCDATA.CFG', 'ASCDATA.CFG')
+	bdy_path = os.path.join(os.environ['hys_path'],'bdyfiles','bdyfiles0p1')
 	os.symlink(bdy_path + '/LANDUSE.ASC', 'LANDUSE.ASC')
 	os.symlink(bdy_path + '/ROUGLEN.ASC', 'ROUGLEN.ASC')
 
@@ -53,6 +53,7 @@ def edit_hys_config():
 
 	#get settings from run_json
 	json_data = read_run_json()
+	user = json_data['user_defined']
 
 	#edit CONTROL:date
 	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
@@ -65,7 +66,7 @@ def edit_hys_config():
 	sed_command('{src_cnt}', src_cnt, 'CONTROL')
 	logging.debug('Source count set to: %s' %src_cnt)
 	#edit CONTROL: hysplit run hours
-	hys_hrs = str(json_data['user_defined']['runhrs'] - int(os.environ['spinup']))
+	hys_hrs = str(user['runhrs'] - int(os.environ['spinup']))
 	sed_command('{hys_hrs}', hys_hrs, 'CONTROL')
 	logging.debug('Hysplit run hours set to: %s ' %hys_hrs)
 	#edit CONTROL max domain
@@ -78,10 +79,14 @@ def edit_hys_config():
 	sed_command('{sources}', sources, 'CONTROL')
 	#offset emissions start from met
 	sed_command('{spinup}', '{:02d}'.format(int(os.environ['spinup'])) , 'CONTROL')
+	#set vertical motion option
+	sed_command('{vert_motion}', str(user['dispersion']['vert_motion']), 'CONTROL')
+
 
 	#edit SETUP.CFG
 	sed_command('{spinup}', os.environ['spinup'], 'SETUP.CFG')
-	
+	sed_command('{min_zi}', str(user['dispersion']['min_zi']), 'SETUP.CFG')
+
 	return
 	
 def sed_command(old_str, new_str, filename):

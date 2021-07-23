@@ -78,11 +78,11 @@ def main():
 	logging.info('Running conversion to ARL format')	
 
 	#TODO: figure out a more elegant way to deal with ITS environment modules
-	os.system('source ~/.bash_profile')
+	#os.system('source ~/.bash_profile')
 
 	#check for met completion
 	if not os.path.isfile(os.path.join(os.environ['run_path'],'wrf','met.OK')):
-		loggin.debug(os.path.join(os.environ['run_path'],'wrf','met.OK'))
+		logging.debug(os.path.join(os.environ['run_path'],'wrf','met.OK'))
 		logging.critical("Missing met.OK file: ensure meteorology has completed. Aborting.")
 		sys.exit()
 		

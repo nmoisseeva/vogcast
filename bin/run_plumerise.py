@@ -38,54 +38,84 @@ def get_sounding(nc_file, x, y):
 
 	return sounding
 
-def static_plumerise(settings):
+def static_line(source, emissions):
 	'''
-	Performs current ops routine for definig an emission source line
+	Performs static legacy ops routine for defining an emission source line:
+		-assumes fixed BL day and night of 700m
+		-fairly strange vertical level selections
+		-uses undocumented fudge factors
+		-must be ran with the following CONTROL settings: 1500m mixing depth, isobaric vertical motion
 	'''
 	### inputs (historic ops settings) ###
 	bias = 0.2314 * 1.458e7 	#obscure historic bias correction factors
 	distribution = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.02, 0.9] 	#fixed vertical distribution
 	levels = [50, 150, 300, 350, 400, 450, 550, 600, 650, 700] 		#no idea why
-	area = 500
 
 	### main ###
-	#load main run json 
-	json_data = read_run_json()
-
 	#distribute the emissions vertically
 	lines = ''
-	lat, lon = str(settings['source']['lat']), str(settings['source']['lon'])
+	lat, lon, area = str(source['lat']), str(source['lon']), str(source['area'])
 	for i in range(len(levels)):
-		so2 = int(distribution[i] * bias * json_data['emissions']['so2'])
-		lines = lines + lat  + ' ' + lon + ' ' + str(levels[i]) + ' ' + str(so2) + ' ' + str (area) + '\\n'
+		so2 = int(distribution[i] * bias * emissions['so2'])
+		lines = lines + lat  + ' ' + lon + ' ' + str(levels[i]) + ' ' + str(so2) + ' ' + area + '\\n'
 	logging.debug('Distributing emissions vertically...\n%s' %lines)
 
 	#remove newline character from the last line
 	lines = lines[:-2]
 	
 	#append main run json with vertical line source data
+	json_data = read_run_json()
 	json_data['plumerise'] = {'sources': lines, 'src_cnt' : len(levels)}
 	update_run_json(json_data)
 
-	logging.debug('Run json updated with source data')
 	return
 
+def static_area(source, emissions):
+	'''
+	New "low buoyancy" approach for a single level area source
+	-must be ran with the following CONTROL settings: 150m mixing depth, met-driven vertical motion
+	'''
+	### inputs (conversion of emisisons ###
+	to_g_per_hr = 1./24 * 1e6 	#factor convert daily tomnnes to g per hour
+	lvl = 100			#virtual source hegith in m AGL
+
+	### main ###
+	lat, lon, area = str(source['lat']), str(source['lon']), str(source['area'])
+	so2 = str(to_g_per_hr * emissions['so2'])
+
+	lines = lat + ' ' + lon + ' ' + str(lvl) + ' ' + so2 + ' ' + area
+
+	#append main run json with area source data
+	json_data = read_run_json()
+	json_data['plumerise'] = {'sources': lines, 'src_cnt' : len(lvl)}
+	update_run_json(json_data)
+
+	return
 
 def main():
 	'''
 	Run plume rise 
 	'''
-	logging.info('Running plumerise module')	
-	
-	#get configuration settings
-	settings = read_config(os.environ['config_path'])
-		
-	
-	#steps for current static operational ("ops") model
-	if settings['source']['pr_model']=='ops':
+	#load main run json
+	json_data = read_run_json()	
+	source = json_data['user_defined']['source']
+	emissions = json_data['emissions']
 
-		logging.debug('Running static %s plumerise model' %settings['source']['pr_model'])
-		static_plumerise(settings)
+	#TODO: this must all be extended for multiple source locations
+
+	#call the selected plume rise approach
+	logging.info('Running plumerise model: %s' %source['pr_model'])
+	if source['pr_model']=='ops':
+		static_line(source, emissions)
+	elif source['pr_model']=='static_area':
+		static_area(source, emissions)
+	else:
+		logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
+	'''
+	elif source['pr_model']=='bl_mixing':
+		bl_mixing(source, emissions)
+	elif source['pr_model']=='bl_mixing':
+		bl_mixing(source, emissions)
 	else:
 		#TODO: NOT TESTED FROM HERE ON
 		#get source location in met domain
@@ -94,7 +124,7 @@ def main():
 		#retrieve sounding
 		#TODO: for now only retrieving BL height
 		sounding = get_sounding(nc_file, x, y)
-
+	'''
 	return
 
  ### Main ###
