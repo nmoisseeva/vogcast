@@ -43,6 +43,7 @@ if __name__ == '__main__':
 	set_env_var(settings, 'vog_root')
 	set_env_var(settings, 'run_dir')
 	set_env_var(settings, 'runhrs')
+	set_env_var(settings, 'freq')
 	os.environ['config_path'] = os.path.join(os.environ['vog_root'], 'vog.config')
 
 	#set full run path

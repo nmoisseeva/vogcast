@@ -86,12 +86,11 @@ def edit_hys_config():
 
 
 	#edit SETUP.CFG
-	sed_command('{spinup}', os.environ['spinup'], 'SETUP.CFG')
+	sed_command('{freq}', os.environ['freq'], 'SETUP.CFG')
 	sed_command('{min_zi}', str(user['dispersion']['min_zi']), 'SETUP.CFG')
 
 	#link carryover vog
-	#TODO: remove hardcoding for forecast cyle!!!!
-	co_date = fc_date - dt.timedelta(hours=12)
+	co_date = fc_date - dt.timedelta(hours=int(os.environ['freq']))
 	co_date_str = co_date.strftime('%Y%m%d%H')
 	carryover_file = os.path.join(user['dispersion']['carryover_path'],'PARINIT.{}'.format(co_date_str))
 	try:

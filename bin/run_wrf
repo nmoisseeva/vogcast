@@ -144,7 +144,7 @@ sbatch -W wrf.slurm
 
 
 # Clean up & exit
-[ -e real.OK -a -e wrf.OK ] && touch ../met.OK
+[ -e real.OK -a -e wrf.OK ] && touch met.OK
 log_msg "$0 is done."
 echo
 exit 0
