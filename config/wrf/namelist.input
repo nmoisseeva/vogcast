@@ -84,7 +84,7 @@
  kvdif                               = 0.05,
  smdiv                               = 0.1,
  emdiv                               = 0.01,
- epssm                               = 0.3,
+ epssm                               = 0.9,
  time_step_sound                     = 0,
  h_mom_adv_order                     = 5,
  v_mom_adv_order                     = 3,
