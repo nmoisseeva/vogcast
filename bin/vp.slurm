@@ -4,7 +4,7 @@
 #SBATCH --partition=vmap
 #SBATCH --time=0-03:00:00
 ##SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=6G
+#SBATCH --mem-per-cpu=12G
 
 module purge
 source ~/.bash_profile

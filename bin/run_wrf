@@ -56,22 +56,24 @@ function config_namelist() {
     sDD=$(date -d "${DATE} ${HH}" +"%d")
     sHH=$(date -d "${DATE} ${HH}" +"%H")
 
+    #TODO remove hard-coded 60 hours and use config json
     eYYYY=$(date -d "${DATE} ${HH} UTC+60hours" +"%Y")
     eMM=$(date -d "${DATE} ${HH} UTC+60hours" +"%m")
     eDD=$(date -d "${DATE} ${HH} UTC+60hours" +"%d")
     eHH=$(date -d "${DATE} ${HH} UTC+60hours" +"%H")
 
-    sed -i s/"sYYYY"/${sYYYY}/g namelist.input
-    sed -i s/"sMM"/${sMM}/g namelist.input
-    sed -i s/"sDD"/${sDD}/g namelist.input
-    sed -i s/"sHH"/${sHH}/g namelist.input
+    sed -i s/"{sYYYY}"/${sYYYY}/g namelist.input
+    sed -i s/"{sMM}"/${sMM}/g namelist.input
+    sed -i s/"{sDD}"/${sDD}/g namelist.input
+    sed -i s/"{sHH}"/${sHH}/g namelist.input
 
-    sed -i s/"eYYYY"/${eYYYY}/g namelist.input
-    sed -i s/"eMM"/${eMM}/g namelist.input
-    sed -i s/"eDD"/${eDD}/g namelist.input
-    sed -i s/"eHH"/${eHH}/g namelist.input
+    sed -i s/"{eYYYY}"/${eYYYY}/g namelist.input
+    sed -i s/"{eMM}"/${eMM}/g namelist.input
+    sed -i s/"{eDD}"/${eDD}/g namelist.input
+    sed -i s/"{eHH}"/${eHH}/g namelist.input
 
-    sed -i s/"runhrs"/${runhrs}/g namelist.input
+    sed -i s/"{runhrs}"/${runhrs}/g namelist.input
+    sed -i s/"{max_dom}"/${max_dom}/g namelist.input
 
     #configure i/o
     ln -s ${vog_root}/config/wrf/removefields.txt .
@@ -112,7 +114,6 @@ fi
 
 
 ###  Main  ###
-echo
 log_msg "Starting $0 ..."
 
 #create forecast label
@@ -139,12 +140,15 @@ log_msg "Starting real.exe"
 
 #run main wrf
 log_msg "Starting wrf.exe"
+#check that the real.exe completed ok
+if [ ! -f real.OK ]
+then
+    log_msg "ERROR: real.OK is missing! Check that real.exe completed successfully.  Aborting"
+    exit 1
+fi
 sbatch -W wrf.slurm
-[ $(ls -l wrfout_d01** | wc -l) -eq ${runhrs} ] && touch wrf.OK
+[ $(ls -l wrfout_d01* | wc -l) -eq ${runhrs} ] && touch wrf.OK
 
 
 # Clean up & exit
-[ -e real.OK -a -e wrf.OK ] && touch met.OK
-log_msg "$0 is done."
-echo
 exit 0

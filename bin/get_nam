@@ -77,7 +77,6 @@ else
 fi
 
 ###  Main  ###
-echo
 log_msg "Starting $0 ..."
 
 # Set date & time of forecast to download
@@ -94,7 +93,8 @@ srce_dir=ftp://${ncep_srv}${ncep_dir}
 dest_dir="$ibc_path/${datetime}"
 if [ -d ${dest_dir} -a -f ${dest_dir}/ibc.OK ]
 then
-	echo "IBCs have been previously downloaded and ibc.OK exists"
+	echo "IBCs have been previously downloaded and ibc.OK exists. Skipping."
+	exit 0
 else
 	mkdir -pv ${dest_dir}
 	echo "Creating directory for storing IBCs: ${dest_dir}"
@@ -131,7 +131,5 @@ done
 
 # Clean up & exit
 touch ibc.OK
-log_msg "$0 is done."
-echo
 exit 0
 

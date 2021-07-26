@@ -21,12 +21,10 @@ function log_msg() {
 }
 
 function link_grib() {
-    echo "Linking grib files into local run directory"
     ${wps_path}/link_grib.csh ${ibc_path}/${DATE}${HH}/*.grib2 . 
 }
 
 function link_tables() {
-    echo "Linking WPS tables into local run directory"
     #clean old links
     find -type l -delete
 
@@ -44,16 +42,15 @@ function link_tables() {
 }
 
 function config_namelist() {
-    echo "Configuring namelist.wps"
     #copy namelist.wps template
     cp ${vog_root}/config/wrf/namelist.wps .
 
     #edit start and end times of the run
     fcst_start=$(date -d "${DATE} ${HH}" +"%Y-%m-%d_%H")
     fcst_end=$(date -d "${DATE} ${HH} UTC+60hours" +"%Y-%m-%d_%H")
-    sed -i s/"sYYYY-MM-DD_HH"/${fcst_start}/g namelist.wps
-    sed -i s/"eYYYY-MM-DD_HH"/${fcst_end}/g namelist.wps
-
+    sed -i s/"{sYYYY-MM-DD_HH}"/${fcst_start}/g namelist.wps
+    sed -i s/"{eYYYY-MM-DD_HH}"/${fcst_end}/g namelist.wps
+    sed -i s/"{max_dom}"/${max_dom}/g namelist.wps
 }
 
 # Initialize variables
@@ -88,7 +85,6 @@ fi
 
 
 ###  Main  ###
-echo
 log_msg "Starting $0 ..."
 
 #create forecast label
@@ -97,7 +93,7 @@ datetime="${DATE}${HH}"
 #set up and navigate to main run directoryi
 cd ${run_dir}/${datetime}
 [[ ! -d wrf ]] || rm -r wrf
-mkdir -pv wrf
+mkdir -pv wrf > /dev/null
 cd wrf
 
 #check that the IBCs are available
@@ -114,24 +110,21 @@ link_grib
 config_namelist
 
 #run ungrib
-log_msg "Running ungrib"
+log_msg "Running ungrib: output saved to ungrib.log"
 ./ungrib.exe > /dev/null
 [ -f FILE:${fcst_end} ] && touch ungrib.OK
 
 #run geogrid
-log_msg "Running geogrid"
-./geogrid.exe
+log_msg "Running geogrid: output saved to geogrid.log"
+./geogrid.exe > /dev/null
 [ $(ls -l geo_em* | wc -l) -eq ${max_dom} ] && touch geogrid.OK
 
 #run metgrid
-log_msg "Running metgrid"
-./metgrid.exe
+log_msg "Running metgrid: output saved to metgrid.log"
+./metgrid.exe > /dev/null
 [ $(ls -l met_em*${fcst_end}* | wc -l) -eq ${max_dom} ] && touch metgrid.OK
 
 
 # Clean up & exit
 [ -e ungrib.OK -a -e geogrid.OK -a -e metgrid.OK ] && touch wps.OK
-log_msg "$0 is done."
-echo
 exit 0
-

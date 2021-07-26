@@ -1,8 +1,8 @@
 &share
  wrf_core = 'ARW',
- max_dom = {max_dom},
- start_date = '{sYYYY-MM-DD_HH}:00:00','{sYYYY-MM-DD_HH}:00:00', 
- end_date   = '{eYYYY-MM-DD_HH}:00:00','{eYYYY-MM-DD_HH}:00:00', 
+ max_dom = 2,
+ start_date = 'sYYYY-MM-DD_HH:00:00','sYYYY-MM-DD_HH:00:00', 	! do not change: required tags for run_wps
+ end_date   = 'eYYYY-MM-DD_HH:00:00','eYYYY-MM-DD_HH:00:00',    ! do not change: required tags for run_wps
  interval_seconds = 3600,
  io_form_geogrid = 2,
  !subgrid_ratio_x = 10,
@@ -10,16 +10,15 @@
 /
 
 &geogrid
-!------for nested runs edit manually--------
  parent_id         =   0,   1,
  parent_grid_ratio =   1,   2,
  i_parent_start    =   1,   158,
  j_parent_start    =   1,   15,
- e_we              =   460, 121,
- e_sn              =   300, 111,
+ e_we              =   230, 121,
+ e_sn              =   150, 111,
  geog_data_res     =  '30s','30s',
- dx = 1500,
- dy = 1500,
+ dx = 3000,
+ dy = 3000,
  map_proj = 'mercator',
  ref_lat   =  20.5,
  ref_lon   = -157.5,

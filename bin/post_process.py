@@ -1,8 +1,8 @@
 #!/usr/bin/python3.7
  
-# The  script pulls emissions data from HVO-API
+# Script for generating hysplit ensemble averages, station traces and POEs
 
-__author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
+__author__"Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
 __date__="July 2021"
 
 from set_vog_env import *
@@ -22,7 +22,7 @@ def ensmean():
 	os.chdir(os.environ['hys_rundir'])
 	os.system('find -type l -delete')
 
-	#TODO check that that dispersion complete
+	#TODO check that that dispersion completed
 
 	#link enecutables
 	conprob = os.path.join(os.environ['hys_path'],'exec','conprob')
@@ -51,7 +51,6 @@ def main():
 	ensmean()
 
 	#create POE for user-defined thresholds, if requested 
-	
 
 	#create station traces for user-defined stations, if requested
 
