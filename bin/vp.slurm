@@ -5,8 +5,9 @@
 #SBATCH --time=0-03:00:00
 ##SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=12G
+#SBATCH --exclude=node-[0012-0021]
 
 module purge
 source ~/.bash_profile
 
-python3.7 vog-run -d 20210101 00
+python3.7 vog-run -d 20210101 12

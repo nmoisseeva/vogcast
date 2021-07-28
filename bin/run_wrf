@@ -147,8 +147,9 @@ then
     exit 1
 fi
 sbatch -W wrf.slurm
-[ $(ls -l wrfout_d01* | wc -l) -eq ${runhrs} ] && touch wrf.OK
+[ $(ls -l wrfout_d01* | wc -l) -eq ${max_dom} ] && touch wrf.OK
 
+#flag met completiong (for future use if met doesn't come from wrf)
+[ -f wrf.OK ] && touch met.OK
 
-# Clean up & exit
 exit 0

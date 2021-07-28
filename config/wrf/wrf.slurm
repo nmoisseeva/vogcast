@@ -5,12 +5,12 @@
 #SBATCH --time=0-06:00:00 ## time format is DD-HH:MM:SS
 ## task-per-node x cpus-per-task should not typically exceed core count on an individual node
 
-#SBATCH --ntasks=171
+#SBATCH --ntasks=190
 ##SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
 
-#SBATCH --exclude=node-[0021,0269]
-#SBATCH --nodes=9
+#SBATCH --exclude=node-[0269]
+#SBATCH --nodes=10
 #SBATCH --ntasks-per-node=19
 ##SBATCH --mem=64G
 

@@ -24,7 +24,7 @@ def link_hysplit():
 
 	#set up necessary configuration files
 	os.system('find -type l -delete')
-	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err cdump* CONC.CFG')
+	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err cdump* CONC.CFG > /dev/null')
 	hys_config_path = os.path.join(os.environ['vog_root'],'config','hysplit')
 	os.system('cp ' + hys_config_path + '/CONTROL .')
 	os.system('cp ' + hys_config_path + '/SETUP.CFG .')
