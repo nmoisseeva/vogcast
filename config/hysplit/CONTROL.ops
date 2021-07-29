@@ -1,4 +1,4 @@
-{YYYY MM DD HH}
+0 0 0 {spinup}
 {src_cnt}
 {sources}
 {hys_hrs}
@@ -10,11 +10,11 @@
 SO2
 1.0
 {hys_hrs}
-00 00 00 {spinup} 00
+00 00 00 00 00
 SO4
 0.0
 {hys_hrs}
-00 00 00 {spinup} 00
+00 00 00 00 00
 1
 20.5 -156.5
 0.01 0.01

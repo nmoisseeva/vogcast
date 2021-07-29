@@ -24,7 +24,7 @@ def link_hysplit():
 
 	#set up necessary configuration files
 	os.system('find -type l -delete')
-	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err cdump* CONC.CFG > /dev/null')
+	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err cdump* CONC.CFG > /dev/null 2>&1')
 	hys_config_path = os.path.join(os.environ['vog_root'],'config','hysplit')
 	os.system('cp ' + hys_config_path + '/CONTROL .')
 	os.system('cp ' + hys_config_path + '/SETUP.CFG .')
@@ -57,12 +57,8 @@ def edit_hys_config():
 	json_data = read_run_json()
 	user = json_data['user_defined']
 
-	#edit CONTROL:date
-	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
-	hys_date = fc_date + dt.timedelta(hours=int(os.environ['spinup']))
-	hys_date_str = hys_date.strftime('%Y %m %d %H')
-	sed_command('{YYYY MM DD HH}', hys_date_str, 'CONTROL')
-	logging.debug('Dispersion start set to: %s' %hys_date_str)
+	#edit CONTROL: set start time relative to met
+	sed_command('{spinup}', '{:02d}'.format(int(os.environ['spinup'])) , 'CONTROL')
 	#edit CONTROL:source count
 	src_cnt = str(json_data['plumerise']['src_cnt'])
 	sed_command('{src_cnt}', src_cnt, 'CONTROL')
@@ -79,26 +75,25 @@ def edit_hys_config():
 	#copy all sources into CONTROL
 	sources = json_data['plumerise']['sources']
 	sed_command('{sources}', sources, 'CONTROL')
-	#offset emissions start from met
-	sed_command('{spinup}', '{:02d}'.format(int(os.environ['spinup'])) , 'CONTROL')
 	#set vertical motion option
 	sed_command('{vert_motion}', str(user['dispersion']['vert_motion']), 'CONTROL')
 
 
-	#edit SETUP.CFG
+	#edit SETUP.CFG	
 	sed_command('{freq}', os.environ['freq'], 'SETUP.CFG')
 	sed_command('{min_zi}', str(user['dispersion']['min_zi']), 'SETUP.CFG')
 
 	#link carryover vog
+	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
 	co_date = fc_date - dt.timedelta(hours=int(os.environ['freq']))
 	co_date_str = co_date.strftime('%Y%m%d%H')
 	carryover_file = os.path.join(user['dispersion']['carryover_path'],'PARINIT.{}'.format(co_date_str))
-	try:
+	if os.path.isfile(carryover_file):
 		os.symlink(carryover_file, 'PARINIT')
 		logging.debug('Linking carryover vog from: %s' %carryover_file)
-	except:
+	else:
 		logging.warning('WARNING: No carryover found from previous cycle')
-		pass
+
 	return
 	
 def sed_command(old_str, new_str, filename):

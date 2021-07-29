@@ -24,12 +24,27 @@ def ensmean():
 
 	#TODO check that that dispersion completed
 
-	#link enecutables
+	#link executables
 	conprob = os.path.join(os.environ['hys_path'],'exec','conprob')
 	os.symlink(conprob, './conprob')
 
 	#run hysplit averaging utility
 	os.system('./conprob -bcdump') 
+
+	return
+
+def stn_traces(tag,stn_file):
+	'''
+	Script extracts ensmean concentrations from user-defined stations
+	'''
+	#link executables
+	con2stn = os.path.join(os.enciron['hys_path'],'exec','con2stn')
+	os.symlink(con2stn, './con2stn')
+
+	#extract station data
+	con2stn_cmd = './con2stn -p1 -d2 -z2 -icmean -oHYSPLIT_so2.{}.{}.txt -s{} -xi'.format(os.environ['forecast'],tag,stn_file)
+	print(con2stn_cmd)
+	#os.system(con2stn_cmd)
 
 	return
 
@@ -53,7 +68,8 @@ def main():
 	#create POE for user-defined thresholds, if requested 
 
 	#create station traces for user-defined stations, if requested
-
+	pproc_settings = json_data['user-defined']['post_process']['stns']
+	stn_traces(pproc_settings['tag'],pproc_settings['stn_file'])
 
 	#update run json with extra data
 	#json_data['emissions'] = {'so2' : so2, 'obs_date': obs_date }
