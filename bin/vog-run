@@ -15,7 +15,7 @@ sys.path.append('.')
 from set_vog_env import *
 import os
 import logging
-import conv_arl, run_plumerise, get_hvo_emissions, run_dispersion
+import run_meteorology, conv_arl, run_plumerise, get_hvo_emissions, run_dispersion, post_process
 
 #set up logging
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='[%Y-%m-%d %H:%M:%S %Z]')
@@ -35,6 +35,8 @@ if __name__ == '__main__':
 		logging.info('Performing real-time run for: %s%s' %(rundate,args.cycle))	
 	forecast = '%s%s' %(rundate,args.cycle)
 	os.environ['forecast'] = forecast
+	os.environ['cycle'] = args.cycle
+	os.environ['rundate'] = rundate
 
 	#load configuration settings
 	settings = read_config(config_path)
@@ -52,10 +54,10 @@ if __name__ == '__main__':
 	#set variables for met modules
 	# includes: get_nam, run_wps, run_wrf
 	#TODO: combine into single python met module
-	set_env_var(settings['met'], 'max_dom')
-	set_env_var(settings['met'], 'ibc_path')
-	set_env_var(settings['met'], 'wps_path')
-	set_env_var(settings['met'], 'wrf_path')
+	set_env_var(settings, 'max_dom')
+	#set_env_var(settings['met'], 'ibc_path')
+	#set_env_var(settings['met'], 'wps_path')
+	#set_env_var(settings['met'], 'wrf_path')
 
 
 	#set vertiables for dispersion
@@ -70,19 +72,21 @@ if __name__ == '__main__':
 	os.environ['json_path'] = json_path
 
 	#download initial conditions
-	os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
-	logging.info('Completed IBC download')
+	#os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
 	
 	#run wps
 	#os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
-	logging.info('Completed WPS run')
+	#logging.info('Completed WPS run')
 	
 	#run wrf
 	#os.system('bash ./run_wrf -d %s %s' %(rundate,args.cycle))
-	logging.info('Completed WRF run')
+	#logging.info('Completed WRF run')
 
 	#convert wrf to arl files
-	conv_arl.main()
+	#conv_arl.main()
+	
+	#run meteorology module
+	run_meteorology.main()
 
 	#update emissions
 	get_hvo_emissions.main()
@@ -92,6 +96,9 @@ if __name__ == '__main__':
 
 	#run dispersion
 	run_dispersion.main()
+
+	#run post processing
+	post_process.main()
 	
 	#run graphics
 
