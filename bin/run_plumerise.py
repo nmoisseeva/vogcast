@@ -114,7 +114,7 @@ def main():
 	'''
 	elif source['pr_model']=='bl_mixing':
 		bl_mixing(source, emissions)
-	elif source['pr_model']=='bl_mixing':
+	elif source['pr_model']=='cwipp':
 		bl_mixing(source, emissions)
 	else:
 		#TODO: NOT TESTED FROM HERE ON

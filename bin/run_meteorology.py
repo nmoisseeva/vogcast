@@ -1,6 +1,6 @@
 #!/usr/bin/python3.7
  
-#This script run meteorology for the pipelene options: wrf, nam, none
+#This script runs meteorology for the pipelene options: 'wrf', 'nam', 'none'
 
 __author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
 __date__="July 2021"
@@ -12,10 +12,10 @@ import glob
 import conv_arl
 
 
-if __name__ == '__main__':
+def main():
 
 	#load main run json
-	json_data = read_run_json
+	json_data = read_run_json()
 	met_settings = json_data['user_defined']['met']
 
 	logging.info('Running meteorology: {}'.format(met_settings['model']))
@@ -23,9 +23,9 @@ if __name__ == '__main__':
 	if met_settings['model'] == 'wrf':
 
 		#set environmental variables for met
-		set_env_var(settings['met'], 'ibc_path')
-		set_env_var(settings['met'], 'wps_path')
-		set_env_var(settings['met'], 'wrf_path')
+		set_env_var(met_settings, 'ibc_path')
+		set_env_var(met_settings, 'wps_path')
+		set_env_var(met_settings, 'wrf_path')
 
 		#download initial conditions
 		os.system('bash ./get_nam -d %s %s' %(os.environ['rundate'],os.environ['cycle']))
@@ -53,3 +53,7 @@ if __name__ == '__main__':
 		#download nam data from arl (already in arl format)
 		#update arl path
 		logging.debug('NAM-based runs will go here')
+
+
+if __name__ == '__main__':
+        main()

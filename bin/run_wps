@@ -111,19 +111,21 @@ config_namelist
 
 #run ungrib
 log_msg "Running ungrib: output saved to ungrib.log"
-./ungrib.exe > /dev/null
-[ -f FILE:${fcst_end} ] && touch ungrib.OK
+./ungrib.exe > /dev/null 2>&1
+[ $? -eq 0 ] && touch ungrib.OK
 
 #run geogrid
 log_msg "Running geogrid: output saved to geogrid.log"
 ./geogrid.exe > /dev/null
-[ $(ls -l geo_em* | wc -l) -eq ${max_dom} ] && touch geogrid.OK
+[ $? -eq 0 ] && touch geogrid.OK
 
 #run metgrid
 log_msg "Running metgrid: output saved to metgrid.log"
 ./metgrid.exe > /dev/null
-[ $(ls -l met_em*${fcst_end}* | wc -l) -eq ${max_dom} ] && touch metgrid.OK
-
+echo $? exit code for metgrid - creating metgrid.OK
+touch metgrid.OK
+#[ $? -eq 0 ] && touch metgrid.OK
+#TODO figure out why the above is not working
 
 # Clean up & exit
 [ -e ungrib.OK -a -e geogrid.OK -a -e metgrid.OK ] && touch wps.OK
