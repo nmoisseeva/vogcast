@@ -38,6 +38,9 @@ def stn_traces(tag,stn_file):
 	Script extracts ensmean concentrations from user-defined stations
 	'''
 	logging.debug('...creating station traces')
+	
+	#define conversion factor from mg/m3 to ppm for SO2
+	conv = 0.382
 
 	#link executables
 	con2stn = os.path.join(os.environ['hys_path'],'exec','con2stn')
@@ -45,7 +48,7 @@ def stn_traces(tag,stn_file):
 
 	#extract station data
 	out_file = 'HYSPLIT_so2.{}.{}.txt'.format(os.environ['forecast'],tag)
-	con2stn_cmd = './con2stn -p1 -d2 -z2 -icmean -o{} -s{} -xi'.format(out_file,stn_file)
+	con2stn_cmd = './con2stn -p1 -d2 -z2 -c{} -icmean -o{} -s{} -xi'.format(conv,out_file,stn_file)
 	os.system(con2stn_cmd)
 
 	#copy to mkwc for web

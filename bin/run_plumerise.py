@@ -76,7 +76,7 @@ def static_area(source, emissions):
 	-must be ran with the following CONTROL settings: 150m mixing depth, met-driven vertical motion
 	'''
 	### inputs (conversion of emisisons ###
-	to_g_per_hr = 1./24 * 1e6 	#factor convert daily tomnnes to g per hour
+	to_g_per_hr = 1./24 * 1e9 	#converstion factor from tonnes/day to mg/hr
 	lvl = 100			#virtual source hegith in m AGL
 
 	### main ###
@@ -87,7 +87,7 @@ def static_area(source, emissions):
 
 	#append main run json with area source data
 	json_data = read_run_json()
-	json_data['plumerise'] = {'sources': lines, 'src_cnt' : len(lvl)}
+	json_data['plumerise'] = {'sources': lines, 'src_cnt' : 1}
 	update_run_json(json_data)
 
 	return

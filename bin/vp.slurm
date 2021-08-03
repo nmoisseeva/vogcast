@@ -10,4 +10,4 @@
 module purge
 source ~/.bash_profile
 
-python3.7 vog-run -d 20210103 00
+python3.7 vog-run -d 20210101 00

@@ -44,7 +44,7 @@ def main():
 	elif met_settings['model'] == 'none':
 	
 		#update run json with path to existing arl files
-		json_data['arl'] = met_settings['arl_path']
+		json_data['arl'] = met_settings['arl_paths']
 		update_run_json(json_data)
 
 	elif met_settings['model'] == 'nam':

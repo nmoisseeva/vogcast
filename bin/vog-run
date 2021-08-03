@@ -46,18 +46,11 @@ if __name__ == '__main__':
 	set_env_var(settings, 'run_dir')
 	set_env_var(settings, 'runhrs')
 	set_env_var(settings, 'freq')
+	set_env_var(settings, 'max_dom')
 	os.environ['config_path'] = os.path.join(os.environ['vog_root'], 'vog.config')
 
 	#set full run path
 	os.environ['run_path'] = os.path.join(os.environ['run_dir'],forecast)
-
-	#set variables for met modules
-	# includes: get_nam, run_wps, run_wrf
-	#TODO: combine into single python met module
-	set_env_var(settings, 'max_dom')
-	#set_env_var(settings['met'], 'ibc_path')
-	#set_env_var(settings['met'], 'wps_path')
-	#set_env_var(settings['met'], 'wrf_path')
 
 
 	#set vertiables for dispersion
@@ -70,20 +63,6 @@ if __name__ == '__main__':
 	create_run_dir()
 	json_path = create_run_json(config_path)
 	os.environ['json_path'] = json_path
-
-	#download initial conditions
-	#os.system('bash ./get_nam -d %s %s' %(rundate,args.cycle))
-	
-	#run wps
-	#os.system('bash ./run_wps -d %s %s' %(rundate,args.cycle))
-	#logging.info('Completed WPS run')
-	
-	#run wrf
-	#os.system('bash ./run_wrf -d %s %s' %(rundate,args.cycle))
-	#logging.info('Completed WRF run')
-
-	#convert wrf to arl files
-	#conv_arl.main()
 	
 	#run meteorology module
 	run_meteorology.main()

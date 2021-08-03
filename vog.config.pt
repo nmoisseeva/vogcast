@@ -1,0 +1,32 @@
+{
+	"vog_root" : "/home/moisseev/dev/vog-pipeline",
+	"run_dir" : "/home/moisseev/dev/vog-pipeline/run",
+	"runhrs": 60,
+	"freq" : 12,
+	"max_dom" : 1,
+	"met" : {
+		"model" : "none",
+		"arl_paths" : ".\\/\\nd01.arl"
+	},
+	"source" : {
+		"lat" : 19.4055,
+		"lon" : -155.2811,
+		"area" : 500,
+		"num_emit" : 1,
+		"pr_model" : "static_area"
+	},
+	"dispersion" : {
+		"hys_path" : "/home/moisseev/opt/hysplit.v5.1.0",
+		"carryover_path" : "/home/moisseev/data/carryover",
+		"spinup" : 6,
+		"vert_motion" : 0, 
+		"min_zi" : 150
+	},
+	"post_process" : {
+		"poe" : "[0.1, 1]",
+		"stns" : { 
+			"tag" : "vp-pt",
+			"stn_file" : "/home/moisseev/dev/vog-pipeline/config/hysplit/obs_stns.txt"
+		}
+	}
+}
