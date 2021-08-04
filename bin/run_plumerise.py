@@ -77,13 +77,12 @@ def static_area(source, emissions):
 	'''
 	### inputs (conversion of emisisons ###
 	to_g_per_hr = 1./24 * 1e9 	#converstion factor from tonnes/day to mg/hr
-	lvl = 100			#virtual source hegith in m AGL
 
 	### main ###
-	lat, lon, area = str(source['lat']), str(source['lon']), str(source['area'])
+	lat, lon, height, area = str(source['lat']), str(source['lon']), str(source['height']),  str(source['area'])
 	so2 = str(to_g_per_hr * emissions['so2'])
 
-	lines = lat + ' ' + lon + ' ' + str(lvl) + ' ' + so2 + ' ' + area
+	lines = lat + ' ' + lon + ' ' + height + ' ' + so2 + ' ' + area
 
 	#append main run json with area source data
 	json_data = read_run_json()

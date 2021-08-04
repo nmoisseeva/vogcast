@@ -5,8 +5,10 @@
 	"freq" : 12,
 	"max_dom" : 1,
         "met" : {
-                "model" : "none",
-                "arl_paths" : ".\\/\\nd01.arl"
+	        "model" : "wrf",
+                "wrf_path" : "/home/moisseev/opt/WRF-SFIRE",
+                "wps_path" : "/home/moisseev/opt/WRF-SFIRE/WPS",
+                "ibc_path" : "/home/moisseev/data/wrf_ibc/nam"
 	},
 	"source" : {
 		"lat" : 19.4055,
