@@ -9,6 +9,10 @@ from set_vog_env import *
 import logging
 import json
 import os
+import netCDF4 as nc
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import colors
 
 ### Functions ###
 
@@ -96,7 +100,45 @@ def to_netcdf(hysfile):
 	os.system(con2cdf4_cmd)
 
 
+def make_con_plots(nc_path,pollutant,fmt):
+	'''
+	Create surface concentration plots for all available timesteps
+	'''
+	logging.info('...creating surface concentration plots for:'.format(pollutant))
 
+	#open netcdf file
+	ds = nc.Dataset(nc_path)
+
+	#create a list of AQI levels to normlize colormap
+	bounds = [0,0.1,0.2,1,3,5,100]
+	lvls = []
+	for n, lvl in enumerate(bounds):
+		try:
+			lvls.extend(list(np.linspace(lvl,bounds[n+1],20, endpoint = False)))
+		except:
+			pass
+      
+	#make a custom colormap correspomding to AQI
+	colornames = ['limegreen','yellow','orange','orangered','rebeccapurple','mediumorchid']
+	cm = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=200)
+	norm = colors.BoundaryNorm(lvls, cm.N)	
+
+	#add alpha for near-zero values
+	cma = cm(np.arange(cm.N))
+	alphas = list(np.linspace(0,1,10)) + [1] * 190
+	cma[:,-1] = alphas
+
+	#combine into a new colormap with transparancy
+	aqi = colors.LinearSegmentedColormap.from_list('aqi',cma)
+	norm = colors.BoundaryNorm(lvls, aqi.N)
+
+	#loop through all frames and save
+	for t in range(ds.dimensions['time'].size):
+		img = plt.imshow(ds.variables[pollutant][t,0,:,:],cmap=aqi, origin='lower', norm = norm)
+		plt.axis('off')
+		plt.savefig('./{}_{}.{}'.format(os.environ['fcst'],t,fmt))
+
+	return
 
 def main():
 	'''
@@ -125,8 +167,7 @@ def main():
 
 
 	#create graphics
-	
-
+	make_con_plots('./cmean.nc','SO2','png')
 
 	logging.info('Post-processing complete')
 

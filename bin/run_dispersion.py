@@ -89,8 +89,11 @@ def edit_hys_config():
 	co_date_str = co_date.strftime('%Y%m%d%H')
 	carryover_file = os.path.join(user['dispersion']['carryover_path'],'PARINIT.{}'.format(co_date_str))
 	if os.path.isfile(carryover_file):
-		os.symlink(carryover_file, 'PARINIT')
+		#os.symlink(carryover_file, 'PARINIT')
 		logging.debug('Linking carryover vog from: %s' %carryover_file)
+		#loop through ensemble members
+		for i in range(1,28):
+			os.symlink(carryover_file, 'PARINIT.{:03d}'.format(i))
 	else:
 		logging.warning('WARNING: No carryover found from previous cycle')
 

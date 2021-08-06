@@ -19,14 +19,14 @@
 	"dispersion" : {
 		"hys_path" : "/home/moisseev/opt/hysplit.v5.1.0",
 		"carryover_path" : "/home/moisseev/data/carryover",
-		"spinup" : 4,
-		"vert_motion" : 1, 
+		"spinup" : 6,
+		"vert_motion" : 7, 
 		"min_zi" : 150
 	},
 	"post_process" : {
 		"poe" : "[0.1, 1]",
 		"stns" : { 
-			"tag" : "vp200",
+			"tag" : "vp200m7",
 			"stn_file" : "/home/moisseev/dev/vog-pipeline/config/hysplit/obs_stns.txt"
 		}
 	}
