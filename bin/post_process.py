@@ -13,6 +13,8 @@ import netCDF4 as nc
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import colors
+from scipy.ndimage import gaussian_filter
+import datetime as dt
 
 ### Functions ###
 
@@ -109,6 +111,15 @@ def make_con_plots(nc_path,pollutant,fmt):
 	#open netcdf file
 	ds = nc.Dataset(nc_path)
 
+	#extract dates and convert to datetime from serial format
+	def serial_date_to_string(srl_datetime):
+		dtstamp = dt.datetime(1970,1,1,0) + dt.timedelta(srl_datetime)
+		return dtstamp.strftime("%Y%m%d%H")
+
+	timedim = []
+	for item in ds.variables['time']:
+		timedim.append(serial_date_to_string(float(item.data)))
+			
 	#create a list of AQI levels to normlize colormap
 	bounds = [0,0.1,0.2,1,3,5,100]
 	lvls = []
@@ -132,12 +143,19 @@ def make_con_plots(nc_path,pollutant,fmt):
 	aqi = colors.LinearSegmentedColormap.from_list('aqi',cma)
 	norm = colors.BoundaryNorm(lvls, aqi.N)
 
-	#loop through all frames and save
-	for t in range(ds.dimensions['time'].size):
-		img = plt.imshow(ds.variables[pollutant][t,0,:,:],cmap=aqi, origin='lower', norm = norm)
+	#loop through all frames, smoothing and saving
+	for t,time in enumerate(timedim):
+		smooth_con = gaussian_filter(ds.variables[pollutant][t,0,:,:], sigma=2)
+		img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
+		#hide all padding, margins and axes
 		plt.axis('off')
-		plt.savefig('./{}_{}.{}'.format(os.environ['fcst'],t,fmt))
-
+		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+		plt.margins(0,0)
+		plt.gca().xaxis.set_major_locator(plt.NullLocator())
+		plt.gca().yaxis.set_major_locator(plt.NullLocator())
+		plt.savefig('./{}.{}'.format(time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
+		#plt.savefig('./{}.{}'.format(time,fmt), dpi=200, bbox_inches = 'tight', pad_inches = 0)
+		plt.close()
 	return
 
 def main():
@@ -167,6 +185,7 @@ def main():
 
 
 	#create graphics
+	#TODO move graphics and plotting into a separate module to run in parallel
 	make_con_plots('./cmean.nc','SO2','png')
 
 	logging.info('Post-processing complete')

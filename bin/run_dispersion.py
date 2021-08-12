@@ -62,15 +62,14 @@ def edit_hys_config():
 	#edit CONTROL:source count
 	src_cnt = str(json_data['plumerise']['src_cnt'])
 	sed_command('{src_cnt}', src_cnt, 'CONTROL')
-	logging.debug('Source count set to: %s' %src_cnt)
+	logging.debug('...source count set to: %s' %src_cnt)
 	#edit CONTROL: hysplit run hours
 	hys_hrs = str(user['runhrs'] - int(os.environ['spinup']))
 	sed_command('{hys_hrs}', hys_hrs, 'CONTROL')
-	logging.debug('Hysplit run hours set to: %s ' %hys_hrs)
+	logging.debug('...Hysplit run hours set to: %s ' %hys_hrs)
 	#edit CONTROL max domain
 	sed_command('{max_dom}', os.environ['max_dom'], 'CONTROL')
 	#copy arl path data into CONTROL
-	logging.debug(json_data['arl'])
 	sed_command('{arl_paths}', json_data['arl'], 'CONTROL')
 	#copy all sources into CONTROL
 	sources = json_data['plumerise']['sources']
@@ -90,12 +89,12 @@ def edit_hys_config():
 	carryover_file = os.path.join(user['dispersion']['carryover_path'],'PARINIT.{}'.format(co_date_str))
 	if os.path.isfile(carryover_file):
 		#os.symlink(carryover_file, 'PARINIT')
-		logging.debug('Linking carryover vog from: %s' %carryover_file)
+		logging.debug('...linking carryover vog from: %s' %carryover_file)
 		#loop through ensemble members
 		for i in range(1,28):
 			os.symlink(carryover_file, 'PARINIT.{:03d}'.format(i))
 	else:
-		logging.warning('WARNING: No carryover found from previous cycle')
+		logging.warning('...WARNING: No carryover found from previous cycle')
 
 	return
 	
@@ -117,7 +116,7 @@ def run_ensemble():
 	'''
 
 	#start the run
-	logging.info('Submitting hysplit ensemble to slurm')
+	logging.info('...submitting hysplit ensemble to slurm')
 	os.system('sbatch -W hysplit.slurm')
 
 	#make sure all members completed
@@ -142,7 +141,7 @@ def save_carryover():
 
 	#make a copy
 	os.system('cp {} {}'.format(parfile,save_path))
-	logging.debug('Saving carryover: %s as %s' %(parfile, save_path))
+	logging.debug('...saving carryover: %s as %s' %(parfile, save_path))
 
 	return
 
