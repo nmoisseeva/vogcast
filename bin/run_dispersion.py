@@ -31,7 +31,8 @@ def link_hysplit():
 
 	#link static config files
 	os.symlink(hys_config_path + '/CHEMRATE.TXT', 'CHEMRATE.TXT')
-	os.symlink(hys_config_path + '/hysplit.slurm', 'hysplit.slurm')
+	slurm_config_path = os.path.join(os.environ['vog_root'],'config','slurm')
+	os.symlink(slurm_config_path + '/hysplit.slurm', 'hysplit.slurm')
 
 	#link bdyfiles
 	#TODO get from wrf: https://www.ready.noaa.gov/documents/TutorialX/html/emit_fine.html

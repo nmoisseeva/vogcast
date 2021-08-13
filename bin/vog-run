@@ -47,6 +47,8 @@ if __name__ == '__main__':
 	set_env_var(settings, 'runhrs')
 	set_env_var(settings, 'freq')
 	set_env_var(settings, 'max_dom')
+
+	#TODO this needs to be served and input argument
 	os.environ['config_path'] = os.path.join(os.environ['vog_root'], 'vog.config')
 
 	#set full run path
@@ -55,6 +57,7 @@ if __name__ == '__main__':
 
 	#set vertiables for dispersion
 	#includes: conv_arl, run_dispersion
+	#TODO move this to dispersion module
 	set_env_var(settings['dispersion'], 'hys_path')
 	set_env_var(settings['dispersion'], 'spinup')
 	os.environ['hys_rundir'] = os.path.join(os.environ['run_path'],'hysplit')

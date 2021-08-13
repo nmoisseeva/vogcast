@@ -1,20 +1,16 @@
 #!/usr/bin/python3.7
  
-# Script for generating hysplit ensemble averages, station traces and POEs
+# Script for generating hysplit ensemble averages, station traces, POEs, archiving and web display
 
 __author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
 __date__="July 2021"
 
 from set_vog_env import *
+from graphics import*
+import to_webserver
 import logging
 import json
 import os
-import netCDF4 as nc
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib import colors
-from scipy.ndimage import gaussian_filter
-import datetime as dt
 
 ### Functions ###
 
@@ -58,15 +54,12 @@ def ensmean():
 
 	return
 
-def stn_traces(tag,stn_file):
+def stn_traces(tag, stn_file, conv):
 	'''
 	Script extracts ensmean concentrations from user-defined stations
 	'''
 	logging.debug('...creating station traces')
 	
-	#define conversion factor from mg/m3 to ppm for SO2
-	conv = 0.382
-
 	#link executables
 	link_exec('con2stn')
 	#con2stn = os.path.join(os.environ['hys_path'],'exec','con2stn')
@@ -78,6 +71,7 @@ def stn_traces(tag,stn_file):
 	os.system(con2stn_cmd)
 
 	#copy to webserver (mkwc)
+	#TODO remove hardcoding and link to config json inputs once operational
 	mkwc_file = 'hysplit.haw.{}.so2.{}.txt'.format(tag,os.environ['forecast'])
 	scp_cmd = 'scp {} vmap@mkwc2.ifa.hawaii.edu:www/hysplit/text/{}'.format(out_file, mkwc_file)
 	os.system(scp_cmd)
@@ -101,63 +95,6 @@ def to_netcdf(hysfile):
 	con2cdf4_cmd = './con2cdf4 {} {}.nc'.format(hysfile, hysfile)
 	os.system(con2cdf4_cmd)
 
-
-def make_con_plots(nc_path,pollutant,fmt):
-	'''
-	Create surface concentration plots for all available timesteps
-	'''
-	logging.info('...creating surface concentration plots for:'.format(pollutant))
-
-	#open netcdf file
-	ds = nc.Dataset(nc_path)
-
-	#extract dates and convert to datetime from serial format
-	def serial_date_to_string(srl_datetime):
-		dtstamp = dt.datetime(1970,1,1,0) + dt.timedelta(srl_datetime)
-		return dtstamp.strftime("%Y%m%d%H")
-
-	timedim = []
-	for item in ds.variables['time']:
-		timedim.append(serial_date_to_string(float(item.data)))
-			
-	#create a list of AQI levels to normlize colormap
-	bounds = [0,0.1,0.2,1,3,5,100]
-	lvls = []
-	for n, lvl in enumerate(bounds):
-		try:
-			lvls.extend(list(np.linspace(lvl,bounds[n+1],20, endpoint = False)))
-		except:
-			pass
-      
-	#make a custom colormap correspomding to AQI
-	colornames = ['limegreen','yellow','orange','orangered','rebeccapurple','mediumorchid']
-	cm = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=200)
-	norm = colors.BoundaryNorm(lvls, cm.N)	
-
-	#add alpha for near-zero values
-	cma = cm(np.arange(cm.N))
-	alphas = list(np.linspace(0,1,10)) + [1] * 190
-	cma[:,-1] = alphas
-
-	#combine into a new colormap with transparancy
-	aqi = colors.LinearSegmentedColormap.from_list('aqi',cma)
-	norm = colors.BoundaryNorm(lvls, aqi.N)
-
-	#loop through all frames, smoothing and saving
-	for t,time in enumerate(timedim):
-		smooth_con = gaussian_filter(ds.variables[pollutant][t,0,:,:], sigma=2)
-		img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
-		#hide all padding, margins and axes
-		plt.axis('off')
-		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-		plt.margins(0,0)
-		plt.gca().xaxis.set_major_locator(plt.NullLocator())
-		plt.gca().yaxis.set_major_locator(plt.NullLocator())
-		plt.savefig('./{}.{}'.format(time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
-		#plt.savefig('./{}.{}'.format(time,fmt), dpi=200, bbox_inches = 'tight', pad_inches = 0)
-		plt.close()
-	return
-
 def main():
 	'''
 	Main script for dispersion post-processing. 
@@ -171,6 +108,8 @@ def main():
 	logging.info('Running post-processing steps')
 
 	json_data = read_run_json()
+	pproc_settings = json_data['user_defined']['post_process']
+
 
 	#create ensemble average, convert it to netcdf
 	ensmean()
@@ -179,14 +118,33 @@ def main():
 	#TODO create POE for user-defined thresholds, if requested 
 
 	#create station traces for user-defined stations, if requested
-	#TODO make this optional
-	pproc_settings = json_data['user_defined']['post_process']['stns']
-	stn_traces(pproc_settings['tag'],pproc_settings['stn_file'])
+	try:
+		stn_settings = pproc_settings['stns']
+		for pollutant in stn_settings:
+			conv = pproc_settings['conversion'][pollutant]
+			stn_traces(stn_settings[pollutant]['tag'],stn_settings[pollutant]['stn_file'], conv)
+	except:
+		logging.info('No station traces requested in config file')
 
 
 	#create graphics
 	#TODO move graphics and plotting into a separate module to run in parallel
-	make_con_plots('./cmean.nc','SO2','png')
+	try:
+		plot_settings = pproc_settings['plots']
+		for pollutant in plot_settings['concentration']:
+			conv = pproc_settings['conversion'][pollutant]
+			make_con_plots('./cmean.nc', pollutant, 'png', conv)
+	except:
+		logging.info('No plots requested in config file')	
+
+	
+	#extras: archive and move to webserver if requested
+	try:
+		web_path = json_data['user_defined']['extras']['web']
+		to_webserver.main(web_path)
+	except:
+		logging.info('No copying to webserver requested')
+
 
 	logging.info('Post-processing complete')
 
