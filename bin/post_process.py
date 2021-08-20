@@ -141,6 +141,7 @@ def main():
 	#extras: archive and move to webserver if requested
 	try:
 		web_path = json_data['user_defined']['extras']['web']
+		logging.debug(web_path)
 		to_webserver.main(web_path)
 	except:
 		logging.info('No copying to webserver requested')

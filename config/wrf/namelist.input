@@ -30,7 +30,7 @@
  time_step                           = 9,
  max_dom                             = {max_dom},
  e_we                                = 460, 
- e_sn                                = 300, 	
+ e_sn                                = 330, 	
  e_vert                              = 55,
  p_top_requested                     = 5000,
  num_metgrid_levels                  = 43,
@@ -51,7 +51,7 @@
  !------adaptive timestep options------
  use_adaptive_time_step              = .true.,
  step_to_output_time                 = .true.,
- max_time_step                       = 18,
+ max_time_step                       = 25,
  min_time_step                       = 1,
  starting_time_step                  = 9,
  /

@@ -73,14 +73,13 @@ def static_line(source, emissions):
 def static_area(source, emissions):
 	'''
 	New "low buoyancy" approach for a single level area source
-	-must be ran with the following CONTROL settings: 150m mixing depth, met-driven vertical motion
 	'''
 	### inputs (conversion of emisisons ###
-	to_g_per_hr = 1./24 * 1e9 	#converstion factor from tonnes/day to mg/hr
+	to_mg_per_hr = (1./24) * 1e9 	#converstion factor from tonnes/day to mg/hr
 
 	### main ###
 	lat, lon, height, area = str(source['lat']), str(source['lon']), str(source['height']),  str(source['area'])
-	so2 = str(to_g_per_hr * emissions['so2'])
+	so2 = str(to_mg_per_hr * emissions['so2'])
 
 	lines = lat + ' ' + lon + ' ' + height + ' ' + so2 + ' ' + area
 

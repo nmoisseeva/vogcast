@@ -53,6 +53,7 @@ def make_aqi_cmap(pollutant):
 	aqi = colors.LinearSegmentedColormap.from_list('aqi',cma)
 	norm = colors.BoundaryNorm(lvls, aqi.N)	
 	
+	logging.debug('...created colormap')
 	return aqi, norm
 
 
@@ -93,6 +94,7 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
+		logging.debug('plot number: {}'.format(t))
 		smooth_con = gaussian_filter(converted_fields[t,:,:], sigma=2)
 		img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
 		#hide all padding, margins and axes
@@ -104,6 +106,6 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 		plt.savefig('./{}_{}.{}'.format(pollutant,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
 		#plt.savefig('./{}.{}'.format(time,fmt), dpi=200, bbox_inches = 'tight', pad_inches = 0)
 		plt.close()
-
+	logging.debug('...created plots')
 	return
 

@@ -5,15 +5,15 @@
 	"freq" : 12,
 	"max_dom" : 1,
         "met" : {
-	        "model" : "wrf",
+                "model" : "wrf",
                 "wrf_path" : "/home/moisseev/opt/WRF-SFIRE",
                 "wps_path" : "/home/moisseev/opt/WRF-SFIRE/WPS",
                 "ibc_path" : "/home/moisseev/data/wrf_ibc/nam"
-	},
+        },
 	"source" : {
 		"lat" : 19.4055,
 		"lon" : -155.2811,
-		"height" : 200,
+		"height" : 600,
 		"area" : 500,
 		"num_emit" : 1,
 		"pr_model" : "static_area"
@@ -21,15 +21,31 @@
 	"dispersion" : {
 		"hys_path" : "/home/moisseev/opt/hysplit.v5.1.0",
 		"carryover_path" : "/home/moisseev/data/carryover",
-		"spinup" : 4,
-		"vert_motion" : 1, 
+		"spinup" : 6,
+		"vert_motion" : 2, 
 		"min_zi" : 150
 	},
 	"post_process" : {
-		"poe" : "[0.1, 1]",
-		"stns" : { 
-			"tag" : "vp200",
-			"stn_file" : "/home/moisseev/dev/vog-pipeline/config/hysplit/obs_stns.txt"
-		}
+		"conversion" : {
+			"SO2" : 0.382,
+			"SO4": 1000
+		},
+		"poe" :  {
+			"SO2" : [0.1, 1],
+			"SO4" : [12, 55]
+		},
+		"stns" : {
+			"SO2" : { 
+				"tag" : "vp600m2s6",
+				"stn_file" : "/home/moisseev/dev/vog-pipeline/config/hysplit/obs_stns.txt"
+			}
+		},
+		"plots" : { 
+			"concentration" : ["SO2","SO4"]
+		}	
+	},
+	"extras" : {
+		"web" : "vmap@mkwc2.ifa.hawaii.edu:/home/vmap/www/new/data",
+		"archive" : "vmap@thredds.soest.hawaii.edu:/export/archive/cluster"
 	}
 }
