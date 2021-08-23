@@ -129,21 +129,22 @@ def main():
 
 	#create graphics
 	#TODO move graphics and plotting into a separate module to run in parallel
-	try:
+	if 'plots' in pproc_settings.keys():
 		plot_settings = pproc_settings['plots']
 		for pollutant in plot_settings['concentration']:
 			conv = pproc_settings['conversion'][pollutant]
 			make_con_plots('./cmean.nc', pollutant, 'png', conv)
-	except:
+	else:
 		logging.info('No plots requested in config file')	
 
 	
 	#extras: archive and move to webserver if requested
-	try:
-		web_path = json_data['user_defined']['extras']['web']
-		logging.debug(web_path)
-		to_webserver.main(web_path)
-	except:
+	if 'extras' in json_data['user_defined'].keys():
+		if 'web' in json_data['user_defined']['extras'].keys():
+			web_path = json_data['user_defined']['extras']['web']
+			logging.debug(web_path)
+			to_webserver.main(web_path)
+	else:
 		logging.info('No copying to webserver requested')
 
 

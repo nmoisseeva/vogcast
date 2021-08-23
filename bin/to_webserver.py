@@ -31,9 +31,7 @@ def make_fcst_json(json_name):
 	#create a tag for the first animation slide
 	spinup = int(os.environ['spinup'])
 	t0 = dt.datetime.strptime(fcstjson['forecast'],'%Y%M%d%H') + dt.timedelta(hours = spinup)
-	fcstjson['firstouput'] = dt.datetime.strftime(t0, '%Y%M%d%H') 
-
-	logging.debug(fcstjson)
+	fcstjson['firstoutput'] = dt.datetime.strftime(t0, '%Y%M%d%H') 
 
 	#create time interval for the timedimension slider
 	runhrs = int(os.environ['runhrs'])
@@ -42,8 +40,6 @@ def make_fcst_json(json_name):
 	end_str = dt.datetime.strftime(end, '%Y-%M-%dT%H')
 	fcstjson['timeInterval'] = start_str + end_str
 	
-	logging.debug(fcstjson)
-
 	#WARNING: this is hardcoded to match the hysplit CONTROL file
 	fcstjson['bounds'] = {}
 	fcstjson['bounds']['minlat'] = 18
@@ -73,14 +69,14 @@ def main(web_path):
 	#create a config json for Leaflet display
 	json_name = 'vogfcst.json'
 	logging.debug('...starting on json')
-	make_forecast_json(json_name)
+	make_fcst_json(json_name)
 
 	#copy json and pngs to webserver
 	json_cmd = 'scp {} {}/json/.'.format(json_name, web_path)
 	logging.debug('...copying json: {}'.format(json_cmd))
 	os.system(json_cmd)
 
-	png_cmd = 'scp *.png {}/png/.'.format(web_path)
+	png_cmd = 'scp *.png {}/png/con/.'.format(web_path)
 	logging.debug('...copying pngs: {}'.format(png_cmd))
 	os.system(png_cmd)
 

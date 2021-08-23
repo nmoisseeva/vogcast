@@ -15,6 +15,7 @@ sys.path.append('.')
 from set_vog_env import *
 import os
 import logging
+import datetime as dt
 import run_meteorology, conv_arl, run_plumerise, get_hvo_emissions, run_dispersion, post_process
 
 #set up logging
@@ -31,7 +32,7 @@ if __name__ == '__main__':
 		rundate = args.date
 		logging.info('Performing historic run for: %s%s' %(rundate, args.cycle))	
 	else:
-		rundate = datetime.datetime.now().strftime('%Y%m%d')	
+		rundate = dt.datetime.now().strftime('%Y%m%d')	
 		logging.info('Performing real-time run for: %s%s' %(rundate,args.cycle))	
 	forecast = '%s%s' %(rundate,args.cycle)
 	os.environ['forecast'] = forecast
@@ -53,7 +54,7 @@ if __name__ == '__main__':
 
 	#set full run path
 	os.environ['run_path'] = os.path.join(os.environ['run_dir'],forecast)
-
+	os.environ['bin'] = os.path.join(os.environ['vog_root'],'bin')
 
 	#set vertiables for dispersion
 	#includes: conv_arl, run_dispersion

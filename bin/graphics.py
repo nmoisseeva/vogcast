@@ -27,8 +27,8 @@ def make_aqi_cmap(pollutant):
 		#so2 aqi is in ppm - ensure corerct conversion in config
 		bounds = [0, 0.1, 0.2, 1, 3, 5, 100]
 	elif pollutant.lower() =='so4':
-		#so3 standards are in ug/m3 - ensure correct conversion in config
-		bounds = [0, 12, 35, 55, 150, 250, 100]
+		#so4 standards are in ug/m3 - ensure correct conversion in config
+		bounds = [0, 12, 35, 55, 150, 250, 1000]
 	else:
 		logging.error('ERROR: pollutant not recognized - {}. Available options: "so2", "so4"'.format(pollutant))	
 
@@ -53,7 +53,6 @@ def make_aqi_cmap(pollutant):
 	aqi = colors.LinearSegmentedColormap.from_list('aqi',cma)
 	norm = colors.BoundaryNorm(lvls, aqi.N)	
 	
-	logging.debug('...created colormap')
 	return aqi, norm
 
 
@@ -94,7 +93,6 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
-		logging.debug('plot number: {}'.format(t))
 		smooth_con = gaussian_filter(converted_fields[t,:,:], sigma=2)
 		img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
 		#hide all padding, margins and axes
@@ -106,6 +104,5 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 		plt.savefig('./{}_{}.{}'.format(pollutant,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
 		#plt.savefig('./{}.{}'.format(time,fmt), dpi=200, bbox_inches = 'tight', pad_inches = 0)
 		plt.close()
-	logging.debug('...created plots')
 	return
 

@@ -28,14 +28,14 @@ def main():
 		set_env_var(met_settings, 'wrf_path')
 
 		#download initial conditions
-		os.system('bash ./get_nam -d %s %s' %(os.environ['rundate'],os.environ['cycle']))
+		os.system('bash %s/get_nam -d %s %s' %(os.environ['bin'],os.environ['rundate'],os.environ['cycle']))
 
 		#run wps
-		os.system('bash ./run_wps -d %s %s' %(os.environ['rundate'],os.environ['cycle']))
+		os.system('bash %s/run_wps -d %s %s' %(os.environ['bin'],os.environ['rundate'],os.environ['cycle']))
 		logging.info('Completed WPS run')
 
 		#run wrf
-		os.system('bash ./run_wrf -d %s %s' %(os.environ['rundate'],os.environ['cycle']))
+		os.system('bash %s/run_wrf -d %s %s' %(os.environ['bin'],os.environ['rundate'],os.environ['cycle']))
 		logging.info('Completed WRF run')
 
 		#convert wrf to arl
