@@ -8,7 +8,7 @@ import json
 import sys, getopt
 import argparse
 import logging
-
+import hjson
  ### Fucntions ###
 
 def read_config(config_path):
@@ -19,7 +19,7 @@ def read_config(config_path):
 	f = open(config_path)
 
 	#return json opject as a dictionary
-	settings = json.load(f)
+	settings = hjson.load(f)
 
 	#close file and return settings
 	f.close()

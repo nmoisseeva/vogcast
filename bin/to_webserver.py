@@ -34,10 +34,10 @@ def make_fcst_json(json_name):
 	fcstjson['firstoutput'] = dt.datetime.strftime(t0, '%Y%M%d%H') 
 
 	#create time interval for the timedimension slider
-	runhrs = int(os.environ['runhrs'])
-	start_str = dt.datetime.strftime(t0, '%Y-%M-%dT%H/')
-	end = t0 + dt.timedelta(hours = runhrs)
-	end_str = dt.datetime.strftime(end, '%Y-%M-%dT%H')
+	hys_hrs = int(os.environ['runhrs']) - int(os.environ['spinup'])
+	start_str = dt.datetime.strftime(t0, '%Y-%M-%dT%H:00:00Z/')
+	end = t0 + dt.timedelta(hours = hys_hrs)
+	end_str = dt.datetime.strftime(end, '%Y-%M-%dT%H:00:00Z')
 	fcstjson['timeInterval'] = start_str + end_str
 	
 	#WARNING: this is hardcoded to match the hysplit CONTROL file
