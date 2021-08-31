@@ -16,19 +16,34 @@ import datetime as dt
 
 ### Functions ###
 
+def make_poe_cmap():
+	'''
+	Create a colorbar for POE
+	'''
+	
+	span = np.array([[0, 100]])
+	img = plt.imshow(span, cmap='YlOrBr')
+	plt.gca().set_visible(False)
+	cbar = plt.colorbar(orientation='horizontal', label='Probability of Exceedance (%)', ticks=np.arange(0, 101,10))
+	#save if necessary
+	#plt.savefig('colorbar_POE.png', dpi=100, bbox_inches = 'tight', pad_inches = 0.1)
+
+	return cbar
 
 def make_aqi_cmap(pollutant):
 	'''
-	Create a custom colormap corresponding to so2 aqi levels
+	Create a custom colormap corresponding to aqi levels
 	'''
  	
 	#create a list of AQI levels to normlize colormap
 	if pollutant.lower() =='so2':
 		#so2 aqi is in ppm - ensure corerct conversion in config
 		bounds = [0, 0.1, 0.2, 1, 3, 5, 100]
+		clabel = r'SO$_2$ (ppm)'
 	elif pollutant.lower() =='so4':
 		#so4 standards are in ug/m3 - ensure correct conversion in config
 		bounds = [0, 12, 35, 55, 150, 250, 1000]
+		clabel = r'SO$_4$ ($\mu$g/m$^3$)'
 	else:
 		logging.error('ERROR: pollutant not recognized - {}. Available options: "so2", "so4"'.format(pollutant))	
 
@@ -52,7 +67,16 @@ def make_aqi_cmap(pollutant):
 	#combine into a new colormap with transparancy
 	aqi = colors.LinearSegmentedColormap.from_list('aqi',cma)
 	norm = colors.BoundaryNorm(lvls, aqi.N)	
-	
+
+	#save colormap
+	#cmplot = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=len(bounds)-1)
+	#span = np.array([[0, bounds[-1]]])
+	#img = plt.imshow(span, cmap=cmplot)
+	#plt.gca().set_visible(False)
+	#cbar = plt.colorbar(orientation='horizontal', extend='max', label=clabel, ticks=np.arange(0, max(bounds),max(bounds)/(len(bounds)-1)))
+	#cbar.ax.set_xticklabels(bounds[:-1]) 
+	#plt.savefig('colorbar_{}.png'.format(pollutant),bbox_inches = 'tight', pad_inches = 0.1, dpi=200)
+
 	return aqi, norm
 
 
@@ -106,3 +130,41 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 		plt.close()
 	return
 
+
+def make_poe_plots(nc_prefix, pollutant, fmt):
+	'''
+	Create surface POE plots
+	'''
+	
+	logging.info('...creating surface POE plots for: {}'.format(pollutant))
+	
+	#manually create tags to match HYSPLIT's very particular namting
+	hys_keys = ['CM01', 'CM10', 'CM00']
+
+	#loop through thresholds
+	for i in range(3):
+		tag = 'lvl{}'.format(str(i+1))
+		poe_file = nc_prefix + tag + '_' + pollutant + '.nc'
+		
+
+		#open netcdf file
+		ds = nc.Dataset(poe_file)
+		tdim = get_tdim(ds)
+		
+		logging.debug(ds.variables)	
+		poe_field = ds.variables[hys_keys[i]][:,0,:,:]
+	
+		#loop through all frams with smoothing
+		for t,time in enumerate(tdim):
+			smooth_poe = gaussian_filter(poe_field[t,:,:], sigma=2)
+			img = plt.imshow(smooth_poe, cmap='YlOrBr', vmin=0, vmax=100)
+			#hide all padding, margins and axes
+			plt.axis('off')
+			plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+			plt.margins(0,0)
+			plt.gca().xaxis.set_major_locator(plt.NullLocator())
+			plt.gca().yaxis.set_major_locator(plt.NullLocator())
+			plt.savefig('./{}_{}_{}.{}'.format(pollutant,tag,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
+			plt.close()
+	
+	return

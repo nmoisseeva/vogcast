@@ -27,10 +27,14 @@ def make_fcst_json(json_name):
 	fcstjson = {}
 	fcstjson['forecast'] = os.environ['forecast']
 	
+	#create some vars for easy info display
+	fcstdate = dt.datetime.strptime(fcstjson['forecast'],'%Y%M%d%H')
+	fcstjson['date'] = dt.datetime.strftime(fcstdate, '%Y-%M-%d')
+	fcstjson['cycle'] = fcstjson['forecast'][-2:] + 'Z'
 
 	#create a tag for the first animation slide
 	spinup = int(os.environ['spinup'])
-	t0 = dt.datetime.strptime(fcstjson['forecast'],'%Y%M%d%H') + dt.timedelta(hours = spinup)
+	t0 = fcstdate + dt.timedelta(hours = spinup)
 	fcstjson['firstoutput'] = dt.datetime.strftime(t0, '%Y%M%d%H') 
 
 	#create time interval for the timedimension slider

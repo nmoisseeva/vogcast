@@ -10,22 +10,22 @@
 	freq : 12						#forecast cycle frequency
 	max_dom : 1						#total number of met domains
         met : {
+		/*
 		#Met Option "wrf": use WRF model
                 model : "wrf"					#met option (str): "wrf"/"nam"/"none"
                 wrf_path : "/home/moisseev/opt/WRF-SFIRE"	#path to wrf model (str) 
                 wps_path : "/home/moisseev/opt/WRF-SFIRE/WPS"	#path to wps (str)
                 ibc_path : "/home/moisseev/data/wrf_ibc/nam"	#path to initial conditions (str)
+		*/
 		
-		/*
 		#Met Option: "none": specify where to find arl files
                 model : "none"					#met option (str): "wrf"/"nam"/"none"
-                arl_paths :					#hysplit format (use pythonic block comment): path \n filename
-		'''
-		./
-		d01.arl
-		''' 
-		#".\\/\\nd01.arl" 
-		*/
+                arl_paths : ".\\/\\nd01.arl"			#hysplit format (use pythonic block comment): path \n filename
+		#'''
+		#./
+		#d01.arl
+		#''' 
+	
        },
 	source : {
 		lat : 19.4055 				#emissions source lat
@@ -59,7 +59,7 @@
 		},
 		plots : { 				#specify which plots to create
 			concentration : ["SO2","SO4"]	#list of strings 
-			poe : ["SO2","SO4"]		#list of strings	
+			poe : ["SO2"]		#list of strings	
 		}	
 	},
 	extras : {					#other actions, assumes keychain access

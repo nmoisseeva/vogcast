@@ -31,12 +31,10 @@ def link_exec(hysexec):
 		os.symlink(exec_path, local_path)
 	return
 
-def ensmean():
+def ensmean(pproc_settings):
 	'''
 	Run ensemble averaging
 	'''
-	logging.info('...creating ensemble average')
-
 	#move into dispersion working directory, clean up
 	os.chdir(os.environ['hys_rundir'])
 	os.system('find -type l -delete')
@@ -46,9 +44,17 @@ def ensmean():
 	#link executables
 	link_exec('conprob')
 	
-	#run hysplit averaging utility
-	os.system('./conprob -bcdump') 
+	for iP, pollutant in enumerate(pproc_settings['conversion']):
+		logging.info('...creating ensemble average: {}'.format(pollutant))
+		pflag = '-p{}'.format(str(iP + 1))
+		#run hysplit averaging utility
+		os.system('./conprob -bcdump {}'.format(pflag)) 
+		to_netcdf('cmean', 'cmean_{}.nc'.format(pollutant))		
 
+		#save ncmean for pollutants with requested stn traces
+		if pollutant in pproc_settings['stns'].keys():
+			logging.debug('...saving as cmean_{} for station traces'.format(pollutant))
+			os.system('mv cmean cmean_{}'.format(pollutant))
 	return
 
 def get_poe(pproc_settings):
@@ -71,18 +77,27 @@ def get_poe(pproc_settings):
 	poe_settings = pproc_settings['poe']
 
 	#loop through requested pollutants
-	for iP, pollutant in poe_settings.items():
+	for iP, pollutant in enumerate(poe_settings.keys()):
 		#flag for pollutant number
 		pflag = '-p{}'.format(str(iP + 1)) 
 		#get levels in internal hysplit units (mg/m3)
-		raw_lvls = poe_settings[pollutant] / conv[pollutant]
+		raw_lvls = np.array(poe_settings[pollutant], dtype=float) / float(conv[pollutant])
 		#flag for concentration levels
-		cflag = '-c{}:{}:{}'.format(raw_lvls)
+		cflag = '-c{:.3f}:{:.3f}:{:.3f}'.format(raw_lvls[0],raw_lvls[1],raw_lvls[2])
 		#run calculation for surface level
 		poe_cmd = './conprob -bcdump -z1 {} {}'.format(pflag, cflag)
 		logging.debug('...running POE analysis for {}: {}'.format(pollutant, poe_cmd))
 		os.system(poe_cmd)
+		#convert output to netcdf
+		to_netcdf('cmean', 'cmean_{}.nc'.format(pollutant))
+		to_netcdf('cmax01', 'poe_lvl1_{}.nc'.format(pollutant))
+		to_netcdf('cmax10', 'poe_lvl2_{}.nc'.format(pollutant))
+		to_netcdf('cmax00', 'poe_lvl3_{}.nc'.format(pollutant))
 
+		#save ncmean for pollutants with requested stn traces
+		if pollutant in pproc_settings['stns'].keys():
+			logging.debug('...saving as cmean_{} for station traces'.format(pollutant))
+			os.system('mv cmean cmean_{}'.format(pollutant))
 	return
 	
 def stn_traces(tag, stn_file, conv):
@@ -91,6 +106,8 @@ def stn_traces(tag, stn_file, conv):
 	'''
 	logging.info('...creating station traces')
 	
+	#TODO extend this to multiple pollutants: corrently assumes SO2
+
 	#link executables
 	link_exec('con2stn')
 	#con2stn = os.path.join(os.environ['hys_path'],'exec','con2stn')
@@ -98,7 +115,7 @@ def stn_traces(tag, stn_file, conv):
 
 	#extract station data
 	out_file = 'HYSPLIT_so2.{}.{}.txt'.format(os.environ['forecast'],tag)
-	con2stn_cmd = './con2stn -p1 -d2 -z2 -c{} -icmean -o{} -s{} -xi'.format(conv,out_file,stn_file)
+	con2stn_cmd = './con2stn -p1 -d2 -z2 -c{} -icmean_SO2 -o{} -s{} -xi'.format(conv,out_file,stn_file)
 	os.system(con2stn_cmd)
 
 	#copy to webserver (mkwc)
@@ -112,18 +129,18 @@ def stn_traces(tag, stn_file, conv):
 	return
 
 
-def to_netcdf(hysfile):
+def to_netcdf(hysfile, ncfile):
 	'''
 	Converts hysplit binary to NetCDF
 	'''
 
-	logging.info('...converting data to netcdf')	
+	logging.info('...saving netcdf: {}'.format(ncfile))	
 
 	#link netcdf converter
 	link_exec('con2cdf4')
 
 	#convert ensemble mean to netcdf
-	con2cdf4_cmd = './con2cdf4 {} {}.nc'.format(hysfile, hysfile)
+	con2cdf4_cmd = './con2cdf4 {} {}'.format(hysfile, ncfile)
 	os.system(con2cdf4_cmd)
 
 def main():
@@ -142,19 +159,14 @@ def main():
 	pproc_settings = json_data['user_defined']['post_process']
 	unit_conv = pproc_settings['conversion']
 
-	#create ensemble average, convert it to netcdf
-	#ensmean()
-	#to_netcdf('cmean')
 
 	#create POE for user-defined thresholds, if requested 
 	if 'poe' in pproc_settings.keys():
 		get_poe(pproc_settings)
 	else:
 		#if no PEO plots requested just do ensemble averaging
-		ensmean()
+		ensmean(pproc_settings)
 
-	#convert to netcdf	
-	to_netcdf('cmean')	
 
 	#create station traces for user-defined stations, if requested
 	if 'stns' in pproc_settings.keys():
@@ -170,7 +182,11 @@ def main():
 	if 'plots' in pproc_settings.keys():
 		plot_settings = pproc_settings['plots']
 		for pollutant in plot_settings['concentration']:
-			make_con_plots('./cmean.nc', pollutant, 'png', unit_conv[pollutant])
+			con_file = './cmean_{}.nc'.format(pollutant)
+			make_con_plots(con_file, pollutant, 'png', unit_conv[pollutant])
+		if 'poe' in plot_settings.keys():
+			for pollutant in plot_settings['poe']:
+				make_poe_plots('./poe_', pollutant, 'png')
 	else:
 		logging.info('No plots requested in config file')	
 
