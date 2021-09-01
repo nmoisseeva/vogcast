@@ -40,6 +40,7 @@ def ensmean(pproc_settings):
 	os.system('find -type l -delete')
 
 	#TODO check that that dispersion completed
+	#TODO fix for consistency with POE plots
 
 	#link executables
 	link_exec('conprob')
@@ -80,14 +81,19 @@ def get_poe(pproc_settings):
 	for iP, pollutant in enumerate(poe_settings.keys()):
 		#flag for pollutant number
 		pflag = '-p{}'.format(str(iP + 1)) 
-		#get levels in internal hysplit units (mg/m3)
-		raw_lvls = np.array(poe_settings[pollutant], dtype=float) / float(conv[pollutant])
+		#flag for concentration conversion
+		xflag = '-x{}'.format(conv[pollutant])
+		#raw_lvls = np.array(poe_settings[pollutant], dtype=float) / float(conv[pollutant])
+		#raw_lvls = np.sort(raw_lvls)[::-1]
+		lvls = np.sort(poe_settings[pollutant])[::-1]
+		logging.debug(lvls)
 		#flag for concentration levels
-		cflag = '-c{:.3f}:{:.3f}:{:.3f}'.format(raw_lvls[0],raw_lvls[1],raw_lvls[2])
-		#run calculation for surface level
-		poe_cmd = './conprob -bcdump -z1 {} {}'.format(pflag, cflag)
+		cflag = '-c{}:{}:{}'.format(lvls[0],lvls[1],lvls[2])
+		#run calculation for first non-deposition layer (-z2)
+		poe_cmd = './conprob -bcdump {} {} -z2 {}'.format(pflag,xflag,cflag)
 		logging.debug('...running POE analysis for {}: {}'.format(pollutant, poe_cmd))
 		os.system(poe_cmd)
+
 		#convert output to netcdf
 		to_netcdf('cmean', 'cmean_{}.nc'.format(pollutant))
 		to_netcdf('cmax01', 'poe_lvl1_{}.nc'.format(pollutant))
@@ -98,8 +104,9 @@ def get_poe(pproc_settings):
 		if pollutant in pproc_settings['stns'].keys():
 			logging.debug('...saving as cmean_{} for station traces'.format(pollutant))
 			os.system('mv cmean cmean_{}'.format(pollutant))
+
 	return
-	
+
 def stn_traces(tag, stn_file, conv):
 	'''
 	Script extracts ensmean concentrations from user-defined stations
@@ -115,7 +122,7 @@ def stn_traces(tag, stn_file, conv):
 
 	#extract station data
 	out_file = 'HYSPLIT_so2.{}.{}.txt'.format(os.environ['forecast'],tag)
-	con2stn_cmd = './con2stn -p1 -d2 -z2 -c{} -icmean_SO2 -o{} -s{} -xi'.format(conv,out_file,stn_file)
+	con2stn_cmd = './con2stn -d2 -icmean_SO2 -o{} -s{} -xi'.format(out_file,stn_file)
 	os.system(con2stn_cmd)
 
 	#copy to webserver (mkwc)

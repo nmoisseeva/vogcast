@@ -65,22 +65,22 @@ if __name__ == '__main__':
 	
 	#create storage folders and pipeline json
 	create_run_dir()
-	#json_path = create_run_json(config_path)
-	json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
+	json_path = create_run_json(config_path)
+	#json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
 	os.environ['json_path'] = json_path
 	
 	#run meteorology module
-	#run_meteorology.main()
+	run_meteorology.main()
 
 	#update emissions
 	#TODO make this a namelist option with alternative prescribed value
-	#get_hvo_emissions.main()
+	get_hvo_emissions.main()
 
 	#calculate plume rise
-	#run_plumerise.main()
+	run_plumerise.main()
 
 	#run dispersion
-	#run_dispersion.main()
+	run_dispersion.main()
 
 	#run post processing
 	post_process.main()

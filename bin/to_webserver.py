@@ -34,7 +34,7 @@ def make_fcst_json(json_name):
 
 	#create a tag for the first animation slide
 	spinup = int(os.environ['spinup'])
-	t0 = fcstdate + dt.timedelta(hours = spinup)
+	t0 = fcstdate + dt.timedelta(hours = spinup+1)
 	fcstjson['firstoutput'] = dt.datetime.strftime(t0, '%Y%M%d%H') 
 
 	#create time interval for the timedimension slider
@@ -80,10 +80,13 @@ def main(web_path):
 	logging.debug('...copying json: {}'.format(json_cmd))
 	os.system(json_cmd)
 
-	png_cmd = 'scp *.png {}/png/con/.'.format(web_path)
-	logging.debug('...copying pngs: {}'.format(png_cmd))
-	os.system(png_cmd)
+	con_png_cmd = 'scp SO2_2*.png SO4_2*.png {}/png/con/.'.format(web_path)
+	logging.debug('...copying concentration pngs: {}'.format(con_png_cmd))
+	os.system(con_png_cmd)
 
+	poe_png_cmd = 'scp *lvl*.png {}/png/poe/.'.format(web_path)
+	logging.debug('...copying poe pngs: {}'.format(poe_png_cmd))
+	os.system(poe_png_cmd)
 
 	logging.info('Copy to webserver complete')
 

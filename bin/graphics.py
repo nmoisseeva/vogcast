@@ -18,17 +18,24 @@ import datetime as dt
 
 def make_poe_cmap():
 	'''
-	Create a colorbar for POE
+	Create a colormap for POE
 	'''
+	#add transparancy
+	poe_cm = plt.cm.YlOrBr
+	poe_cmA = poe_cm(np.arange(poe_cm.N))
+	alphas = list(np.linspace(0,1,10)) + [1] * 246
+	poe_cmA[:,-1] = alphas	
+
+	poe = colors.LinearSegmentedColormap.from_list('poe',poe_cmA)
 	
-	span = np.array([[0, 100]])
-	img = plt.imshow(span, cmap='YlOrBr')
-	plt.gca().set_visible(False)
-	cbar = plt.colorbar(orientation='horizontal', label='Probability of Exceedance (%)', ticks=np.arange(0, 101,10))
-	#save if necessary
+	#save colormbar if ncessary - dumps strange log output
+	#span = np.array([[0, 100]])
+	#img = plt.imshow(span, cmap='YlOrBr')
+	#plt.gca().set_visible(False)
+	#cbar = plt.colorbar(orientation='horizontal', label='Probability of Exceedance (%)', ticks=np.arange(0, 101,10))
 	#plt.savefig('colorbar_POE.png', dpi=100, bbox_inches = 'tight', pad_inches = 0.1)
 
-	return cbar
+	return poe
 
 def make_aqi_cmap(pollutant):
 	'''
@@ -68,7 +75,7 @@ def make_aqi_cmap(pollutant):
 	aqi = colors.LinearSegmentedColormap.from_list('aqi',cma)
 	norm = colors.BoundaryNorm(lvls, aqi.N)	
 
-	#save colormap
+	#save colormap - for some reason prodcues a massive log dump
 	#cmplot = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=len(bounds)-1)
 	#span = np.array([[0, bounds[-1]]])
 	#img = plt.imshow(span, cmap=cmplot)
@@ -113,8 +120,9 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 	aqi, norm = make_aqi_cmap(pollutant)
 
 	#convert dataset fields to correct units
-	converted_fields = ds.variables[pollutant][:,0,:,:] * conv 
-
+	#converted_fields = ds.variables[pollutant][:,0,:,:] * conv 
+	converted_fields = ds.variables[pollutant][:,0,:,:]
+	
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
 		smooth_con = gaussian_filter(converted_fields[t,:,:], sigma=2)
@@ -141,6 +149,9 @@ def make_poe_plots(nc_prefix, pollutant, fmt):
 	#manually create tags to match HYSPLIT's very particular namting
 	hys_keys = ['CM01', 'CM10', 'CM00']
 
+	#get colormap
+	poe = make_poe_cmap()
+
 	#loop through thresholds
 	for i in range(3):
 		tag = 'lvl{}'.format(str(i+1))
@@ -151,13 +162,16 @@ def make_poe_plots(nc_prefix, pollutant, fmt):
 		ds = nc.Dataset(poe_file)
 		tdim = get_tdim(ds)
 		
-		logging.debug(ds.variables)	
-		poe_field = ds.variables[hys_keys[i]][:,0,:,:]
-	
+		#deal with Hysplit's weird naming: -p1 has keys CM00 etc, -pX uses pollutnat as key
+		try:
+			poe_field = ds.variables[hys_keys[i]][:,0,:,:]
+		except:
+			poe_field = ds.variables[pollutant][:,0,:,:]
+
 		#loop through all frams with smoothing
 		for t,time in enumerate(tdim):
 			smooth_poe = gaussian_filter(poe_field[t,:,:], sigma=2)
-			img = plt.imshow(smooth_poe, cmap='YlOrBr', vmin=0, vmax=100)
+			img = plt.imshow(smooth_poe, cmap=poe, vmin=0, vmax=100, origin='lower')
 			#hide all padding, margins and axes
 			plt.axis('off')
 			plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
