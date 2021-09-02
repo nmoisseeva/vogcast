@@ -30,7 +30,7 @@
 	source : {
 		lat : 19.4055 				#emissions source lat
 		lon : -155.2811				#emissions source lon
-		height : 150				#emission hight mAGL
+		height : 600				#emission hight mAGL
 		area : 500				#source area m2	
 		num_emit : 1				#number of emission sources
 		pr_model : "static_area"		#plume rise model options (str): "static_area"/"cwipp"
@@ -39,12 +39,12 @@
 		hys_path : "/home/moisseev/opt/hysplit.v5.1.0" 		#path to hysplit model (str)
 		carryover_path : "/home/moisseev/data/carryover"	#path to carryover vog files (str)
 		spinup : 6						#spinup hours (from beginning of met)
-		vert_motion : 0						#vertical motion setting for hysplit 2=isothermal 
+		vert_motion : 1						#vertical motion setting for hysplit 2=isothermal 
 		min_zi : 150						#hysplit min mixing depth
 	},
 	post_process : {
 		conversion : {				#unit conversion: model assumes mg/m3
-			SO2 : 0.382			#conversion to ppm for comparison with obs
+			SO2 : 0.38			#conversion to ppm for comparison with obs
 			SO4: 1000			#conversion to ug/m3 for comparison with obs
 		},
 		poe :  {				#calculate probabilities of exceedance
@@ -53,7 +53,7 @@
 		},
 		stns : {				#extract station traces
 			SO2 : { 			#pollutant 
-				tag : "vp150m0s6"	#file naming tag (str)
+				tag : "vp600m1s6"	#file naming tag (str)
 				stn_file : "/home/moisseev/dev/vog-pipeline/config/hysplit/obs_stns.txt"	#stn locations file (str)
 			}
 		},

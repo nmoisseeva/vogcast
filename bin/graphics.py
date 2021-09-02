@@ -20,8 +20,10 @@ def make_poe_cmap():
 	'''
 	Create a colormap for POE
 	'''
+	colornames = ['palegoldenrod','chocolate','firebrick']
+
 	#add transparancy
-	poe_cm = plt.cm.YlOrBr
+	poe_cm = colors.LinearSegmentedColormap.from_list('poe', colornames, N=256)
 	poe_cmA = poe_cm(np.arange(poe_cm.N))
 	alphas = list(np.linspace(0,1,10)) + [1] * 246
 	poe_cmA[:,-1] = alphas	

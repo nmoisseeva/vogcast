@@ -40,7 +40,7 @@ def make_fcst_json(json_name):
 	#create time interval for the timedimension slider
 	hys_hrs = int(os.environ['runhrs']) - int(os.environ['spinup'])
 	start_str = dt.datetime.strftime(t0, '%Y-%M-%dT%H:00:00Z/')
-	end = t0 + dt.timedelta(hours = hys_hrs)
+	end = t0 + dt.timedelta(hours = hys_hrs - 1)
 	end_str = dt.datetime.strftime(end, '%Y-%M-%dT%H:00:00Z')
 	fcstjson['timeInterval'] = start_str + end_str
 	
@@ -51,7 +51,9 @@ def make_fcst_json(json_name):
 	fcstjson['bounds']['minlon'] = -160.5
 	fcstjson['bounds']['maxlon'] = -154.5 
 
-	#TODO: add POE thresholds
+	#TODO: add POE thresholds (currently hardcoded on web-server) Low Prioirty
+
+	fcstjson['completion'] = dt.datetime.strftime(dt.datetime.utcnow(), '%Y-%m-%d %H:%M:%S UTC')
 
 	#write out json
 	with open(json_name, 'w') as f:
