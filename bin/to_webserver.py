@@ -32,6 +32,10 @@ def make_fcst_json(json_name):
 	fcstjson['date'] = dt.datetime.strftime(fcstdate, '%Y-%M-%d')
 	fcstjson['cycle'] = fcstjson['forecast'][-2:] + 'Z'
 
+	#copy emissions info for display
+	json_data = read_run_json()
+	fcstjson['emissions'] = json_data['emissions']['so2'] 
+
 	#create a tag for the first animation slide
 	spinup = int(os.environ['spinup'])
 	t0 = fcstdate + dt.timedelta(hours = spinup+1)
