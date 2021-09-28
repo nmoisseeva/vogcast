@@ -34,7 +34,7 @@ def make_fcst_json(json_name):
 
 	#copy emissions info for display
 	json_data = read_run_json()
-	fcstjson['emissions'] = json_data['emissions']['so2'] 
+	fcstjson['emissions'] = str(json_data['emissions']['so2']) + ' tonnes/day'
 
 	#create a tag for the first animation slide
 	spinup = int(os.environ['spinup'])
