@@ -9,8 +9,9 @@
 function usage() {
     echo "Run WPS"
     echo
-    echo "Usage: $0 [-d YYYYMMDD] INIT"
-    echo "where: INIT = two-digit initialization time i.e. 00, 06, etc"
+    echo "Usage: $0 [-d YYYYMMDD] RUNHRS INIT"
+    echo "where: RUNHRS = simulation run hours"
+    echo "       INIT = two-digit initialization time i.e. 00, 06, etc"
     echo "       -d = (optional) date to download, default is current date"
 }
 
@@ -47,7 +48,8 @@ function config_namelist() {
 
     #edit start and end times of the run
     fcst_start=$(date -d "${DATE} ${HH}" +"%Y-%m-%d_%H")
-    fcst_end=$(date -d "${DATE} ${HH} UTC+60hours" +"%Y-%m-%d_%H")
+    #fcst_end=$(date -d "${DATE} ${HH} UTC+60hours" +"%Y-%m-%d_%H")
+    fcst_end=$(date -d "${DATE} ${HH} UTC+"+${runhrs}+"hours" +"%Y-%m-%d_%H")
     sed -i s/"{sYYYY-MM-DD_HH}"/${fcst_start}/g namelist.wps
     sed -i s/"{eYYYY-MM-DD_HH}"/${fcst_end}/g namelist.wps
     sed -i s/"{max_dom}"/${max_dom}/g namelist.wps
@@ -57,6 +59,7 @@ function config_namelist() {
 DATE=$(date +"%Y%m%d")
 year=""
 HH=""
+runhrs=""
 
 # Parse optional arguments
 while getopts "d:h" opt; do
@@ -75,14 +78,14 @@ done
 # Parse mandatory arguments
 shift $((OPTIND-1))
 if [[ -z "$@" ]]; then
-    echo "You must supply an initialization time."
+    echo "You must supply simulation length and initialization time."
     echo
     usage
     exit 1
 else
-    HH="$@"
+    runhrs=$1
+    HH=$2
 fi
-
 
 ###  Main  ###
 log_msg "Starting $0 ..."

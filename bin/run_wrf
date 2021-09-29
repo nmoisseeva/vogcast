@@ -9,8 +9,9 @@
 function usage() {
     echo "Run WRF"
     echo
-    echo "Usage: $0 [-d YYYYMMDD] INIT"
-    echo "where: INIT = two-digit initialization time i.e. 00, 06, etc"
+    echo "Usage: $0 [-d YYYYMMDD] RUNHRS INIT"
+    echo "where: RUNHRS = length of the simulation (hours)"
+    echo "       INIT = two-digit initialization time i.e. 00, 06, etc"
     echo "       -d = (optional) date to download, default is current date"
 }
 
@@ -56,11 +57,11 @@ function config_namelist() {
     sDD=$(date -d "${DATE} ${HH}" +"%d")
     sHH=$(date -d "${DATE} ${HH}" +"%H")
 
-    #TODO remove hard-coded 60 hours and use config json
-    eYYYY=$(date -d "${DATE} ${HH} UTC+60hours" +"%Y")
-    eMM=$(date -d "${DATE} ${HH} UTC+60hours" +"%m")
-    eDD=$(date -d "${DATE} ${HH} UTC+60hours" +"%d")
-    eHH=$(date -d "${DATE} ${HH} UTC+60hours" +"%H")
+    offset="UTC+"+${runhrs}+"hours"
+    eYYYY=$(date -d "${DATE} ${HH} ${offset}" +"%Y")
+    eMM=$(date -d "${DATE} ${HH} ${offset}" +"%m")
+    eDD=$(date -d "${DATE} ${HH} ${offset}" +"%d")
+    eHH=$(date -d "${DATE} ${HH} ${offset}" +"%H")
 
     sed -i s/"{sYYYY}"/${sYYYY}/g namelist.input
     sed -i s/"{sMM}"/${sMM}/g namelist.input
@@ -104,12 +105,13 @@ done
 # Parse mandatory arguments
 shift $((OPTIND-1))
 if [[ -z "$@" ]]; then
-    echo "You must supply an initialization time."
+    echo "You must supply simulation length and an initialization time."
     echo
     usage
     exit 1
 else
-    HH="$@"
+    HH=$2
+    runhrs=$1
 fi
 
 

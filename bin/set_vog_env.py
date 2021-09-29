@@ -49,7 +49,8 @@ def parse_inputs():
 	'''
 	parser = argparse.ArgumentParser()
 	
-	#get mandatory input (initialization time)
+	#get mandatory input (config, initialization time)
+	parser.add_argument("-c","--config", help="Path (absolute) to run config file", type=str)
 	parser.add_argument("cycle", help="Forecast initialization time (e.g. 00, 12 etc)", type=str)
 
 	#get optional date input to run a historic simulation

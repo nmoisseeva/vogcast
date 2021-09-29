@@ -1,13 +1,6 @@
 #!/usr/bin/python3.7
-
-# Setup environment for the vog model run
-#
 __author__='Nadya Moisseeva (nadya.moisseeva@hawaii.edu)'
 __date__='July 2021'
-
- ### Inputs ###
-#TODO This CANNOT be hardcoded: provide as mandatory input option
-config_path = '../vog.config' 		#json config file (assumed vog_root location)
 
 #import supporting modules
 import sys
@@ -35,12 +28,13 @@ if __name__ == '__main__':
 		rundate = dt.datetime.now().strftime('%Y%m%d')	
 		logging.info('Performing real-time run for: %s%s' %(rundate,args.cycle))	
 	forecast = '%s%s' %(rundate,args.cycle)
+	os.environ['config_path'] = args.config
 	os.environ['forecast'] = forecast
 	os.environ['cycle'] = args.cycle
 	os.environ['rundate'] = rundate
 
 	#load configuration settings
-	settings = read_config(config_path)
+	settings = read_config(os.environ['config_path'])
 
 	#set shared environmental variables
 	set_env_var(settings, 'vog_root')
@@ -48,9 +42,6 @@ if __name__ == '__main__':
 	set_env_var(settings, 'runhrs')
 	set_env_var(settings, 'freq')
 	set_env_var(settings, 'max_dom')
-
-	#TODO this needs to be served and input argument
-	os.environ['config_path'] = os.path.join(os.environ['vog_root'], 'vog.config')
 
 	#set full run path
 	os.environ['run_path'] = os.path.join(os.environ['run_dir'],forecast)
@@ -65,8 +56,7 @@ if __name__ == '__main__':
 	
 	#create storage folders and pipeline json
 	create_run_dir()
-	json_path = create_run_json(config_path)
-	#json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
+	json_path = create_run_json(os.environ['config_path'])
 	os.environ['json_path'] = json_path
 	
 	#run meteorology module

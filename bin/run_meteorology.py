@@ -32,11 +32,11 @@ def main():
 		os.system('bash %s/get_nam -d %s %s > /dev/null' %(os.environ['bin'],os.environ['rundate'],os.environ['cycle']))
 
 		#run wps
-		os.system('bash %s/run_wps -d %s %s' %(os.environ['bin'],os.environ['rundate'],os.environ['cycle']))
+		os.system('bash %s/run_wps -d %s %s %s' %(os.environ['bin'],os.environ['rundate'],os.environ['runhrs'],os.environ['cycle']))
 		logging.info('Completed WPS run')
 
 		#run wrf
-		os.system('bash %s/run_wrf -d %s %s' %(os.environ['bin'],os.environ['rundate'],os.environ['cycle']))
+		os.system('bash %s/run_wrf -d %s %s %s' %(os.environ['bin'],os.environ['rundate'],os.environ['runhrs'],os.environ['cycle']))
 		logging.info('Completed WRF run')
 
 		#convert wrf to arl
