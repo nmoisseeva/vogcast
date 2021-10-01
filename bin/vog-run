@@ -9,7 +9,7 @@ from set_vog_env import *
 import os
 import logging
 import datetime as dt
-import run_meteorology, conv_arl, run_plumerise, get_hvo_emissions, run_dispersion, post_process
+import run_meteorology, conv_arl, run_plumerise, get_emissions, run_dispersion, post_process
 
 #set up logging
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='[%Y-%m-%d %H:%M:%S %Z]')
@@ -55,23 +55,23 @@ if __name__ == '__main__':
 	os.environ['hys_rundir'] = os.path.join(os.environ['run_path'],'hysplit')
 	
 	#create storage folders and pipeline json
-	create_run_dir()
-	json_path = create_run_json(os.environ['config_path'])
+	#create_run_dir()
+	#json_path = create_run_json(os.environ['config_path'])
+	json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
 	os.environ['json_path'] = json_path
 	
 	#run meteorology module
-	run_meteorology.main()
+	#run_meteorology.main()
 
 	#update emissions
-	#TODO make this a namelist option with alternative prescribed value
-	get_hvo_emissions.main()
+	get_emissions.main()
 
 	#calculate plume rise
 	run_plumerise.main()
 
 	#run dispersion
-	run_dispersion.main()
+	#run_dispersion.main()
 
 	#run post processing
-	post_process.main()
+	#post_process.main()
 	

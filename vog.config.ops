@@ -45,7 +45,7 @@
 	post_process : {
 		conversion : {				#unit conversion: model assumes mg/m3
 			SO2 : 0.38			#conversion to ppm for comparison with obs
-			SO4: 1000			#conversion to ug/m3 for comparison with obs
+			SO4: 100			#conversion to ug/m3 for comparison with obs
 		},
 		poe :  {				#calculate probabilities of exceedance
 			SO2 : [0.1, 1, 5]		#exceedance thresholds (3 max) in obs units (ppm) 

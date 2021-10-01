@@ -2,6 +2,6 @@ run/**
 venv/**
 vmap/**
 __pycache__/
-bin/get_hvo_emissions.py
+config/api.keys
 **/*.out
 **/*.log

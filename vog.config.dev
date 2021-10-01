@@ -35,6 +35,11 @@
 		num_emit : 1				#number of emission sources
 		pr_model : "static_area"		#plume rise model options (str): "static_area"/"cwipp"
 	},
+	emissions : {
+		input : "hvo"				#how to obtain emissions ("hvo"/"manual")
+		keys : "/home/moisseev/dev/vog-pipeline/config/api.keys" 	#path to login details (used for "hvo" only)
+		rate : 20000				#tonnes/day (used for "manual" only)
+	},
 	dispersion : {
 		hys_path : "/home/moisseev/opt/hysplit.v5.1.0" 		#path to hysplit model (str)
 		carryover_path : "/home/moisseev/data/carryover"	#path to carryover vog files (str)
