@@ -46,7 +46,8 @@ def make_fcst_json(json_name):
 	start_str = dt.datetime.strftime(t0, '%Y-%M-%dT%H:00:00Z/')
 	end = t0 + dt.timedelta(hours = hys_hrs - 1)
 	end_str = dt.datetime.strftime(end, '%Y-%M-%dT%H:00:00Z')
-	logging.debug('ENDTIME: {}'.format(end_str))
+	#TODO this breaks on month-end!! figure out why!!
+	logging.debug('...ENDTIME: {}'.format(end_str))
 	fcstjson['timeInterval'] = start_str + end_str
 	
 	#WARNING: this is hardcoded to match the hysplit CONTROL file

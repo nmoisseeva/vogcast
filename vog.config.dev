@@ -44,7 +44,7 @@
 		hys_path : "/home/moisseev/opt/hysplit.v5.1.0" 		#path to hysplit model (str)
 		carryover_path : "/home/moisseev/data/carryover"	#path to carryover vog files (str)
 		spinup : 6						#spinup hours (from beginning of met)
-		vert_motion : 2						#vertical motion setting for hysplit 2=isothermal 
+		vert_motion : 1						#vertical motion setting for hysplit 2=isothermal 
 		min_zi : 150						#hysplit min mixing depth
 	},
 	post_process : {

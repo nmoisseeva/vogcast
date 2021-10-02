@@ -88,7 +88,7 @@ def main():
 	if emis_settings['input'] == 'hvo':
 		#pull from hvo-api
 		so2, obs_date = get_hvo_data(emis_settings['keys'])
-		logging.info('HVO emissions value: {} tonnes/day'.format(so2))
+		logging.info('...HVO emissions value: {} tonnes/day'.format(so2))
 	elif emis_settings['input'] == 'manual':
 		#assign user defined value
 		so2 = emis_settings['rate']
