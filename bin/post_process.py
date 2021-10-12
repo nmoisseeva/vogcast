@@ -152,6 +152,13 @@ def to_netcdf(hysfile, ncfile):
 
 	return
 
+def clean_hysdir():
+	#set up necessary configuration files
+	os.system('find -type l -delete')
+	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err *.log cdump* > /dev/null 2>&1')
+
+	return
+
 def main():
 	'''
 	Main script for dispersion post-processing. 
@@ -209,6 +216,9 @@ def main():
 	else:
 		logging.info('No copying to webserver requested')
 
+	#clean up before archiving
+	clean_hysdir()
+	logging.debug('Cleaning up HYSPLIT direcotry')
 
 	logging.info('Post-processing complete')
 

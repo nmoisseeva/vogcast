@@ -56,12 +56,12 @@ if __name__ == '__main__':
 	
 	#create storage folders and pipeline json
 	create_run_dir()
-	json_path = create_run_json(os.environ['config_path'])
-	#json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
+	#json_path = create_run_json(os.environ['config_path'])
+	json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
 	os.environ['json_path'] = json_path
 	
 	#run meteorology module
-	run_meteorology.main()
+	#run_meteorology.main()
 
 	#update emissions
 	get_emissions.main()
