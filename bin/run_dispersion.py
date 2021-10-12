@@ -146,6 +146,13 @@ def save_carryover():
 
 	return
 
+def clean_hysdir():
+	#set up necessary configuration files
+	os.system('find -type l -delete')
+	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err *.log cdump* > /dev/null 2>&1')
+
+	return
+
 def main():
 	'''
 	Run dispersion 
@@ -163,6 +170,9 @@ def main():
 
 	#save carryover smoke
 	save_carryover()
+
+	#clean up
+	clean_hysdir()
 
 	logging.info('Ensemble dispersion run complete')
 

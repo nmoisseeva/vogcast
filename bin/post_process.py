@@ -150,6 +150,8 @@ def to_netcdf(hysfile, ncfile):
 	con2cdf4_cmd = './con2cdf4 {} {}'.format(hysfile, ncfile)
 	os.system(con2cdf4_cmd)
 
+	return
+
 def main():
 	'''
 	Main script for dispersion post-processing. 

@@ -83,6 +83,25 @@ function config_namelist() {
     ln -s ${vog_root}/config/slurm/wrf.slurm .
 }
 
+function clean_wrfdir() {
+    #clean up intermediate files
+    rm FILE:*  met_em.* geo_em.*
+
+    #clean up IBCs
+    rm wrfbdy_* wrfinput_*
+
+    #clean up links
+    find -type l -delete
+
+    #clean up rsl files
+    rm rsl.*
+
+    #clean up logs and .OK files
+    #TODO clean up .OK files after confirming workflow works
+    rm  *.log slurm-*.out
+}
+
+
 # Initialize variables
 DATE=$(date +"%Y%m%d")
 year=""
@@ -138,7 +157,8 @@ config_namelist
 #run real.exe
 log_msg "Starting real.exe"
 ./real.exe
-[ $(ls -l wrfinput* | wc -l) -eq ${max_dom} ] && touch real.OK
+[ $? -eq 0 ] && touch real.OK
+#[ $(ls -l wrfinput* | wc -l) -eq ${max_dom} ] && touch real.OK
 
 #run main wrf
 log_msg "Starting wrf.exe"
@@ -149,9 +169,13 @@ then
     exit 1
 fi
 sbatch -W wrf.slurm
-[ $(ls -l wrfout_d01* | wc -l) -eq ${max_dom} ] && touch wrf.OK
+#[ $(ls -l wrfout_d01* | wc -l) -eq ${max_dom} ] && touch wrf.OK
+[ $? -eq 0 ] && touch wrf.OK
 
 #flag met completiong (for future use if met doesn't come from wrf)
 [ -f wrf.OK ] && touch met.OK
+
+#clean up
+clean_wrfdir
 
 exit 0
