@@ -53,9 +53,8 @@ def ensmean(pproc_settings):
 		to_netcdf('cmean', 'cmean_{}.nc'.format(pollutant))		
 
 		#save ncmean for pollutants with requested stn traces
-		if pollutant in pproc_settings['stns'].keys():
-			logging.debug('...saving as cmean_{} for station traces'.format(pollutant))
-			os.system('mv cmean cmean_{}'.format(pollutant))
+		logging.debug('...saving as cmean_{} for future use'.format(pollutant))
+		os.system('mv cmean cmean_{}'.format(pollutant))
 	return
 
 def get_poe(pproc_settings):
@@ -101,9 +100,8 @@ def get_poe(pproc_settings):
 		to_netcdf('cmax00', 'poe_lvl3_{}.nc'.format(pollutant))
 
 		#save ncmean for pollutants with requested stn traces
-		if pollutant in pproc_settings['stns'].keys():
-			logging.debug('...saving as cmean_{} for station traces'.format(pollutant))
-			os.system('mv cmean cmean_{}'.format(pollutant))
+		logging.debug('...saving as cmean_{} for future use'.format(pollutant))
+		os.system('mv cmean cmean_{}'.format(pollutant))
 
 	return
 
@@ -153,9 +151,30 @@ def to_netcdf(hysfile, ncfile):
 	return
 
 def clean_hysdir():
-	#set up necessary configuration files
+	#clean up dispersion folder
+
+	logging.debug('...cleaning up HYSPLIT direcotry')
 	os.system('find -type l -delete')
 	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err *.log cdump* > /dev/null 2>&1')
+
+	return
+
+def archive(archive_path):
+	#archiving script: compresses the main run folder and pushes to remote archive
+	logging.info('...compressing data and pushing to remote archive')
+	logging.warning('...this step may take a LONG time')
+	
+	#move out of forecast direcotry
+	os.chdir(os.environ['run_dir'])
+
+	#run tar command - THIS WILL BE SLOW
+	tar_cmd = 'tar -zcf {}TEST.tar.gz {}'.format(os.environ['forecast'], os.environ['forecast'])
+	os.system(tar_cmd)
+
+	#push archived data to remote set by user (requires ssh key)
+	scp_cmd = 'scp {}TEST.tar.gz {}'.format(os.environ['forecast'],archive_path)
+	logging.debug('...copying to remote: {}'.format(scp_cmd))
+	os.system(scp_cmd)
 
 	return
 
@@ -209,16 +228,15 @@ def main():
 	
 	#extras: archive and move to webserver if requested
 	if 'extras' in json_data['user_defined'].keys():
-		if 'web' in json_data['user_defined']['extras'].keys():
-			web_path = json_data['user_defined']['extras']['web']
-			logging.debug(web_path)
-			to_webserver.main(web_path)
+		extras = json_data['user_defined']['extras']
+		if 'web' in extras.keys():
+			to_webserver.main(extras['web'])
+		if 'archive' in extras.keys():
+			#clean up before archiving
+			clean_hysdir()
+			archive(extras['archive'])
 	else:
 		logging.info('No copying to webserver requested')
-
-	#clean up before archiving
-	clean_hysdir()
-	logging.debug('Cleaning up HYSPLIT direcotry')
 
 	logging.info('Post-processing complete')
 

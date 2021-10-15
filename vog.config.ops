@@ -68,7 +68,7 @@
 		}	
 	},
 	extras : {					#other actions, assumes keychain access
-		web : "vmap@mkwc2.ifa.hawaii.edu:/home/vmap/www/new/data" 		#copy data to webserver path (str)
-		archive : "vmap@thredds.soest.hawaii.edu:/export/archive/cluster"	#archive data on server path (str) - NOT IMPLEMENTED
+		web : "vmap@mkwc2.ifa.hawaii.edu:/home/vmap/www/testing/data" 		#copy data to webserver path (str)
+		archive : "moisseev@thredds.soest.hawaii.edu:/export/thredds/archives/vog-pipeline"	#archive data on server path (str) - NOT IMPLEMENTED
 	}
 }

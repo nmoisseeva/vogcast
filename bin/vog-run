@@ -64,13 +64,13 @@ if __name__ == '__main__':
 	#run_meteorology.main()
 
 	#update emissions
-	get_emissions.main()
+	#get_emissions.main()
 
 	#calculate plume rise
-	run_plumerise.main()
+	#run_plumerise.main()
 
 	#run dispersion
-	run_dispersion.main()
+	#run_dispersion.main()
 
 	#run post processing
 	post_process.main()
