@@ -151,7 +151,17 @@ def main():
 	Run dispersion 
 	'''
 	logging.info('Running dispersion')	
-	
+
+	#load main run json
+	json_data = read_run_json()
+	hys_settings = json_data['user_defined']['dispersion']
+
+	#set environmental variables for dispersion
+	config_keys = ['hys_path','spinup','freq']
+	for key in config_keys:
+		set_env_var(hys_settings, key)
+	#set_env_var(hys_settings, 'spinup')
+
 	#link config and executables
 	link_hysplit()		
 	
@@ -165,7 +175,6 @@ def main():
 	save_carryover()
 
 	logging.info('Ensemble dispersion run complete')
-
 
 
 	return

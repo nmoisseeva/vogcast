@@ -34,15 +34,15 @@ def make_fcst_json(json_name):
 
 	#copy emissions info for display
 	json_data = read_run_json()
-	fcstjson['emissions'] = str(json_data['emissions']['so2']) + ' tonnes/day'
+	fcstjson['emissions'] = str(json_data['emissions']['src1']['so2']) + ' tonnes/day'
 
 	#create a tag for the first animation slide
-	spinup = int(os.environ['spinup'])
+	spinup = int(json_data['user_defined']['dispersion']['spinup'])
 	t0 = fcstdate + dt.timedelta(hours = spinup+1)
 	fcstjson['firstoutput'] = dt.datetime.strftime(t0, '%Y%M%d%H') 
 
 	#create time interval for the timedimension slider
-	hys_hrs = int(os.environ['runhrs']) - int(os.environ['spinup'])
+	hys_hrs = int(os.environ['runhrs']) - spinup
 	start_str = dt.datetime.strftime(t0, '%Y-%M-%dT%H:00:00Z/')
 	end = t0 + dt.timedelta(hours = hys_hrs - 1)
 	end_str = dt.datetime.strftime(end, '%Y-%M-%dT%H:00:00Z')
@@ -80,7 +80,6 @@ def main(web_path):
 
 	#create a config json for Leaflet display
 	json_name = 'vogfcst.json'
-	logging.debug('...starting on json')
 	make_fcst_json(json_name)
 
 	#copy json and pngs to webserver

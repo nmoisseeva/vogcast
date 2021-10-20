@@ -92,37 +92,34 @@ def static_area(source, emissions):
 
 def main():
 	'''
-	Run plume rise 
+	Run plume rise/source model
 	'''
 	#load main run json
 	json_data = read_run_json()	
-	source = json_data['user_defined']['source']
-	emissions = json_data['emissions']
 
-	#TODO: this must all be extended for multiple source locations
+	#get number of sources
+	num_src = len(json_data['user_defined']['source'])
 
-	#call the selected plume rise approach
-	logging.info('Running plumerise model: %s' %source['pr_model'])
-	if source['pr_model']=='ops':
-		static_line(source, emissions)
-	elif source['pr_model']=='static_area':
-		static_area(source, emissions)
-	else:
-		logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
-	'''
-	elif source['pr_model']=='bl_mixing':
-		bl_mixing(source, emissions)
-	elif source['pr_model']=='cwipp':
-		bl_mixing(source, emissions)
-	else:
-		#TODO: NOT TESTED FROM HERE ON
-		#get source location in met domain
-		nc_file,x,y = locate_source()
+	logging.info('Running source model: {} emissions sources'.format(num_src))
 
-		#retrieve sounding
-		#TODO: for now only retrieving BL height
-		sounding = get_sounding(nc_file, x, y)
-	'''
+	#run source model for each emissions location
+	for iSrc in range(num_src):
+		tag = 'src'+str(iSrc+1)
+		source = json_data['user_defined']['source'][tag]
+		emissions = json_data['emissions'][tag]
+
+		#call the selected plume rise approach
+		logging.info('... {} plumerise model: {}'.format(tag,source['pr_model']))
+		if source['pr_model']=='ops':
+			static_line(source, emissions)
+		elif source['pr_model']=='static_area':
+			static_area(source, emissions)
+		#TODO set up cwipp
+		elif source['pr_model']=='cwipp':
+			print('PLACEHOLDER FOR CWIPP RUN')
+		else:
+			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
+
 	return
 
  ### Main ###

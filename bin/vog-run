@@ -9,7 +9,7 @@ from set_vog_env import *
 import os
 import logging
 import datetime as dt
-import run_meteorology, conv_arl, run_plumerise, get_emissions, run_dispersion, post_process
+import meteorology, conv_arl, source, emissions, dispersion, post_process
 
 #set up logging
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='[%Y-%m-%d %H:%M:%S %Z]')
@@ -37,41 +37,40 @@ if __name__ == '__main__':
 	settings = read_config(os.environ['config_path'])
 
 	#set shared environmental variables
-	set_env_var(settings, 'vog_root')
-	set_env_var(settings, 'run_dir')
-	set_env_var(settings, 'runhrs')
-	set_env_var(settings, 'freq')
-	set_env_var(settings, 'max_dom')
+	config_keys = ['vog_root','run_dir','runhrs','max_dom']
+	for key in config_keys:
+		set_env_var(settings, key)
 
-	#set full run path
+	#set common paths
 	os.environ['run_path'] = os.path.join(os.environ['run_dir'],forecast)
 	os.environ['bin'] = os.path.join(os.environ['vog_root'],'bin')
-
-	#set veriables for dispersion
-	#includes: conv_arl, run_dispersion
-	#TODO move this to dispersion module
-	set_env_var(settings['dispersion'], 'hys_path')
-	set_env_var(settings['dispersion'], 'spinup')
 	os.environ['hys_rundir'] = os.path.join(os.environ['run_path'],'hysplit')
 	
-	#create storage folders and pipeline json
+	#create/locate run folders and pipeline json
 	create_run_dir()
-	json_path = create_run_json(os.environ['config_path'])
-	#json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
+	if settings['rerun']:
+		json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
+		run_modules = settings['modules']
+		#TODO update run json with all modules in run_modules 
+	else:
+		json_path = create_run_json(os.environ['config_path'])
+		run_modules = ['met','emissions','source','dispersion','post_process']
 	os.environ['json_path'] = json_path
-	
-	#run meteorology module
-	run_meteorology.main()
 
-	#update emissions
-	get_emissions.main()
 
-	#calculate plume rise
-	run_plumerise.main()
+	#run the pipeline modules	
+	if 'met' in run_modules:
+		meteorology.main()
 
-	#run dispersion
-	run_dispersion.main()
+	if 'emissions' in run_modules:
+		emissions.main()
 
-	#run post processing
-	post_process.main()
+	if 'source' in run_modules:
+		source.main()
+
+	if 'dispersion' in run_modules:
+		dispersion.main()
+
+	if 'post_process' in run_modules:
+		post_process.main()
 	

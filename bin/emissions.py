@@ -55,7 +55,7 @@ def get_hvo_data(keypath):
 	'''
 	Run all the steps for pulling emissions form HVO
 	'''
-	logging.info('Pulling the most recent emissions data from HVO-API')
+	logging.info('...pulling the most recent emissions data from HVO-API')
 
 	#check if a forecast date is set in environ
 	if 'forecast' in os.environ:
@@ -82,23 +82,35 @@ def main():
 	'''
 	#read user settings
 	json_data = read_run_json()
-	emis_settings = json_data['user_defined']['emissions']
 
-	#get emissions based on user preferences
-	if emis_settings['input'] == 'hvo':
-		#pull from hvo-api
-		so2, obs_date = get_hvo_data(emis_settings['keys'])
-		logging.info('...HVO emissions value: {} tonnes/day'.format(so2))
-	elif emis_settings['input'] == 'manual':
-		#assign user defined value
-		so2 = emis_settings['rate']
-		obs_date = 'manual update'
-		logging.info('Manual emissions assignment requested: rate = {} tonnes/day)'.format(so2))
-	else:
-		logging.critical('ERROR: Emissions input not recognized. Availble options are: "hvo","manual"')
+	#get number of emissions sources
+	num_src = len(json_data['user_defined']['emissions'])
+	json_data['emissions'] = {}
 
-	#write to main json file
-	json_data['emissions'] = {'so2' : so2, 'obs_date': obs_date }
+	#get emissions for each source
+	for iSrc in range(num_src):
+		tag = 'src' + str(iSrc + 1)
+		emis_settings = json_data['user_defined']['emissions'][tag]
+
+		logging.debug('...getting emissions for {}:'.format(tag))
+
+		#get emissions based on user preferences
+		if emis_settings['input'] == 'hvo':
+			#pull from hvo-api
+			so2, obs_date = get_hvo_data(emis_settings['keys'])
+			logging.info('...HVO emissions value: {} tonnes/day'.format(so2))
+		elif emis_settings['input'] == 'manual':
+			#assign user defined value
+			so2 = emis_settings['rate']
+			obs_date = 'manual update'
+			logging.info('...manual emissions assignment requested: rate = {} tonnes/day)'.format(so2))
+		else:
+			logging.critical('ERROR: Emissions input not recognized. Availble options are: "hvo","manual"')
+
+		#write to main json file
+		json_data['emissions'][tag] = {'so2' : so2, 'obs_date': obs_date }
+
+	#update run json
 	update_run_json(json_data)
 
 	logging.info('Emissions update completed')

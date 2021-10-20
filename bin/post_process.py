@@ -82,10 +82,7 @@ def get_poe(pproc_settings):
 		pflag = '-p{}'.format(str(iP + 1)) 
 		#flag for concentration conversion
 		xflag = '-x{}'.format(conv[pollutant])
-		#raw_lvls = np.array(poe_settings[pollutant], dtype=float) / float(conv[pollutant])
-		#raw_lvls = np.sort(raw_lvls)[::-1]
 		lvls = np.sort(poe_settings[pollutant])[::-1]
-		logging.debug(lvls)
 		#flag for concentration levels
 		cflag = '-c{}:{}:{}'.format(lvls[0],lvls[1],lvls[2])
 		#run calculation for first non-deposition layer (-z2)
@@ -115,8 +112,6 @@ def stn_traces(tag, stn_file, conv):
 
 	#link executables
 	link_exec('con2stn')
-	#con2stn = os.path.join(os.environ['hys_path'],'exec','con2stn')
-	#os.symlink(con2stn, './con2stn')
 
 	#extract station data
 	out_file = 'HYSPLIT_so2.{}.{}.txt'.format(os.environ['forecast'],tag)
@@ -129,7 +124,6 @@ def stn_traces(tag, stn_file, conv):
 	scp_cmd = 'scp {} vmap@mkwc2.ifa.hawaii.edu:www/hysplit/text/{}'.format(out_file, mkwc_file)
 	os.system(scp_cmd)
 	logging.debug('...copying station data to mwkc as: {}'.format(mkwc_file))
-
 
 	return
 
@@ -193,7 +187,7 @@ def main():
 	json_data = read_run_json()
 	pproc_settings = json_data['user_defined']['post_process']
 	unit_conv = pproc_settings['conversion']
-
+	set_env_var(json_data['user_defined']['dispersion'],'hys_path')
 
 	#create POE for user-defined thresholds, if requested 
 	if 'poe' in pproc_settings.keys():
