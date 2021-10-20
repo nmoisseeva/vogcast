@@ -105,3 +105,24 @@ def update_run_json(json_data):
 		f.write(json.dumps(json_data, indent=4))
 
 	return
+
+def update_user_settings(run_modules):
+	'''
+	Update user settings for partial reruns
+	'''
+	logging.warning('WARNING: this is a pipeline RERUN')
+	
+	#read existing config json and run json
+	user_defined = read_config(os.environ['config_path'])	
+	json_data = read_run_json()
+
+	#loop through modules to be rerun and overwrite corresponding settings
+	for module in run_modules:
+		logging.debug('...updating user-settings for "{}" module'.format(module))
+		json_data['user_defined'][module] = user_defined[module]
+
+	#write updated run json
+	update_run_json(json_data)
+
+	return
+

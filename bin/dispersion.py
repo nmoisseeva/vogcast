@@ -48,14 +48,13 @@ def link_hysplit():
 
 	return
 
-def edit_hys_config():
+def edit_hys_config(json_data):
 	'''
 	Edit hysplit configuration settings for the run
 	'''
 	#TODO: all this is pretty ugly, look for more elegant ways
 
 	#get settings from run_json
-	json_data = read_run_json()
 	user = json_data['user_defined']
 
 	#edit CONTROL: set start time relative to met
@@ -126,14 +125,11 @@ def run_ensemble():
 	if member_cnt == 27:
 		os.system('touch dispersion.OK')
 
-def save_carryover():
+def save_carryover(json_data):
 	'''
 	Save carryover smoke for next run cycle
 	'''
 	
-	#get user-defined location for saving
-	json_data = read_run_json()
-
 	#randomly select a PARDUMP file for carryover smoke
 	irand = randrange(1, 27)
 	parfile = 'PARDUMP.{:03d}'.format(irand)
@@ -160,19 +156,18 @@ def main():
 	config_keys = ['hys_path','spinup','freq']
 	for key in config_keys:
 		set_env_var(hys_settings, key)
-	#set_env_var(hys_settings, 'spinup')
 
 	#link config and executables
 	link_hysplit()		
 	
 	#edit config for the run
-	edit_hys_config()
+	edit_hys_config(json_data)
 	
 	#start the run
 	run_ensemble()
 
 	#save carryover smoke
-	save_carryover()
+	save_carryover(json_data)
 
 	logging.info('Ensemble dispersion run complete')
 

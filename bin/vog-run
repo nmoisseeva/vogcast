@@ -51,11 +51,13 @@ if __name__ == '__main__':
 	if settings['rerun']:
 		json_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'vog_run.json')
 		run_modules = settings['modules']
-		#TODO update run json with all modules in run_modules 
+		os.environ['json_path'] = json_path	
+		#for modules to be rerun, update config settings in existing runjson
+		update_user_settings(run_modules)
 	else:
 		json_path = create_run_json(os.environ['config_path'])
 		run_modules = ['met','emissions','source','dispersion','post_process']
-	os.environ['json_path'] = json_path
+		os.environ['json_path'] = json_path
 
 
 	#run the pipeline modules	
