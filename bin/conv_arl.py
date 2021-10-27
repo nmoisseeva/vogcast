@@ -42,7 +42,7 @@ def convert_to_arl():
 	Run the conversion to arl
 	'''	
 	#get local subdirectories within run folder
-	wrf_rundir = os.path.join(os.environ['run_path'],'wrf')
+	wrf_rundir = os.path.join(os.environ['run_path'],'meteorology')
 
 	#loop through all domains
 	#lines to write to run json for auto-config of hysplit CONTROL
@@ -81,8 +81,8 @@ def main():
 	#os.system('source ~/.bash_profile')
 
 	#check for met completion
-	if not os.path.isfile(os.path.join(os.environ['run_path'],'wrf','met.OK')):
-		logging.debug(os.path.join(os.environ['run_path'],'wrf','met.OK'))
+	if not os.path.isfile(os.path.join(os.environ['run_path'],'meteorology','met.OK')):
+		logging.debug(os.path.join(os.environ['run_path'],'meteorology','met.OK'))
 		logging.critical("Missing met.OK file: ensure meteorology has completed. Aborting.")
 		sys.exit()
 		

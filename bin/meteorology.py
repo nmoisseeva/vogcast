@@ -16,7 +16,7 @@ def main():
 
 	#load main run json
 	json_data = read_run_json()
-	met_settings = json_data['user_defined']['met']
+	met_settings = json_data['user_defined']['meteorology']
 
 	logging.info('Running meteorology: {}'.format(met_settings['model']))
 	

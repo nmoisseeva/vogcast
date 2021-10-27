@@ -141,7 +141,7 @@ log_msg "Starting $0 ..."
 datetime="${DATE}${HH}"
 
 #navigate to main run directory
-cd ${run_dir}/${datetime}/wrf
+cd ${run_dir}/${datetime}/meteorology
 
 #check that the WPS completed ok
 if [ ! -f wps.OK ]

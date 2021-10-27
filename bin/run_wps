@@ -93,11 +93,11 @@ log_msg "Starting $0 ..."
 #create forecast label
 datetime="${DATE}${HH}"
 
-#set up and navigate to main run directoryi
+#set up and navigate to main run directory
 cd ${run_dir}/${datetime}
-[[ ! -d wrf ]] || rm -r wrf
-mkdir -pv wrf > /dev/null
-cd wrf
+[[ ! -d meteorology ]] || rm -r meteorology
+mkdir -pv meteorology > /dev/null
+cd meteorology
 
 #check that the IBCs are available
 if [ ! -f ${ibc_path}/${DATE}${HH}/ibc.OK ]
