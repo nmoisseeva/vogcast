@@ -81,8 +81,8 @@ def main():
 	#os.system('source ~/.bash_profile')
 
 	#check for met completion
-	if not os.path.isfile(os.path.join(os.environ['run_path'],'meteorology','met.OK')):
-		logging.debug(os.path.join(os.environ['run_path'],'meteorology','met.OK'))
+	met_ok = os.path.join(os.environ['run_path'],'meteorology','met.OK')
+	if not os.path.isfile(met_ok):
 		logging.critical("Missing met.OK file: ensure meteorology has completed. Aborting.")
 		sys.exit()
 		

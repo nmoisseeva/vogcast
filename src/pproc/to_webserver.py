@@ -6,7 +6,7 @@ __author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
 __date__="July 2021"
 
 from set_vog_env import *
-from graphics import*
+from pproc.graphics import*
 import logging
 import json
 import os

@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
 	#set common paths
 	os.environ['run_path'] = os.path.join(os.environ['run_dir'],forecast)
-	os.environ['bin'] = os.path.join(os.environ['vog_root'],'bin')
+	os.environ['src'] = os.path.join(os.environ['vog_root'],'src')
 	os.environ['hys_rundir'] = os.path.join(os.environ['run_path'],'hysplit')
 	
 	#create/locate run folders and pipeline json

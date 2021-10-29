@@ -6,8 +6,8 @@ __author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
 __date__="July 2021"
 
 from set_vog_env import *
-from graphics import*
-import to_webserver
+from pproc.graphics import *
+import pproc.to_webserver as web
 import logging
 import json
 import os
@@ -224,7 +224,7 @@ def main():
 	if 'extras' in json_data['user_defined'].keys():
 		extras = json_data['user_defined']['extras']
 		if 'web' in extras.keys():
-			to_webserver.main(extras['web'])
+			web.main(extras['web'])
 		if 'archive' in extras.keys():
 			#clean up before archiving
 			clean_hysdir()
