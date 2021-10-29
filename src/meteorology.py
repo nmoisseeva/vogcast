@@ -9,7 +9,7 @@ import os
 import logging
 from set_vog_env import *
 import glob
-import conv_arl
+import met.conv_arl as conv_arl
 
 
 def main():
@@ -32,14 +32,14 @@ def main():
 
 		#download initial conditionsi
 		#TODO check for existing files before downloading, create ibc.OK
-		os.system('bash %s/get_nam -d %s %s > /dev/null' %(os.environ['src'],os.environ['rundate'],os.environ['cycle']))
+		os.system('bash %s//met/get_nam -d %s %s > /dev/null' %(os.environ['src'],os.environ['rundate'],os.environ['cycle']))
 
 		#run wps
-		os.system('bash %s/run_wps -d %s %s %s' %(os.environ['src'],os.environ['rundate'],os.environ['runhrs'],os.environ['cycle']))
+		os.system('bash %s/met/run_wps -d %s %s %s' %(os.environ['src'],os.environ['rundate'],os.environ['runhrs'],os.environ['cycle']))
 		logging.info('Completed WPS run')
 
 		#run wrf
-		os.system('bash %s/run_wrf -d %s %s %s' %(os.environ['src'],os.environ['rundate'],os.environ['runhrs'],os.environ['cycle']))
+		os.system('bash %s/met/run_wrf -d %s %s %s' %(os.environ['src'],os.environ['rundate'],os.environ['runhrs'],os.environ['cycle']))
 		logging.info('Completed WRF run')
 
 		conv_arl.main()
