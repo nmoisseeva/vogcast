@@ -10,6 +10,7 @@ import logging
 #import wrf
 from set_vog_env import *
 import glob
+import plumerise.preproc_src as prepcwipp
 
  ### Fucntions ###
 def locate_source():
@@ -116,7 +117,7 @@ def main():
 			static_area(source, emissions)
 		#TODO set up cwipp
 		elif source['pr_model']=='cwipp':
-			print('PLACEHOLDER FOR CWIPP RUN')
+			prepcwipp.main()
 		else:
 			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
 

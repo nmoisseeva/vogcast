@@ -28,8 +28,8 @@ def make_fcst_json(json_name):
 	fcstjson['forecast'] = os.environ['forecast']
 	
 	#create some vars for easy info display
-	fcstdate = dt.datetime.strptime(fcstjson['forecast'],'%Y%M%d%H')
-	fcstjson['date'] = dt.datetime.strftime(fcstdate, '%Y-%M-%d')
+	fcstdate = dt.datetime.strptime(fcstjson['forecast'],'%Y%m%d%H')
+	fcstjson['date'] = dt.datetime.strftime(fcstdate, '%Y-%m-%d')
 	fcstjson['cycle'] = fcstjson['forecast'][-2:] + 'Z'
 
 	#copy emissions info for display
@@ -37,19 +37,18 @@ def make_fcst_json(json_name):
 	fcstjson['emissions'] = str(json_data['emissions']['src1']['so2']) + ' tonnes/day'
 
 	#create a tag for the first animation slide
-	spinup = int(json_data['user_defined']['dispersion']['spinup'])
+	spinup = int(os.environ['spinup'])
 	t0 = fcstdate + dt.timedelta(hours = spinup+1)
-	fcstjson['firstoutput'] = dt.datetime.strftime(t0, '%Y%M%d%H') 
+	fcstjson['firstoutput'] = dt.datetime.strftime(t0, '%Y%m%d%H') 
 
 	#create time interval for the timedimension slider
 	hys_hrs = int(os.environ['runhrs']) - spinup
-	start_str = dt.datetime.strftime(t0, '%Y-%M-%dT%H:00:00Z/')
+	start_str = dt.datetime.strftime(t0, '%Y-%m-%dT%H:00:00Z/')
 	end = t0 + dt.timedelta(hours = hys_hrs - 1)
-	end_str = dt.datetime.strftime(end, '%Y-%M-%dT%H:00:00Z')
-	#TODO this breaks on month-end!! figure out why!!
-	logging.debug('...ENDTIME: {}'.format(end_str))
+	end_str = dt.datetime.strftime(end, '%Y-%m-%dT%H:00:00Z')
 	fcstjson['timeInterval'] = start_str + end_str
-	
+
+
 	#WARNING: this is hardcoded to match the hysplit CONTROL file
 	fcstjson['bounds'] = {}
 	fcstjson['bounds']['minlat'] = 18

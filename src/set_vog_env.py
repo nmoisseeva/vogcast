@@ -106,6 +106,16 @@ def update_run_json(json_data):
 
 	return
 
+def write_json(json_path, json_data):
+        '''
+        Write json file - same as above, repeated for convenience
+        '''
+        with open(json_path, 'w') as f:
+                f.write(json.dumps(json_data, indent=4))
+
+        return
+
+
 def update_user_settings(run_modules):
 	'''
 	Update user settings for partial reruns

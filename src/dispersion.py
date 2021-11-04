@@ -153,7 +153,7 @@ def main():
 	hys_settings = json_data['user_defined']['dispersion']
 
 	#set environmental variables for dispersion
-	config_keys = ['hys_path','spinup','freq']
+	config_keys = ['freq']
 	for key in config_keys:
 		set_env_var(hys_settings, key)
 

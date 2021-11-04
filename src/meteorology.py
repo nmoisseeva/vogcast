@@ -27,9 +27,6 @@ def main():
 		set_env_var(met_settings, 'wps_path')
 		set_env_var(met_settings, 'wrf_path')
 
-		#add hysplit path for arl conversion
-		set_env_var(json_data['user_defined']['dispersion'], 'hys_path')
-
 		#download initial conditionsi
 		#TODO check for existing files before downloading, create ibc.OK
 		os.system('bash %s//met/get_nam -d %s %s > /dev/null' %(os.environ['src'],os.environ['rundate'],os.environ['cycle']))

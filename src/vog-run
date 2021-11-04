@@ -37,7 +37,7 @@ if __name__ == '__main__':
 	settings = read_config(os.environ['config_path'])
 
 	#set shared environmental variables
-	config_keys = ['vog_root','run_dir','runhrs','max_dom']
+	config_keys = ['vog_root','run_dir','runhrs','max_dom','spinup']
 	for key in config_keys:
 		set_env_var(settings, key)
 
@@ -45,6 +45,7 @@ if __name__ == '__main__':
 	os.environ['run_path'] = os.path.join(os.environ['run_dir'],forecast)
 	os.environ['src'] = os.path.join(os.environ['vog_root'],'src')
 	os.environ['hys_rundir'] = os.path.join(os.environ['run_path'],'hysplit')
+	set_env_var(settings['dispersion'],'hys_path')
 	
 	#create/locate run folders and pipeline json
 	create_run_dir()

@@ -187,7 +187,6 @@ def main():
 	json_data = read_run_json()
 	pproc_settings = json_data['user_defined']['post_process']
 	unit_conv = pproc_settings['conversion']
-	set_env_var(json_data['user_defined']['dispersion'],'hys_path')
 
 	#create POE for user-defined thresholds, if requested 
 	if 'poe' in pproc_settings.keys():
