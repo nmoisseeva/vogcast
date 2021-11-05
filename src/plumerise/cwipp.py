@@ -1,9 +1,19 @@
-import config
-import utils
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.optimize import fsolve
 import logging
+
+#---------default CWIPP parameters-------
+# do not change these settings unless sure
+
+g = 9.81		#gravity constant
+
+#vertical level settings
+dz = 20             	#height interpolation step for analysis (in meteres)
+zmax = 10000        	#max height m AGL for analysis
+BLfrac = 0.75       	#fraction of BL height to use as reference height z_s (default = 0.75)
+
+#-----------end of parameters-----------
 
 class Plume:
 	"""
@@ -45,7 +55,7 @@ class Plume:
 		"""
 	#---for ops version all parameters assigned later 
 		self.name = name
-		self.interpZ = np.arange(0,config.zmax+1,config.dz)
+		self.interpZ = np.arange(0,zmax+1,dz)
 
 	def get_sounding(self, inputs):
 		"""
@@ -69,7 +79,7 @@ class Plume:
 		"""
 
 		zi = inputs['PBLH']
-		zs = zi * config.BLfrac
+		zs = zi * BLfrac
 
 		#interpolate sounding to analysis levels
 		interpT= interp1d(inputs['Z'],inputs['T'],fill_value='extrapolate')
@@ -95,8 +105,8 @@ class Plume:
 		Tau : float
 			characteristic timescale [s]
 		"""
-		Tau = 1/np.sqrt(config.g*(self.THzCL - self.THs)/(self.THs * (self.zCL-self.zs)))
-		wf= ((config.g*self.I*(self.zCL-self.zs))/(self.THs*self.zi))**(1/3.)
+		Tau = 1/np.sqrt(g*(self.THzCL - self.THs)/(self.THs * (self.zCL-self.zs)))
+		wf= ((g*self.I*(self.zCL-self.zs))/(self.THs*self.zi))**(1/3.)
 
 		self.Tau = Tau
 		self.wf = wf
@@ -113,7 +123,7 @@ class Plume:
 			classification (True if penetrative).
 		"""
 
-		if	self.zCL < (self.zi + (config.dz)/2):
+		if	self.zCL < (self.zi + (dz)/2):
 			self.penetrative = False
 		else:
 			self.penetrative = True
@@ -150,8 +160,8 @@ class Plume:
 		else:
 			#obtain iterative solution
 			toSolve = lambda z : z	- b - m*(self.zs + \
-							1/(np.sqrt(config.g*(self.sounding[int(z/config.dz)] - self.THs)/(self.THs * (z-self.zs))))	* \
-							(config.g*self.I*(z-self.zs)/(self.THs * self.zi))**(1/3.))
+							1/(np.sqrt(g*(self.sounding[int(z/dz)] - self.THs)/(self.THs * (z-self.zs))))	* \
+							(g*self.I*(z-self.zs)/(self.THs * self.zi))**(1/3.))
 
 			#set inital guess for day vs night time
 			if self.zi < 400:
@@ -201,7 +211,7 @@ class Plume:
 		else:
 			m, b = 1, 0
 
-		zCL = m*(((self.THs/config.g)**(1/4.)) * ((self.I/self.zi)**(0.5)) * ((1/Gamma)**(3/4.)) + ze) + b
+		zCL = m*(((self.THs/g)**(1/4.)) * ((self.I/self.zi)**(0.5)) * ((1/Gamma)**(3/4.)) + ze) + b
 
 		self.zCL = zCL
 
@@ -244,7 +254,7 @@ class Plume:
 			self.get_wf()
 
 			#get Deadorff's velocity for spread
-			wD = (config.g * self.zi * 0.13 / self.THs)**(1/3.) #!!!! HARDCODED SURFACE HEAT FLUX: use wrf?
+			wD = (g * self.zi * 0.13 / self.THs)**(1/3.) #!!!! HARDCODED SURFACE HEAT FLUX: use wrf?
 
 			#get smoke spread above zCL
 			sigma_top = (self.zCL - self.zs)/3.

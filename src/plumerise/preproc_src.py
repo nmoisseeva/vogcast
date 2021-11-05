@@ -94,9 +94,6 @@ def get_met_data(ds,hr,met_idx):
 	pblh = ds.variables['PBLH'][inds]
 
 
-	logging.debug('SANITY CHECK: {}'.format(ds.variables['XLONG'][hr,ilat,ilon]))
-
-
 	#compile output dict
 	metdata = {}
 	metdata['T'] = T0.squeeze().tolist()
@@ -150,6 +147,8 @@ def main():
 		#get loc index nearest to fire
 		met_idx = get_met_loc_idx(met_tree, src_loc)
 
+		cwippjson[tag] = {}
+
 		#loop through hours of simulation
 		for hr in range(int(os.environ['spinup']),int(os.environ['runhrs'])):
 			
@@ -160,12 +159,11 @@ def main():
 			timestamp = parse_timestamp(json_data, hr)
 			
 			#add data to out dictionary
-			cwippjson[timestamp] = {}
-			cwippjson[timestamp][tag] = metdata 
+			cwippjson[tag][timestamp] = metdata 
 
     			#add intensity record
 			#NOTE future: is there a diurnal temperature cycle to consider?
-			cwippjson[timestamp][tag]['I'] = source['intensity']
+			cwippjson[tag][timestamp]['I'] = source['intensity']
 
 	#write out the cwipp json
 	write_json('cwipp_inputs.json',cwippjson)

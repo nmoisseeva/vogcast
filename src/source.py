@@ -11,6 +11,7 @@ import logging
 from set_vog_env import *
 import glob
 import plumerise.preproc_src as prepcwipp
+import plumerise.cwipp as cwipp
 
  ### Fucntions ###
 def locate_source():
@@ -28,17 +29,8 @@ def locate_source():
 	x, y = wrf.ll_to_xy(nc_file, lat, lon, timeidx=wrf.ALL_TIMES)
 
 	return nc_file, x, y
-	
-def get_sounding(nc_file, x, y):
-	'''
-	Get sounding from source location
-	'''
-	
-	#pblh = wrf_extract
-	sounding = 0
 
-	return sounding
-
+	
 def static_line(source, emissions):
 	'''
 	Performs static legacy ops routine for defining an emission source line:
@@ -91,6 +83,46 @@ def static_area(source, emissions):
 
 	return
 
+def run_cwipp():
+	'''
+	Run dynamic plume rise model
+	'''
+
+	#-------this is a bias fit default from Moisseeva 2021----
+	biasFit =  [0.9195, 137.9193]
+	#---------------------------------------------------------
+
+	#load input data
+	cwippinputs = read_json('cwipp_inputs.json')
+
+	#set up output dictionary
+	output = {}
+
+	#loop through available timestamps
+	for tag in cwippinputs.keys():
+		logging.debug(cwippinputs[tag])	
+		logging.debug('.....processing source: {}'.format(tag))
+		output[tag] = {}
+
+		#loop through all hours
+		for dtime in cwippinputs[tag].keys():
+			src = cwippinputs[tag][dtime]
+		
+			#run cwipp model
+			plume = cwipp.Plume(tag)
+			plume.get_sounding(src)
+			plume.I = src['I']
+			plume.iterate(biasFit)
+			plume.classify()
+			plume.get_uBL(src)
+			plume.get_profile()
+
+			output[tag][dtime] = plume.profile
+	#write output? 	
+
+	return
+
+
 def main():
 	'''
 	Run plume rise/source model
@@ -111,13 +143,17 @@ def main():
 
 		#call the selected plume rise approach
 		logging.info('... {} plumerise model: {}'.format(tag,source['pr_model']))
+		
 		if source['pr_model']=='ops':
+			#this is legacy option up to 2021 (NOTE: note included in config)
 			static_line(source, emissions)
 		elif source['pr_model']=='static_area':
+			#standard hysplit area source option
 			static_area(source, emissions)
-		#TODO set up cwipp
 		elif source['pr_model']=='cwipp':
+			#dynamic plume rise model adapted from widlfire
 			prepcwipp.main()
+			run_cwipp()
 		else:
 			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
 
