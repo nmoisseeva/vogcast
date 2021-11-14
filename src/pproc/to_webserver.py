@@ -94,6 +94,10 @@ def main(web_path):
 	logging.debug('...copying poe pngs: {}'.format(poe_png_cmd))
 	os.system(poe_png_cmd)
 
+	ci_png_cmd = 'scp *ci*.png {}/png/ci/.'.format(web_path)
+	logging.debug('...copying ci pngs: {}'.format(ci_png_cmd))
+	os.system(ci_png_cmd)
+
 	logging.info('Copy to webserver complete')
 
 

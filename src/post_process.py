@@ -76,6 +76,7 @@ def get_poe(pproc_settings):
 	conv = pproc_settings['conversion']
 	poe_settings = pproc_settings['poe']
 
+	#TODO what if only one pollutant is requested and it's not the first? indexing is wrong
 	#loop through requested pollutants
 	for iP, pollutant in enumerate(poe_settings.keys()):
 		#flag for pollutant number
@@ -100,7 +101,16 @@ def get_poe(pproc_settings):
 		logging.debug('...saving as cmean_{} for future use'.format(pollutant))
 		os.system('mv cmean cmean_{}'.format(pollutant))
 
+	#extract QUALITATIVE column integrated smoke for SO4
+	#TODO fix this ugly thing so it's not so hardcoded
+	ci_cmd = './conprob -bcdump {} {} -z3'.format(pflag,xflag)
+	logging.debug('...getting CI valuess for {}: {}'.format(pollutant, ci_cmd))
+	os.system(ci_cmd)
+	to_netcdf('cmean', 'CI_{}.nc'.format(pollutant))
+
 	return
+
+
 
 def stn_traces(tag, stn_file, conv):
 	'''
@@ -215,6 +225,9 @@ def main():
 		if 'poe' in plot_settings.keys():
 			for pollutant in plot_settings['poe']:
 				make_poe_plots('./poe_', pollutant, 'png')
+				if pollutant=='SO4':
+					#NOTE HARDOCODED integration depth!!!!
+					make_ci_contours('CI_SO4.nc', pollutant, 5000, 'png')
 	else:
 		logging.info('No plots requested in config file')	
 

@@ -88,6 +88,35 @@ def make_aqi_cmap(pollutant):
 
 	return aqi, norm
 
+def make_ci_contours(nc_path, pollutant, cz, fmt):
+	'''
+	Create crude contours of column-integrated smoke, for column of height cz
+	'''
+	logging.info('...creating column-integrated contours for: {}'.format(pollutant))
+
+	#open netcdf file
+	ds = nc.Dataset(nc_path)
+
+	#get readable time dimension
+	tdim = get_tdim(ds)
+
+	#get the needed variable
+	converted_fields = ds.variables[pollutant][:,0,:,:]
+
+	#loop through all frames, smoothing and saving
+	for t,time in enumerate(tdim):
+		ci_con = converted_fields[t,:,:] * cz
+		ctr = plt.contour(ci_con,cmap='copper', origin='lower', levels=50, vmin=0.001, linewidths=0.1)
+		#hide all padding, margins and axes
+		plt.axis('off')
+		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+		plt.margins(0,0)
+		plt.gca().xaxis.set_major_locator(plt.NullLocator())
+		plt.gca().yaxis.set_major_locator(plt.NullLocator())
+		plt.savefig('./ci_{}.{}'.format(time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
+		plt.close()
+
+	return
 
 def get_tdim(ds):
 	'''

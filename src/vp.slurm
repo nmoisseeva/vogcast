@@ -11,4 +11,4 @@ module purge
 source ~/.bash_profile 
 source ../venv/bin/activate
 
-python3.7 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211029 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211112 00

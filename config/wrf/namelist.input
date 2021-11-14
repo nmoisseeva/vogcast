@@ -61,13 +61,14 @@
  ra_lw_physics                       = 4, 4, 	!RRTMG scheme - part of TROPICAL
  ra_sw_physics                       = 4, 4,	!RRTMG scheme - part of TROPICAL
  radt                                = 10, 10,
- sf_sfclay_physics                   = 1, 1,	!leaving at 1 -TROPICAL: Old MM5 scheme (91)
- sf_surface_physics                  = 2, 2,	!Unified Noah LSM - part of TROPICAL
+ sf_sfclay_physics                   = 7, 7,	!Pleum-Xy (accompanies ACM2 PBL) - TROPICAL: Old MM5 scheme (91)
+ sf_surface_physics                  = 7, 7,	!Pleim-Xu (accompanies ACM2 PBL) -  TROPICAL: Unified Noah LSM (2)
  bl_pbl_physics                      = 7, 7,	!ACM2 as recommended by Tim - TROPICAL: Yonsei University scheme (1)
  bldt                                = 0, 0,	!call BL physics every time step
  cu_physics                          = 0, 0,	! (if used, consder newer Tiedtke scheme - part of TROPICAL)
  cudt                                = 0, 0,	!call every time step
 ! surface_input_source               = 3, 3,	!not sure what option 3 is supposed to mean (SFIRE-specific?)
+ num_soil_layers		     = 2,  	!Pluem-Xu LSM
  num_land_cat                        = 21, 	!check if it's 24
  sf_urban_physics                    = 0, 0,
  /

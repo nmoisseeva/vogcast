@@ -175,6 +175,6 @@ sbatch -W wrf.slurm
 [ -f wrf.OK ] && touch met.OK
 
 #clean up
-clean_wrfdir
+#clean_wrfdir
 
 exit 0
