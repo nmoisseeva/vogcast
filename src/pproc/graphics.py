@@ -106,7 +106,7 @@ def make_ci_contours(nc_path, pollutant, cz, fmt):
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
 		ci_con = converted_fields[t,:,:] * cz
-		ctr = plt.contour(ci_con,cmap='copper', origin='lower', levels=50, vmin=0.001, linewidths=0.1)
+		ctr = plt.contour(ci_con,cmap='copper', origin='lower', levels=[100,1000,10000,100000,1000000], vmin=10, vmax=1000000,linewidths=0.1)
 		#hide all padding, margins and axes
 		plt.axis('off')
 		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
