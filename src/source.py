@@ -100,7 +100,6 @@ def run_cwipp():
 
 	#loop through available timestamps
 	for tag in cwippinputs.keys():
-		logging.debug(cwippinputs[tag])	
 		logging.debug('.....processing source: {}'.format(tag))
 		output[tag] = {}
 

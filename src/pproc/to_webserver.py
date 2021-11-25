@@ -51,8 +51,8 @@ def make_fcst_json(json_name):
 
 	#WARNING: this is hardcoded to match the hysplit CONTROL file
 	fcstjson['bounds'] = {}
-	fcstjson['bounds']['minlat'] = 18
-	fcstjson['bounds']['maxlat'] = 23
+	fcstjson['bounds']['minlat'] = 18.25
+	fcstjson['bounds']['maxlat'] = 22.75
 	fcstjson['bounds']['minlon'] = -160.5
 	fcstjson['bounds']['maxlon'] = -154.5 
 

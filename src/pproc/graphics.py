@@ -25,7 +25,7 @@ def make_poe_cmap():
 	#add transparancy
 	poe_cm = colors.LinearSegmentedColormap.from_list('poe', colornames, N=256)
 	poe_cmA = poe_cm(np.arange(poe_cm.N))
-	alphas = list(np.linspace(0,1,10)) + [1] * 246
+	alphas = list(np.linspace(0,1,5)) + [1] * 251
 	poe_cmA[:,-1] = alphas	
 
 	poe = colors.LinearSegmentedColormap.from_list('poe',poe_cmA)
@@ -70,7 +70,7 @@ def make_aqi_cmap(pollutant):
 
 	#add alpha for near-zero values
 	cma = cm(np.arange(cm.N))
-	alphas = list(np.linspace(0,1,10)) + [1] * 190
+	alphas = list(np.linspace(0,1,5)) + [1] * 195
 	cma[:,-1] = alphas
 
 	#combine into a new colormap with transparancy
@@ -106,7 +106,9 @@ def make_ci_contours(nc_path, pollutant, cz, fmt):
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
 		ci_con = converted_fields[t,:,:] * cz
-		ctr = plt.contour(ci_con,cmap='copper', origin='lower', levels=[100,1000,10000,100000,1000000], vmin=10, vmax=1000000,linewidths=0.1)
+		ctr1 = plt.contourf(ci_con,cmap='copper', origin='lower', levels=[5000,1e20], vmin=5000, vmax=1e100,alpha=0.05)
+		ctr2 = plt.contourf(ci_con,cmap='copper', origin='lower', levels=[1000,1e20], vmin=1000, vmax=1e100,alpha=0.05)
+		ctr3 = plt.contourf(ci_con,cmap='copper', origin='lower', levels=[10,1e20],  vmin=10, vmax=1e100,alpha=0.08)
 		#hide all padding, margins and axes
 		plt.axis('off')
 		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)

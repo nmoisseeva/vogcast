@@ -72,7 +72,6 @@ def get_met_data(ds,hr,met_idx):
 	
 	#get indecies in two differet formats for convenience
 	iz,ilat,ilon =  np.unravel_index(met_idx[0],shape = np.shape(ds.variables['XLAT']))
-	inds = np.unravel_index(met_idx[0],shape = np.shape(ds.variables['XLAT']))
 
 	#debug sanity-check prinout
 	logging.debug('...closest grid location found: {},{}'.format(ds.variables['XLAT'][hr,ilat,ilon].squeeze(),ds.variables['XLONG'][hr,ilat,ilon].squeeze()))
@@ -81,7 +80,7 @@ def get_met_data(ds,hr,met_idx):
 	#get destaggered height vector, convert to AGL
 	zstag = (ds.variables['PHB'][hr,:,ilat,ilon] + ds.variables['PH'][hr,:,ilat,ilon])//9.81
 	z0 = wrf.destagger(zstag,0)
-	sfc_elev = ds.variables['HGT'][inds]
+	sfc_elev = ds.variables['HGT'][hr,ilat,ilon]
 	agl_height = z0 - sfc_elev
 
 	#get vertical temperature profile
@@ -91,8 +90,8 @@ def get_met_data(ds,hr,met_idx):
 	M  = (ds.variables['U'][hr,:,ilat,ilon].squeeze()**2 + ds.variables['V'][hr,:,ilat,ilon].squeeze()**2)**(0.5)
 
 	#get zi
-	pblh = ds.variables['PBLH'][inds]
-
+	pblh = ds.variables['PBLH'][hr,ilat,ilon]
+	logging.debug(pblh)
 
 	#compile output dict
 	metdata = {}

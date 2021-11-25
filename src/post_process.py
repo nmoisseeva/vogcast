@@ -159,7 +159,7 @@ def clean_hysdir():
 
 	logging.debug('...cleaning up HYSPLIT direcotry')
 	os.system('find -type l -delete')
-	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err *.log cdump* > /dev/null 2>&1')
+	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err *.log > /dev/null 2>&1')
 
 	return
 
