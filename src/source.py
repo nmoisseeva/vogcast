@@ -143,43 +143,70 @@ def generate_emitimes(source,emissions):
 	Create hysplit source files for time-varying emissions
 	'''
 
-	logging.info('.....Generating EMITIMES file for HYSPLTI')
+	logging.info('.....Generating EMITIMES file for HYSPLIT')
 
 	#format of EMITIMES file
-	#YYYY MM DD HH    DURATION(hhhh) #RECORDS
-	#YYYY MM	 DD HH MM DURATION(hhmm) LAT LON HGT(m) RATE(/h) AREA(m2) HEAT(w)
+	info_lines = 'YYYY MM DD HH DURATION(hhhh) #RECORDS\nYYYY MM DD HH MM DURATION(hhmm) LAT LON HGT(m) RATE(/h) AREA(m2) HEAT(w)\n'
 
 	#read plumerise data
-	cwippdata = read_json('cwipp_outputs.json')
+	cwippdata = read_json('cwipp_output.json')
+	
+	#string storage for control lines
+	control_lines = ''
 
-	#TODO the loops must be flipped, HYSPLIT will likely fail with multipe records for same hour
-	#loop through available timestamps
-	for tag in cwippdata.keys():
-		logging.debug('.....processing source: {}'.format(tag))
+	#open write file$
+	#TODO wipe old file$
+	with open('../hysplit/EMITIMES', 'w') as emitimes:
+		emitimes.write(info_lines)
 
-		#open write file
-		with open('EMITIMES', 'a') as emitimes:
-		
+		#TODO the loops must be flipped, HYSPLIT will likely fail with multipe records for same hour
+		#loop through available timestamps
+		for tag in cwippdata.keys():
+			logging.debug('.....processing source: {}'.format(tag))
+
 			#loop through aemitimes
 			for dtime in cwippdata[tag].keys():
 				#convert to datetime for convenience
 				emitdate = dt.datetime.strptime(dtime, '%Y%m%d%H')
 		
 				#generate block header			
-				header = emitdate.strftime('%Y %m %d %H ') + '0001 ' + 5
+				header = emitdate.strftime('%Y %m %d %H ') + '0001 10 \n'
 				emitimes.write(header)
-			
-				for lvl in range(5):
+
+				#TODO check if this is what hysplit is looking for
+				control_lines = ''			
+				for layer in range(5):
 					# conversion of emisisons
 					to_mg_per_hr = (1./24) * 1e9    #converstion factor from tonnes/day to mg/hr
-					so2 = str(to_mg_per_hr * emissions['so2'] * cwippdata[tag][dtime]['fractions'][lvl]) 
+					so2 = str(int(to_mg_per_hr * emissions['so2'] * cwippdata[tag][dtime]['fractions'][layer])) 
 
-					#git height
-					hgt = str(cwippdata[tag][dtime]['heights'][lvl])
-					
-					#generate a line
-					line = emidate.strftime('%Y %m %d %H ') + '00 0100 ' + source['lat'] + ' ' + source['lon'] + ' ' + hgt  + ' ' + so2
-	
+					#get height and location data as strings
+					hgt = str(int(cwippdata[tag][dtime]['heights'][layer]))
+					lat, lon, area = str(source['lat']), str(source['lon']), str(source['area'])					
+
+					#generate source lines for SO2 and SO4
+					#TODO THIS IS SO HARDCODED!! FIX!!
+					so2_line = emitdate.strftime('%Y %m %d %H ') + '00 0100 ' + lat + ' ' + lon  + ' ' + hgt  + ' ' + so2 + ' ' + area + ' 0\n'
+					emitimes.write(so2_line)	
+					so4_line = emitdate.strftime('%Y %m %d %H ') + '00 0100 ' + lat + ' ' + lon  + ' ' + hgt  + ' 0 ' + area + ' 0\n'
+					emitimes.write(so4_line)
+
+					#generate lines for hysplit CONTROL file
+					control_lines = control_lines + lat + ' ' + lon + ' ' + hgt + ' ' + so2 + ' ' + area + '\\n'
+
+	#count total number of source lines for control file
+	#src_cnt = len(cwippdata.keys()) * len(cwippdata[tag].keys()) * 5
+	src_cnt = 5
+
+	#remove newline character from the last line
+	control_lines = control_lines[:-2]
+
+	#append main run json with area source data
+	json_data = read_run_json()
+	json_data['plumerise'] = {'sources': control_lines, 'src_cnt' : src_cnt}
+	update_run_json(json_data)
+
+
 	return
 
 def main():

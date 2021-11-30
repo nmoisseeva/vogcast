@@ -78,7 +78,7 @@ def edit_hys_config(json_data):
 	sed_command('{vert_motion}', str(user['dispersion']['vert_motion']), 'CONTROL')
 	#set vertical levels
 	lvls = user['dispersion']['lvls']
-	num_lvls = len(lvls)
+	num_lvls = str(len(lvls))
 	sed_command('{num_lvls}', num_lvls, 'CONTROL')
 	lvls_str = " ". join([str(i) for i in lvls])
 	sed_command('{lvls}', lvls_str, 'CONTROL')
