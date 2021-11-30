@@ -12,6 +12,8 @@ from set_vog_env import *
 import glob
 import plumerise.preproc_src as prepcwipp
 import plumerise.cwipp as cwipp
+import matplotlib.pyplot as plt #TODO this is for testing only
+import datetime as dt
 
  ### Fucntions ###
 def locate_source():
@@ -115,12 +117,70 @@ def run_cwipp():
 			plume.classify()
 			plume.get_uBL(src)
 			plume.get_profile()
-
-			output[tag][dtime] = plume.profile
-	#write output? 	
-
+			#plume.allocate_to_layers()
+			output[tag][dtime] = {}
+			output[tag][dtime]['fractions'] = plume.layer_fractions
+			output[tag][dtime]['heights'] = plume.layer_heights
+			logging.debug('{}: estimated mean injection height is {:.1f} m'.format(dtime,plume.zCL))
+	
+			plt.figure()
+			plt.plot(plume.sounding, plume.interpZ, color='grey', label='WRF sounding')
+			ax1 = plt.gca()
+			ax1.set(xlabel='potential temperature (K)', ylabel='height [m]')
+			plt.axhline(y = plume.zi, color='grey', label='zi')
+			plt.axhline(y = plume.zCL, color='C1', label='modelled injection height')
+			ax2 = plt.twiny(ax1)
+			plt.plot(plume.profile, plume.interpZ, color='red',label='CWIPP profile')
+			plt.gca().set(xlabel='norm smoke concentration', ylabel='height [m]')
+			plt.legend()
+			plt.savefig('/home/moisseev/dev/vog-pipeline/src/{}.png'.format(dtime))
+			plt.close()
+	write_json('cwipp_output.json',output)
 	return
 
+def generate_emitimes(source,emissions):
+	'''
+	Create hysplit source files for time-varying emissions
+	'''
+
+	logging.info('.....Generating EMITIMES file for HYSPLTI')
+
+	#format of EMITIMES file
+	#YYYY MM DD HH    DURATION(hhhh) #RECORDS
+	#YYYY MM	 DD HH MM DURATION(hhmm) LAT LON HGT(m) RATE(/h) AREA(m2) HEAT(w)
+
+	#read plumerise data
+	cwippdata = read_json('cwipp_outputs.json')
+
+	#TODO the loops must be flipped, HYSPLIT will likely fail with multipe records for same hour
+	#loop through available timestamps
+	for tag in cwippdata.keys():
+		logging.debug('.....processing source: {}'.format(tag))
+
+		#open write file
+		with open('EMITIMES', 'a') as emitimes:
+		
+			#loop through aemitimes
+			for dtime in cwippdata[tag].keys():
+				#convert to datetime for convenience
+				emitdate = dt.datetime.strptime(dtime, '%Y%m%d%H')
+		
+				#generate block header			
+				header = emitdate.strftime('%Y %m %d %H ') + '0001 ' + 5
+				emitimes.write(header)
+			
+				for lvl in range(5):
+					# conversion of emisisons
+					to_mg_per_hr = (1./24) * 1e9    #converstion factor from tonnes/day to mg/hr
+					so2 = str(to_mg_per_hr * emissions['so2'] * cwippdata[tag][dtime]['fractions'][lvl]) 
+
+					#git height
+					hgt = str(cwippdata[tag][dtime]['heights'][lvl])
+					
+					#generate a line
+					line = emidate.strftime('%Y %m %d %H ') + '00 0100 ' + source['lat'] + ' ' + source['lon'] + ' ' + hgt  + ' ' + so2
+	
+	return
 
 def main():
 	'''
@@ -153,6 +213,7 @@ def main():
 			#dynamic plume rise model adapted from widlfire
 			prepcwipp.main()
 			run_cwipp()
+			generate_emitimes(source,emissions)
 		else:
 			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
 
