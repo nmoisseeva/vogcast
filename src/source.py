@@ -102,7 +102,7 @@ def run_cwipp():
 
 	#loop through available timestamps
 	for tag in cwippinputs.keys():
-		logging.debug('.....processing source: {}'.format(tag))
+		logging.debug('...processing source: {}'.format(tag))
 		output[tag] = {}
 
 		#loop through all hours
@@ -121,18 +121,19 @@ def run_cwipp():
 			output[tag][dtime] = {}
 			output[tag][dtime]['fractions'] = plume.layer_fractions
 			output[tag][dtime]['heights'] = plume.layer_heights
-			logging.debug('{}: estimated mean injection height is {:.1f} m'.format(dtime,plume.zCL))
+			logging.debug('...{}: estimated mean injection height is {:.1f} m'.format(dtime,plume.zCL))
 	
 			plt.figure()
-			plt.plot(plume.sounding, plume.interpZ, color='grey', label='WRF sounding')
 			ax1 = plt.gca()
-			ax1.set(xlabel='potential temperature (K)', ylabel='height [m]')
-			plt.axhline(y = plume.zi, color='grey', label='zi')
-			plt.axhline(y = plume.zCL, color='C1', label='modelled injection height')
+			ax1.set(xlabel='potential temperature (K)', ylabel='height (m)')
+			l_sound = plt.plot(plume.sounding[:100], plume.interpZ[:100], color='C0', label='WRF sounding')
+			l_zi = plt.axhline(y = plume.zi, ls='--', color='C0', label='broundary layer height')
+			l_zCL = plt.axhline(y = plume.zCL, color='C1',ls=':', label='modelled injection height')
 			ax2 = plt.twiny(ax1)
-			plt.plot(plume.profile, plume.interpZ, color='red',label='CWIPP profile')
-			plt.gca().set(xlabel='norm smoke concentration', ylabel='height [m]')
-			plt.legend()
+			l_cwipp = plt.plot(plume.profile[:100], plume.interpZ[:100], color='C1',label='modelled profile')
+			plt.gca().set(xlabel='normalized concentration', ylabel='height [m]')
+			plt.xlim(xmin=0)
+			plt.legend([l_sound[0],l_zi,l_zCL,l_cwipp[0]],['WRF sounding','boundary layer height','modelled injection height','modelled vog profile'],loc=2)
 			plt.savefig('/home/moisseev/dev/vog-pipeline/src/{}.png'.format(dtime))
 			plt.close()
 	write_json('cwipp_output.json',output)
@@ -162,7 +163,7 @@ def generate_emitimes(source,emissions):
 		#TODO the loops must be flipped, HYSPLIT will likely fail with multipe records for same hour
 		#loop through available timestamps
 		for tag in cwippdata.keys():
-			logging.debug('.....processing source: {}'.format(tag))
+			logging.debug('...processing source: {}'.format(tag))
 
 			#loop through aemitimes
 			for dtime in cwippdata[tag].keys():

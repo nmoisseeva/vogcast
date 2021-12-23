@@ -101,12 +101,12 @@ def get_poe(pproc_settings):
 		logging.debug('...saving as cmean_{} for future use'.format(pollutant))
 		os.system('mv cmean cmean_{}'.format(pollutant))
 
-	#extract QUALITATIVE column integrated smoke for SO4
-	#TODO fix this ugly thing so it's not so hardcoded
-	ci_cmd = './conprob -bcdump {} {} -z3'.format(pflag,xflag)
-	logging.debug('...getting CI valuess for {}: {}'.format(pollutant, ci_cmd))
-	os.system(ci_cmd)
-	to_netcdf('cmean', 'CI_{}.nc'.format(pollutant))
+		#extract QUALITATIVE column integrated smoke for SO4
+		#TODO fix this ugly thing so it's not so hardcoded
+		ci_cmd = './conprob -bcdump {} {}'.format(pflag,xflag)
+		logging.debug('...getting CI valuess for {}: {}'.format(pollutant, ci_cmd))
+		os.system(ci_cmd)
+		to_netcdf('cmean', 'CI_{}.nc'.format(pollutant))
 
 	return
 

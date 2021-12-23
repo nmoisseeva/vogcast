@@ -246,7 +246,7 @@ class Plume:
 		profile = np.empty((len(self.interpZ))) * np.nan
 		i_zCL = np.nanargmin(abs(self.interpZ - self.zCL))
 
-
+		'''	
 		if not self.penetrative:
 			#for BL plumes: uniform distribution
 			profile[:i_zCL] = 1./i_zCL
@@ -256,8 +256,10 @@ class Plume:
 			#allocate to 5 source layers
 			self.layer_fractions = [0.2, 0.2, 0.2, 0.2, 0.2]
 			self.layer_heights = [self.zCL*0.1, self.zCL*0.3, self.zCL*0.5, self.zCL*0.7, self.zCL*0.9]
-
+		
 		elif self.penetrative:
+		'''
+		if self.penetrative or not self.penetrative:
 			#get fire velocity scale
 			self.get_wf()
 
@@ -281,6 +283,7 @@ class Plume:
 			#prescribe gaussian profile
 			profile[i_zCL:] = np.exp(-0.5*((self.interpZ[i_zCL:] - self.zCL)/sigma_top)**2)
 			profile[:i_zCL+1] = np.exp(-0.5*((self.interpZ[:i_zCL+1] - self.zCL)/sigma_bottom)**2)
+			#profile[:i_zCL+1] = np.exp(-0.5*((self.interpZ[:i_zCL+1] - self.zCL)/sigma_top)**2)			
 
 			#convert to normalized distribution (sum area = 1)
 			intC = sum(profile[:])
@@ -292,49 +295,5 @@ class Plume:
 			self.layer_heights = [self.zCL-2*sigma_bottom, self.zCL-sigma_bottom, self.zCL, self.zCL+sigma_top, self.zCL+2*sigma_top]
 			self.layer_fractions = [0.092, 0.238, 0.34, 0.238, 0.092]
 
-			logging.debug(self.layer_heights)
 
 		self.profile = profile.squeeze().tolist()
-
-	def allocate_to_layers(self):
-		"""
-		Allocate the smoke to predefined set of layers
-
-		Parameters
-		----------
-
-		Returns
-		-------
-		layer_fraction : ndarray
-			1D vector corresponding to fraction of total smoke contained in the layer
-		layer_height : ndarray
-			1D vector corresponding to the height of the layer containing the layer_fraction
-		"""
-	
-		#TODO expand this to arbitrary number of points
-		#currently assumes the curve is apporximated with 5 points
-		
-		#set up arrays for storing data
-		layer_fraction, layer_height = [], []		
-
-		#get hieght of mean injection height
-		i_zCL = np.nanargmin(abs(self.interpZ - self.zCL))
-		
-		#get 1, 25, 50, 75, 99 perceniles and their heights
-		percentiles = [99.9, 95, 75, 50, 25, 5, 0.1]
-		fractions = np.percentile(self.profile, percentiles)
-		
-		for nP, pcnt in enumerate(fractions):
-			if nP !=len(fractions)-1:
-				#get indeces of percentiles
-				i_pcnt=abs(self.profile - pcnt).argmin()
-				j_pcnt = abs(self.profile - fractions[nP+1]).argmin()
-				area = np.trapz(self.profile[i_pcnt:j_pcnt], self.interpZ[i_pcnt:j_pcnt])
-				print(area)
-				#get mean height of layer
-				zLayer = np.mean([self.interpZ[i_pcnt], self.interpZ[j_pcnt]])
-			
-				#write out data
-				layer_fraction.append(area)
-				layer_height.append(zLayer)
-	

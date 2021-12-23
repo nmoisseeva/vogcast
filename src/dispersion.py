@@ -135,9 +135,12 @@ def save_carryover(json_data):
 	Save carryover smoke for next run cycle
 	'''
 	
-	#randomly select a PARDUMP file for carryover smoke
-	irand = randrange(1, 27)
-	parfile = 'PARDUMP.{:03d}'.format(irand)
+	##randomly select a PARDUMP file for carryover smoke
+	#irand = randrange(1, 27)
+	#parfile = 'PARDUMP.{:03d}'.format(irand)
+
+	#always save .001 as carryover (for reproducible runs)
+	parfile = 'PARDUMP.001'
 	savefile = 'PARINIT.{}'.format(os.environ['forecast'])
 	save_path = os.path.join(json_data['user_defined']['dispersion']['carryover_path'], savefile)
 
