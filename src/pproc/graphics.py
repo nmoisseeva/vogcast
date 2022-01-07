@@ -90,7 +90,7 @@ def make_aqi_cmap(pollutant):
 
 def make_ci_contours(nc_path, pollutant, cz, fmt):
 	'''
-	Create crude contours of column-integrated smoke, for column of height cz
+	Create crude (qualitative) contours of column-integrated smoke, for user-defined layers cz
 	'''
 	logging.info('...creating column-integrated contours for: {}'.format(pollutant))
 
@@ -101,14 +101,29 @@ def make_ci_contours(nc_path, pollutant, cz, fmt):
 	tdim = get_tdim(ds)
 
 	#get the needed variable
-	converted_fields = ds.variables[pollutant][:,0,:,:]
+	converted_fields = ds.variables[pollutant][:,:,:,:]
+
+	#integrate over all layers to get total column mass
+	#NOTE units are not appropriate for quantitative comparison
+	ci_con = []
+	#if there is a deposition layer, exclude
+	if cz[0] == 0:
+		mass_layers = cz[1:]
+		deposition = 1
+	else:
+		mass_layers = cz.copy()
+		deposition = 0
+	#loop through remaining layers
+	for iZ,z in enumerate(mass_layers):
+		layer_tot = converted_fields[:,deposition+iZ,:,:] * z
+		ci_con.append(layer_tot)
+	cum_mass = np.sum(np.array(ci_con), axis = 0)	
 
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
-		ci_con = converted_fields[t,:,:] * cz
-		ctr1 = plt.contourf(ci_con,cmap='copper', origin='lower', levels=[5000,1e20], vmin=5000, vmax=1e100,alpha=0.05)
-		ctr2 = plt.contourf(ci_con,cmap='copper', origin='lower', levels=[1000,1e20], vmin=1000, vmax=1e100,alpha=0.05)
-		ctr3 = plt.contourf(ci_con,cmap='copper', origin='lower', levels=[10,1e20],  vmin=10, vmax=1e100,alpha=0.08)
+		ctr1 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[5000,1e20], vmin=5000, vmax=1e100,alpha=0.05)
+		ctr2 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[1000,1e20], vmin=1000, vmax=1e100,alpha=0.05)
+		ctr3 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[10,1e20],  vmin=10, vmax=1e100,alpha=0.08)
 		#hide all padding, margins and axes
 		plt.axis('off')
 		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)

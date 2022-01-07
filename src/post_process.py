@@ -197,6 +197,7 @@ def main():
 	json_data = read_run_json()
 	pproc_settings = json_data['user_defined']['post_process']
 	unit_conv = pproc_settings['conversion']
+	vert_lvls = json_data['user_defined']['dispersion']['lvls']
 
 	#create POE for user-defined thresholds, if requested 
 	if 'poe' in pproc_settings.keys():
@@ -227,7 +228,7 @@ def main():
 				make_poe_plots('./poe_', pollutant, 'png')
 				if pollutant=='SO4':
 					#NOTE HARDOCODED integration depth!!!!
-					make_ci_contours('CI_SO4.nc', pollutant, 5000, 'png')
+					make_ci_contours('CI_SO4.nc', pollutant, vert_lvls, 'png')
 	else:
 		logging.info('No plots requested in config file')	
 
