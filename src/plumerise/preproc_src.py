@@ -160,9 +160,17 @@ def main():
 			#add data to out dictionary
 			cwippjson[tag][timestamp] = metdata 
 
-    			#add intensity record
+    			#calculate intensity
 			#NOTE future: is there a diurnal temperature cycle to consider?
-			cwippjson[tag][timestamp]['I'] = source['intensity']
+			#cwippjson[tag][timestamp]['I'] = source['intensity']
+			delT = (source['temperature'] + 273) - metdata['T'][0]
+			logging.debug('... delT is: {} K'.format(delT))
+			H = delT * source['hc']
+			logging.debug('... H is: {} W/m2'.format(H))
+			#convert to kinematic flux and integrate along the diameter
+			I = H * source['diameter'] / (1.2 * 1005) 
+			logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
+			cwippjson[tag][timestamp]['I'] = I
 
 	#write out the cwipp json
 	write_json('cwipp_inputs.json',cwippjson)

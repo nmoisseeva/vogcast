@@ -10,7 +10,7 @@ import datetime as dt
 import logging
 import json
 import os
-import pytz
+import pandas as pd
 from set_vog_env import *
 
 
@@ -30,13 +30,13 @@ def pull_from_api(url,days,series,keypath):
 	login = read_config(keypath)
 	response = requests.get(api_call,auth=(login['hvo']['user'],login['hvo']['pwd']))
 
-	return response
+	return response.json()
 
 def no_data(response):
 	'''
 	Check if so2 data is available for the given day
 	'''
-	if len(response.json()['records']['SUMDFW'])==0:
+	if len(response['records']['SUMDFW'])==0:
 		return True
 	else:
 		return False
@@ -46,18 +46,12 @@ def get_days_offset():
 	Calculate number of days between now and forecast day
 	'''
 
-	hst = pytz.timezone("US/Hawaii")
 	now = dt.datetime.utcnow()
 	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
 	offset = now - fc_date
 
-	logging.debug('...offset days (without +1): {}'.format(offset.days))
-
-	#TODO make this more elegant: this accounts for HST and indexing difference
-	if fc_date.hour == 0:
-		hst_adjust = 2
-	elif fc_date.hour == 12:
-		hst_adjust = 1
+	#add offset to account for HST and API indexing
+	hst_adjust = 2
 
 	return offset.days + hst_adjust
 
@@ -65,17 +59,15 @@ def get_hvo_data(keypath):
 	'''
 	Run all the steps for pulling emissions form HVO
 	'''
-	logging.info('...pulling the most recent emissions data from HVO-API')
+	logging.info('...pulling emissions data from HVO-API')
 
 	#check if a forecast date is set in environ
 	if 'forecast' in os.environ:
 		day = get_days_offset()
 		logging.debug('...Historic run: number of days offset for emissions pull is {}'.format(day))
-		record_idx = 0
 	else:
 		logging.debug('...No forecast date set, getting the most recent data')
 		day = 1
-		record_idx = -1
 
 	#loop until we find some data
 	while no_data(pull_from_api(url,day,series,keypath)):
@@ -83,9 +75,26 @@ def get_hvo_data(keypath):
 
 	#get the data we need
 	response = pull_from_api(url,day,series,keypath)
-	so2 = int(response.json()['records']['SUMDFW'][record_idx]['so2'])
-	obs_date = response.json()['records']['SUMDFW'][record_idx]['date']
-	logging.info('...most recend data found: %s' %obs_date)
+
+	#get the correct index of the record (if forecast mode: use most recent)
+	if 'forecast' in os.environ:
+		#get all record timestamps manually adding UTC offset (HVO data is in HST)
+		nr = int(response['nr'])
+		obs_dates = [response['records']['SUMDFW'][i]['date']+' -1000' for i in range(nr)]
+		obs_datetimes = [dt.datetime.strptime(date, '%Y-%m-%d %H:%M:%S %z') for date in obs_dates]
+
+		#use pandas to locate nearest record and get index
+		pdtime = pd.DatetimeIndex(obs_datetimes)
+		fc_date = dt.datetime.strptime(os.environ['forecast']+'UTC', '%Y%m%d%H%Z') 
+		record_idx = pdtime.get_loc(fc_date, method='nearest')
+		#nearest = min(obs_datetimes, key=lambda d: abs(d - date))
+	else:
+		#get the most recent record
+		record_idx = -1
+
+	so2 = int(response['records']['SUMDFW'][record_idx]['so2'])
+	obs_date = response['records']['SUMDFW'][record_idx]['date']
+	logging.info('...nearest record found found: %s HST' %obs_date)
 
 	return so2, obs_date
 

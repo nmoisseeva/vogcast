@@ -14,14 +14,23 @@ from set_vog_env import *
 
  ### Fucntions ###
 
-def setup_hys_dir():
+def create_hys_dir():
 	'''
-	Set up and navigate to hyslit subdirectory within main run folder
+	Create a hysplit subdirectory within main run folder, if necessary 
 	'''
 	#create subdirectory for hysplit files, clean up
 	Path(os.environ['hys_rundir']).mkdir(exist_ok=True)
 	os.chdir(os.environ['hys_rundir'])
 	os.system('find -type l -delete')
+
+	return
+
+def setup_hys_dir():
+	'''
+	Set up and navigate to hyslit subdirectory within main run folder
+	'''
+	create_hys_dir()
+	
 	try:
 		os.remove('ARLDATA.CFG')
 	except:

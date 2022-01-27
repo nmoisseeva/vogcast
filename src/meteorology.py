@@ -41,18 +41,20 @@ def main():
 
 		conv_arl.main()
 
-	elif met_settings['model'] == 'none':
-	
-		#update run json with path to existing arl files
-		json_data['arl'] = met_settings['arl_paths']
-		update_run_json(json_data)
-
 	elif met_settings['model'] == 'nam':
 		
-		#TODO nam runs will go here
+		#create and move into hysplit subdirectory
+		conv_arl.create_hys_dir()
+
 		#download nam data from arl (already in arl format)
+		logging.info('...pulling data from ARL FTP server')
+		arl_file = '{}_hysplit.t00z.namsa.HI'.format(os.environ['rundate'])
+		os.system('wget ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{}'.format(arl_file))
+		os.system('mv {} d01.arl'.format(arl_file))
+
 		#update arl path
-		logging.debug('NAM-based runs will go here')
+		json_data['arl'] = '.\/\\nd01.arl'
+		update_run_json(json_data)
 
 
 if __name__ == '__main__':

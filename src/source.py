@@ -12,7 +12,7 @@ from set_vog_env import *
 import glob
 import plumerise.preproc_src as prepcwipp
 import plumerise.cwipp as cwipp
-import matplotlib.pyplot as plt #TODO this is for testing only
+import matplotlib.pyplot as plt #NOTE this is for testing only
 import datetime as dt
 
  ### Fucntions ###
@@ -117,7 +117,6 @@ def run_cwipp():
 			plume.classify()
 			plume.get_uBL(src)
 			plume.get_profile()
-			#plume.allocate_to_layers()
 			output[tag][dtime] = {}
 			output[tag][dtime]['fractions'] = plume.layer_fractions
 			output[tag][dtime]['heights'] = plume.layer_heights
