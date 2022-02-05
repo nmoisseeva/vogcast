@@ -13,6 +13,8 @@ import met.conv_arl as conv_arl
 
 
 def main():
+	
+	logging.info('================METEOROLOGY MODULE================')
 
 	#load main run json
 	json_data = read_run_json()

@@ -192,7 +192,7 @@ def main():
 	- station traces
 	'''
 
-	logging.info('Running post-processing steps')
+	logging.info('===========POST-PROCESSING MODULE=========')
 
 	json_data = read_run_json()
 	pproc_settings = json_data['user_defined']['post_process']

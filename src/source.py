@@ -213,6 +213,8 @@ def main():
 	'''
 	Run plume rise/source model
 	'''
+	logging.info('=============SOURCE MODULE===========')
+	
 	#load main run json
 	json_data = read_run_json()	
 

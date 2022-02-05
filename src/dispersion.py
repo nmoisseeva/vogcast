@@ -154,7 +154,7 @@ def main():
 	'''
 	Run dispersion 
 	'''
-	logging.info('Running dispersion')	
+	logging.info('=================DISPERSION MODULE=================')	
 
 	#load main run json
 	json_data = read_run_json()

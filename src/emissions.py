@@ -36,7 +36,7 @@ def no_data(response):
 	'''
 	Check if so2 data is available for the given day
 	'''
-	if len(response['records']['SUMDFW'])==0:
+	if response['nr']==0:
 		return True
 	else:
 		return False
@@ -81,12 +81,13 @@ def get_hvo_data(keypath):
 		#get all record timestamps manually adding UTC offset (HVO data is in HST)
 		nr = int(response['nr'])
 		obs_dates = [response['records']['SUMDFW'][i]['date']+' -1000' for i in range(nr)]
-		obs_datetimes = [dt.datetime.strptime(date, '%Y-%m-%d %H:%M:%S %z') for date in obs_dates]
+		obs_datetimes_utc = [dt.datetime.strptime(date, '%Y-%m-%d %H:%M:%S %z').astimezone(dt.timezone.utc) for date in obs_dates]
 
-		#use pandas to locate nearest record and get index
-		pdtime = pd.DatetimeIndex(obs_datetimes)
-		fc_date = dt.datetime.strptime(os.environ['forecast']+'UTC', '%Y%m%d%H%Z') 
-		record_idx = pdtime.get_loc(fc_date, method='nearest')
+		#use pandas to locate nearest record to emission start datetime and get index
+		pdtime = pd.DatetimeIndex(obs_datetimes_utc)
+		em_date = dt.datetime.strptime(os.environ['forecast']+'UTC', '%Y%m%d%H%Z') + dt.timedelta(hours=int(os.environ['spinup']))
+		logging.debug('...emissions start hour in UTC is {}'.format(em_date))
+		record_idx = pdtime.get_loc(em_date, method='nearest')
 		#nearest = min(obs_datetimes, key=lambda d: abs(d - date))
 	else:
 		#get the most recent record
@@ -102,6 +103,8 @@ def main():
 	'''
 	Main script steps: find most recent day, get data, write out json
 	'''
+	logging.info('===========EMISSIONS MODULE============')
+
 	#read user settings
 	json_data = read_run_json()
 
