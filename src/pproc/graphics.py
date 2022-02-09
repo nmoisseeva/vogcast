@@ -14,6 +14,10 @@ from matplotlib import colors
 from scipy.ndimage import gaussian_filter
 import datetime as dt
 
+
+#turn off font warnings for logging
+logging.getLogger('matplotlib.font_manager').disabled = True
+
 ### Functions ###
 
 def make_poe_cmap():

@@ -15,6 +15,10 @@ import plumerise.cwipp as cwipp
 import matplotlib.pyplot as plt #NOTE this is for testing only
 import datetime as dt
 
+
+#turn off font warnings in logging
+logging.getLogger('matplotlib.font_manager').disabled = True
+
  ### Fucntions ###
 def locate_source():
 	'''
@@ -133,7 +137,8 @@ def run_cwipp():
 			plt.gca().set(xlabel='normalized concentration', ylabel='height [m]')
 			plt.xlim(xmin=0)
 			plt.legend([l_sound[0],l_zi,l_zCL,l_cwipp[0]],['WRF sounding','boundary layer height','modelled injection height','modelled vog profile'],loc=2)
-			plt.savefig('/home/moisseev/dev/vog-pipeline/src/{}.png'.format(dtime))
+			save_dir = os.path.join(os.environ['run_dir'],os.environ['forecast'],'plumerise')
+			plt.savefig(save_dir + '/{}.pdf'.format(dtime))
 			plt.close()
 	write_json('cwipp_output.json',output)
 	return

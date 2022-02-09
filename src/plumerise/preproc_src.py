@@ -73,10 +73,6 @@ def get_met_data(ds,hr,met_idx):
 	#get indecies in two differet formats for convenience
 	iz,ilat,ilon =  np.unravel_index(met_idx[0],shape = np.shape(ds.variables['XLAT']))
 
-	#debug sanity-check prinout
-	logging.debug('...closest grid location found: {},{}'.format(ds.variables['XLAT'][hr,ilat,ilon].squeeze(),ds.variables['XLONG'][hr,ilat,ilon].squeeze()))
-
-
 	#get destaggered height vector, convert to AGL
 	zstag = (ds.variables['PHB'][hr,:,ilat,ilon] + ds.variables['PH'][hr,:,ilat,ilon])//9.81
 	z0 = wrf.destagger(zstag,0)
@@ -91,7 +87,6 @@ def get_met_data(ds,hr,met_idx):
 
 	#get zi
 	pblh = ds.variables['PBLH'][hr,ilat,ilon]
-	logging.debug(pblh)
 
 	#compile output dict
 	metdata = {}
@@ -161,8 +156,8 @@ def main():
 			cwippjson[tag][timestamp] = metdata 
 
     			#calculate intensity
-			#NOTE future: is there a diurnal temperature cycle to consider?
 			#cwippjson[tag][timestamp]['I'] = source['intensity']
+			logging.debug('... BL height is: {}'.format(metdata['PBLH']
 			delT = (source['temperature'] + 273) - metdata['T'][0]
 			logging.debug('... delT is: {} K'.format(delT))
 			H = delT * source['hc']
