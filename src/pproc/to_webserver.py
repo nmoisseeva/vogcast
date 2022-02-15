@@ -81,6 +81,12 @@ def main(web_path):
 	json_name = 'vogfcst.json'
 	make_fcst_json(json_name)
 
+	#TODO copy station files to webserver
+	stn_file = 'hysplit.haw*.txt' 
+	stn_cmd = 'scp {} {}/../../hysplit/text/.'.format(stn_file, web_path)
+	logging.debug('...copying station data: {}'.format(stn_cmd))
+	os.system(stn_cmd)
+
 	#copy json and pngs to webserver
 	json_cmd = 'scp {} {}/json/.'.format(json_name, web_path)
 	logging.debug('...copying json: {}'.format(json_cmd))

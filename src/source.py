@@ -148,7 +148,7 @@ def generate_emitimes(source,emissions):
 	Create hysplit source files for time-varying emissions
 	'''
 
-	logging.info('.....Generating EMITIMES file for HYSPLIT')
+	logging.info('Generating EMITIMES file for HYSPLIT')
 
 	#format of EMITIMES file
 	info_lines = 'YYYY MM DD HH DURATION(hhhh) #RECORDS\nYYYY MM DD HH MM DURATION(hhmm) LAT LON HGT(m) RATE(/h) AREA(m2) HEAT(w)\n'
@@ -235,7 +235,7 @@ def main():
 		emissions = json_data['emissions'][tag]
 
 		#call the selected plume rise approach
-		logging.info('... {} plumerise model: {}'.format(tag,source['pr_model']))
+		logging.info('{} plumerise model: {}'.format(tag,source['pr_model']))
 		
 		if source['pr_model']=='ops':
 			#this is legacy option up to 2021 (NOTE: note included in config)

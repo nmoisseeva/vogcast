@@ -9,7 +9,7 @@ from set_vog_env import *
 import os
 import logging
 import datetime as dt
-import meteorology, source, emissions, dispersion, post_process
+import meteorology, source, emissions, dispersion, post_process, extras
 
 #set up logging
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s', datefmt='[%Y-%m-%d %H:%M:%S %Z]')
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 		update_user_settings(run_modules)
 	else:
 		json_path = create_run_json(os.environ['config_path'])
-		run_modules = ['meteorology','emissions','source','dispersion','post_process']
+		run_modules = ['meteorology','emissions','source','dispersion','post_process','extras']
 		os.environ['json_path'] = json_path
 
 	#run the pipeline modules	
@@ -75,5 +75,8 @@ if __name__ == '__main__':
 
 	if 'post_process' in run_modules:
 		post_process.main()
+
+	if 'extras' in run_modules:
+		extras.main()
 
 logging.info('PIPELINE RUN COMPLETE')	

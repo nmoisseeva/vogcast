@@ -61,7 +61,7 @@ def get_poe(pproc_settings):
 	'''
 	Get probabilities of exceedance for all user-defined pollutants and thresholds
 	'''
-	logging.info('...calculating exceedance probabilities')
+	logging.info('Calculating exceedance probabilities')
 	
 	#move into dispersion working directory, clean up
 	os.chdir(os.environ['hys_rundir'])
@@ -116,7 +116,7 @@ def stn_traces(tag, stn_file, conv):
 	'''
 	Script extracts ensmean concentrations from user-defined stations
 	'''
-	logging.info('...creating station traces')
+	logging.info('Creating station traces')
 	
 	#TODO extend this to multiple pollutants: corrently assumes SO2
 
@@ -124,16 +124,17 @@ def stn_traces(tag, stn_file, conv):
 	link_exec('con2stn')
 
 	#extract station data
-	out_file = 'HYSPLIT_so2.{}.{}.txt'.format(os.environ['forecast'],tag)
+	out_file = 'hysplit.haw.{}.so2.{}.txt'.format(tag,os.environ['forecast'])
+	#out_file = 'HYSPLIT_so2.{}.{}.txt'.format(os.environ['forecast'],tag)
 	con2stn_cmd = './con2stn -d2 -icmean_SO2 -o{} -s{} -xi'.format(out_file,stn_file)
 	os.system(con2stn_cmd)
 
 	#copy to webserver (mkwc)
 	#TODO remove hardcoding and link to config json inputs once operational
-	mkwc_file = 'hysplit.haw.{}.so2.{}.txt'.format(tag,os.environ['forecast'])
-	scp_cmd = 'scp {} vmap@mkwc2.ifa.hawaii.edu:www/hysplit/text/{}'.format(out_file, mkwc_file)
-	os.system(scp_cmd)
-	logging.debug('...copying station data to mwkc as: {}'.format(mkwc_file))
+	#mkwc_file = 'hysplit.haw.{}.so2.{}.txt'.format(tag,os.environ['forecast'])
+	#scp_cmd = 'scp {} vmap@mkwc2.ifa.hawaii.edu:www/hysplit/text/{}'.format(out_file, mkwc_file)
+	#os.system(scp_cmd)
+	#logging.debug('...copying station data to mwkc as: {}'.format(mkwc_file))
 
 	return
 
@@ -226,27 +227,15 @@ def main():
 		if 'poe' in plot_settings.keys():
 			for pollutant in plot_settings['poe']:
 				make_poe_plots('./poe_', pollutant, 'png')
-				if pollutant=='SO4':
-					#NOTE HARDOCODED integration depth!!!!
-					make_ci_contours('CI_SO4.nc', pollutant, vert_lvls, 'png')
+		if 'ci' in plot_settings.keys():
+			for pollutant in plot_settings['ci']:
+				make_ci_contours('CI_{}.nc'.format(pollutant), pollutant, vert_lvls, 'png')
 	else:
 		logging.info('No plots requested in config file')	
-
 	
-	#extras: archive and move to webserver if requested
-	if 'extras' in json_data['user_defined'].keys():
-		extras = json_data['user_defined']['extras']
-		if 'web' in extras.keys():
-			web.main(extras['web'])
-		if 'archive' in extras.keys():
-			#clean up before archiving
-			clean_hysdir()
-			archive(extras['archive'])
-	else:
-		logging.info('No copying to webserver requested')
-
 	logging.info('Post-processing complete')
 
+	return
 
  ### Main ###
 if __name__ == '__main__':

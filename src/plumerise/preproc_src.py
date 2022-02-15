@@ -155,9 +155,9 @@ def main():
 			#add data to out dictionary
 			cwippjson[tag][timestamp] = metdata 
 
-    			#calculate intensity
+			#calculate intensity
 			#cwippjson[tag][timestamp]['I'] = source['intensity']
-			logging.debug('... BL height is: {}'.format(metdata['PBLH']
+			logging.debug('... BL height is: {}'.format(metdata['PBLH']))
 			delT = (source['temperature'] + 273) - metdata['T'][0]
 			logging.debug('... delT is: {} K'.format(delT))
 			H = delT * source['hc']
