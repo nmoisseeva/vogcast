@@ -16,6 +16,7 @@ import datetime as dt
 import pandas as pd
 import os
 from pproc.graphics import get_tdim
+#import cartopy.crs as ccrs
 
 #turn off font warnings for logging
 logging.getLogger('matplotlib.font_manager').disabled = True
@@ -35,241 +36,131 @@ def assemble_hourly_data(settings):
 	fcst_range = pd.date_range(settings['start'],settings['end'],freq=settings['freq'])
 
 	#create storage dictionary
-	compiled_data = dict.fromkeys(data_range, None)
+	compiled_data = {}
 
 	#loop through all the forecasts
 	for fcst in fcst_range:
 		
 		fcst_tag = dt.datetime.strftime(fcst,'%Y%m%d%H')
 		logging.debug('... extracting forecast: {}'.format(fcst_tag))
-		#open the pollutant nc file and get time dimensions
-		ds = get_nc_data(fcst_tag, settings['pollutant'])
+		#open the pollutant nc file and get time dimensionsi
+		#TODO add iterations over multiple pollutants and poe levels
+
+		try:
+			ds = get_nc_data(fcst_tag, settings['pollutant'], settings['poe_lvl'])
+		except:
+			logging.warning('WARNING: poe data missing for {}, skipping!'.format(fcst_tag))
+			continue
+
 		tdim = get_tdim(ds)
 		
 		#loop through availble hours
 		for t, time in enumerate(tdim):
-			surface_poe = ds.variables[settings['pollutant']][t,0,:,:]	
-			compiled_data[time] = surface_poe	
-
+			surface_poe = get_surface_field(ds, settings['pollutant'], settings['poe_lvl'], t)	
+			compiled_data[time] = surface_poe
 	return compiled_data
 
 
-def get_nc_data(fcst_tag, pollutant):
+def get_nc_data(fcst_tag, pollutant, lvl):
 	'''
-	Locates correct forecast subfolderes, ncfiles and pulls data
+	Locates correct forecast subfolderes, ncfiles and pulls data for given pollutant, lvl, time
 	'''
 	
 	#check if directory exists
-	fcst_path = os.path.join(os.environ['rundir'],fcst_tag,'hysplit') 
+	fcst_path = os.path.join(os.environ['run_dir'],fcst_tag,'hysplit') 
 	if os.path.exists(fcst_path) is False:
 		logging.CRITICAL('ERROR: {} forecast is missing. Aborting.'.format(fcst_path))
 
 	
 	#get dataset
-	nc_path = os.path.join(fcst_path,'poe_lvl{}_{}.nc'.format(settings['poe_lvl'],pollutant))
+	fcst_file = 'poe_lvl{}_{}.nc'.format(lvl,pollutant)
+	nc_path = os.path.join(fcst_path,fcst_file)
 	ds = nc.Dataset(nc_path)
 
 	return ds
 
+def get_surface_field(ds, pollutant,lvl,time):
+	'''
+	Get data for correct pollutant and time dealing with hysplit naming
+	'''
 
-def make_poe_cmap():
+	#deal with Hysplit's weird naming: -p1 has keys CM00 etc, -pX uses pollutnat as key
+	hys_keys = ['CM01', 'CM10', 'CM00']
+	try:
+		surface_poe = ds.variables[hys_keys[int(lvl-1)]][time,0,:,:]
+	except:
+		surface_poe = ds.variables[pollutant][time,0,:,:]
+
+
+	return surface_poe
+
+def make_hazard_cmap():
 	'''
 	Create a colormap for POE
 	'''
-	colornames = ['palegoldenrod','chocolate','firebrick']
+	#colornames = ['green','gold','orangered','crimson']
+	colornames = ['yellowgreen','gold','orangered','crimson','darkviolet']
 
 	#add transparancy
-	poe_cm = colors.LinearSegmentedColormap.from_list('poe', colornames, N=256)
-	poe_cmA = poe_cm(np.arange(poe_cm.N))
+	hazard_cm = colors.LinearSegmentedColormap.from_list('hazard', colornames, N=256)
+	hazard_cmA = hazard_cm(np.arange(hazard_cm.N))
 	alphas = list(np.linspace(0,1,5)) + [1] * 251
-	poe_cmA[:,-1] = alphas	
+	hazard_cmA[:,-1] = alphas	
 
-	poe = colors.LinearSegmentedColormap.from_list('poe',poe_cmA)
+	hazard = colors.LinearSegmentedColormap.from_list('hazard',hazard_cmA)
 	
 	#save colormbar if ncessary - dumps strange log output
-	#span = np.array([[0, 100]])
-	#img = plt.imshow(span, cmap='YlOrBr')
-	#plt.gca().set_visible(False)
-	#cbar = plt.colorbar(orientation='horizontal', label='Probability of Exceedance (%)', ticks=np.arange(0, 101,10))
-	#plt.savefig('colorbar_POE.png', dpi=100, bbox_inches = 'tight', pad_inches = 0.1)
+	plt.figure()
+	span = np.array([[0, 100]])
+	img = plt.imshow(span, cmap=hazard)
+	plt.gca().set_visible(False)
+	cbar = plt.colorbar(orientation='horizontal', label='Probability of Exceedance (%)', ticks=np.arange(0, 101,10))
+	plt.savefig('./colorbar_hazard.png', dpi=100, bbox_inches = 'tight', pad_inches = 0.1)
+	plt.close()
 
-	return poe
+	return hazard
 
-def make_aqi_cmap(pollutant):
+
+def plot_hazard(mean_poe, hazard_cmap,  settings):
 	'''
-	Create a custom colormap corresponding to aqi levels
+	Create surface hazard plots plots for averaged conditions
 	'''
- 	
-	#create a list of AQI levels to normlize colormap
-	if pollutant.lower() =='so2':
-		#so2 aqi is in ppm - ensure corerct conversion in config
-		bounds = [0, 0.1, 0.2, 1, 3, 5, 100]
-		clabel = r'SO$_2$ (ppm)'
-	elif pollutant.lower() =='so4':
-		#so4 standards are in ug/m3 - ensure correct conversion in config
-		bounds = [0, 12, 35, 55, 150, 250, 1000]
-		clabel = r'SO$_4$ ($\mu$g/m$^3$)'
-	else:
-		logging.error('ERROR: pollutant not recognized - {}. Available options: "so2", "so4"'.format(pollutant))	
 
-	lvls = []
-	for n, lvl in enumerate(bounds):
-		try:
-			lvls.extend(list(np.linspace(lvl,bounds[n+1],20, endpoint = False)))
-		except:
-			pass
-      
-	#make a custom colormap correspomding to AQI
-	colornames = ['limegreen','yellow','orange','orangered','rebeccapurple','mediumorchid']
-	cm = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=200)
-	norm = colors.BoundaryNorm(lvls, cm.N)	
+	##plotting using cartopy
+	##TODO this is hardcoded: remove for future and provide as input
+	##NOTE: consider adding bounds in hysplit step (calculate from settings)
+	#bounds =   (-160.5, -154.5, 18.25, 22.75)
 
-	#add alpha for near-zero values
-	cma = cm(np.arange(cm.N))
-	alphas = list(np.linspace(0,1,5)) + [1] * 195
-	cma[:,-1] = alphas
-
-	#combine into a new colormap with transparancy
-	aqi = colors.LinearSegmentedColormap.from_list('aqi',cma)
-	norm = colors.BoundaryNorm(lvls, aqi.N)	
-
-	#save colormap - for some reason prodcues a massive log dump
-	#cmplot = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=len(bounds)-1)
-	#span = np.array([[0, bounds[-1]]])
-	#img = plt.imshow(span, cmap=cmplot)
-	#plt.gca().set_visible(False)
-	#cbar = plt.colorbar(orientation='horizontal', extend='max', label=clabel, ticks=np.arange(0, max(bounds),max(bounds)/(len(bounds)-1)))
-	#cbar.ax.set_xticklabels(bounds[:-1]) 
-	#plt.savefig('colorbar_{}.png'.format(pollutant),bbox_inches = 'tight', pad_inches = 0.1, dpi=200)
-
-	return aqi, norm
-
-def make_ci_contours(nc_path, pollutant, cz, fmt):
-	'''
-	Create crude (qualitative) contours of column-integrated smoke, for user-defined layers cz
-	'''
-	logging.info('...creating column-integrated contours for: {}'.format(pollutant))
-
-	#open netcdf file
-	ds = nc.Dataset(nc_path)
-
-	#get readable time dimension
-	tdim = get_tdim(ds)
-
-	#get the needed variable
-	converted_fields = ds.variables[pollutant][:,:,:,:]
-
-	#integrate over all layers to get total column mass
-	#NOTE units are not appropriate for quantitative comparison
-	ci_con = []
-	#if there is a deposition layer, exclude
-	if cz[0] == 0:
-		mass_layers = cz[1:]
-		deposition = 1
-	else:
-		mass_layers = cz.copy()
-		deposition = 0
-	#loop through remaining layers
-	for iZ,z in enumerate(mass_layers):
-		layer_tot = converted_fields[:,deposition+iZ,:,:] * z
-		ci_con.append(layer_tot)
-	cum_mass = np.sum(np.array(ci_con), axis = 0)	
-
-	#loop through all frames, smoothing and saving
-	for t,time in enumerate(tdim):
-		ctr1 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[5000,1e20], vmin=5000, vmax=1e100,alpha=0.05)
-		ctr2 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[1000,1e20], vmin=1000, vmax=1e100,alpha=0.05)
-		ctr3 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[10,1e20],  vmin=10, vmax=1e100,alpha=0.08)
-		#hide all padding, margins and axes
-		plt.axis('off')
-		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-		plt.margins(0,0)
-		plt.gca().xaxis.set_major_locator(plt.NullLocator())
-		plt.gca().yaxis.set_major_locator(plt.NullLocator())
-		plt.savefig('./ci_{}.{}'.format(time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
-		plt.close()
-
-	return
-
-
-def make_con_plots(nc_path, pollutant, fmt, conv):
-	'''
-	Create surface concentration plots for all available timesteps
-	'''
-	logging.info('...creating surface concentration plots for: {}'.format(pollutant))
-
-	#open netcdf file
-	ds = nc.Dataset(nc_path)
-
-	#get readable time dimension
-	tdim = get_tdim(ds)
-
-	#get colormap
-	aqi, norm = make_aqi_cmap(pollutant)
-
-	#convert dataset fields to correct units
-	#converted_fields = ds.variables[pollutant][:,0,:,:] * conv 
-	converted_fields = ds.variables[pollutant][:,0,:,:]
+	##plot as separate figure (assumes lat/lon coordiantes from HYSPLIT)
+	#plt.figure()
+	#ax = plt.axes(projection=ccrs.PlateCarree())
+	#im = ax.imshow(mean_poe, origin='lower',cmap=hazard_cmap,vmin=0, vmax=100, extent=bounds, transform=ccrs.PlateCarree())	
+	#ax.coastlines(resolution='50m',color='grey', linewidth=0.5)
+	#ax.gridlines(draw_labels=True)
+	#plt.colorbar()
+	#plt.title('ANALYSIS PERIOD: {} - {}'.format(settings['start'], settings['end']))
 	
-	#loop through all frames, smoothing and saving
-	for t,time in enumerate(tdim):
-		smooth_con = gaussian_filter(converted_fields[t,:,:], sigma=2)
-		img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
-		#hide all padding, margins and axes
-		plt.axis('off')
-		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-		plt.margins(0,0)
-		plt.gca().xaxis.set_major_locator(plt.NullLocator())
-		plt.gca().yaxis.set_major_locator(plt.NullLocator())
-		plt.savefig('./{}_{}.{}'.format(pollutant,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
-		#plt.savefig('./{}.{}'.format(time,fmt), dpi=200, bbox_inches = 'tight', pad_inches = 0)
-		plt.close()
-	return
+	#plotting for leaflet display
+	img = plt.imshow(mean_poe,cmap=hazard_cmap, origin='lower', vmin = 0, vmax=100)
+	#hide all padding, margins and axes
+	plt.axis('off')
+	plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+	plt.margins(0,0)
+	plt.gca().xaxis.set_major_locator(plt.NullLocator())
+	plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
-
-def make_poe_plots(nc_prefix, pollutant, fmt):
-	'''
-	Create surface POE plots
-	'''
+	#save
+	save_path = os.path.join(os.environ['run_dir'],'hazard_{}_lvl{}_{}_{}.png'.format(settings['pollutant'], \
+				settings['poe_lvl'], settings['start'], settings['end']))
+	plt.savefig(save_path, transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
+	#plt.savefig('./{}.{}'.format(time,fmt), dpi=200, bbox_inches = 'tight', pad_inches = 0)
+	plt.close()
 	
-	logging.info('...creating surface POE plots for: {}'.format(pollutant))
-	
-	#manually create tags to match HYSPLIT's very particular namting
-	hys_keys = ['CM01', 'CM10', 'CM00']
-
-	#get colormap
-	poe = make_poe_cmap()
-
-	#loop through thresholds
-	for i in range(3):
-		tag = 'lvl{}'.format(str(i+1))
-		poe_file = nc_prefix + tag + '_' + pollutant + '.nc'
-		
-
-		#open netcdf file
-		ds = nc.Dataset(poe_file)
-		tdim = get_tdim(ds)
-		
-		#deal with Hysplit's weird naming: -p1 has keys CM00 etc, -pX uses pollutnat as key
-		try:
-			poe_field = ds.variables[hys_keys[i]][:,0,:,:]
-		except:
-			poe_field = ds.variables[pollutant][:,0,:,:]
-
-		#loop through all frams with smoothing
-		for t,time in enumerate(tdim):
-			smooth_poe = gaussian_filter(poe_field[t,:,:], sigma=2)
-			img = plt.imshow(smooth_poe, cmap=poe, vmin=0, vmax=100, origin='lower')
-			#hide all padding, margins and axes
-			plt.axis('off')
-			plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-			plt.margins(0,0)
-			plt.gca().xaxis.set_major_locator(plt.NullLocator())
-			plt.gca().yaxis.set_major_locator(plt.NullLocator())
-			plt.savefig('./{}_{}_{}.{}'.format(pollutant,tag,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
-			plt.close()
+	logging.debug('Hazard map saved as: {}'.format(save_path))
 	
 	return
+
+
 
 def main(settings):
 	'''
@@ -278,11 +169,14 @@ def main(settings):
 	logging.info('Creating hazard maps')
 	
 	#collect data from the user-specified forecast range
-	compile_data = assemble_hourly_data(settings)	
-		
-		
+	compiled_data = assemble_hourly_data(settings)	
+	mean_poe = sum(compiled_data.values()) / int(len(compiled_data.keys()))
 
-return
+	#do plotting
+	hazard_cmap = make_hazard_cmap()
+	plot_hazard(mean_poe, hazard_cmap,  settings)
+
+	return
 
 if __name__ == '__main__':
 	main(settings)

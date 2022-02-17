@@ -288,7 +288,6 @@ class Plume:
 			#convert to normalized distribution (sum area = 1)
 			intC = sum(profile[:])
 			profile = profile/intC
-			print(sum(profile))
 
 			#allocate to 5 source layers
 			#TODO make this dynamic like BSP

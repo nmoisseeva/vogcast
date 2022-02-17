@@ -8,6 +8,7 @@ __date__="July 2021"
 from set_vog_env import *
 import pproc.to_webserver as web
 import pproc.archive as archive
+import pproc.hazard_map as hazard
 import logging
 import json
 import os
@@ -43,6 +44,9 @@ def main():
 		web.main(extras['web'])
 	if 'archive' in extras.keys():
 		archive.main(extras['archive'])
+	if 'hazard_map' in extras.keys():
+		hazard.main(extras['hazard_map'])
+		
 	#FOR ADDITIONAL SUBMODULES ADD AN EXTRA CALL HERE
 	else:
 		logging.info('No other modules requested')
