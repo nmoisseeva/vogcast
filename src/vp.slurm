@@ -12,7 +12,7 @@ source ~/.bash_profile
 source ../venv/bin/activate
 
 
-#python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210930 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210930 00
 #python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210930 12
 #python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211001 00
 #python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211001 12
@@ -38,4 +38,4 @@ source ../venv/bin/activate
 #python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211011 12
 
 #python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211012 00
-python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211012 12
+#python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211012 12

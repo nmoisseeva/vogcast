@@ -107,6 +107,47 @@ def parse_timestamp(json_data,hr):
 
 	return tstamp_str
 
+def get_intensity_hc(source, metdata):
+	'''
+	Calculate equivalent cross-wind intensity using heat transfer estimate
+	'''
+	#get mean heat flux
+	logging.debug('... BL height is: {}'.format(metdata['PBLH']))
+	delT = (source['temperature'] + 273) - metdata['T'][0]
+	logging.debug('... delT is: {} K'.format(delT))
+	H = delT * source['hc']
+	logging.debug('... H is: {} W/m2'.format(H))
+
+	#convert to kinematic flux and integrate along the diameter
+	diameter = 2* ((source['area']/3.14)**0.5)
+	I = H * diameter / (1.2 * 1005)
+	logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
+
+	return I
+
+def get_intensity_mass(source, metdata, emissions):
+	'''
+	Calculate equivalent cross-wind intensity using mass-flux method
+	NOTE: this assumes constnant plume composition of 88% H20, 2% CO2, 10% SO2 (ref. Tricia Nadeau)
+	'''
+
+	#prescribe gas densities
+	rho_so2 = 2.28
+	rho_co2 = 1.84
+	rho_h2o = 0.8
+	mean_rho = 0.88 * 0.8 + 1.84 * 0.02 + 2.28 * 0.1
+
+	#get kinemtaic mass flux
+	so2_kg_per_sec = emissions['so2'] * 1000 / ( 24 * 60 * 60 )
+	tot_mass = (mean_rho/rho_so2) * so2_kg_per_sec / 0.1
+	mass_flux = tot_mass / (mean_rho * source['area'])
+	mass_flux_cw = mass_flux * 2* ((source['area']/3.14)**0.5)
+	I = mass_flux_cw * (source['temperature'] + 273)
+	
+	#logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
+
+	return I
+
 
 def main():
 	'''
@@ -131,6 +172,7 @@ def main():
 	for iSrc in range(num_src):
 		tag = 'src'+str(iSrc+1)
 		source = json_data['user_defined']['source'][tag]
+		emissions = json_data['emissions'][tag]
 
 		#get source location
 		lat, lon = float(source['lat']),float(source['lon'])
@@ -155,16 +197,23 @@ def main():
 			#add data to out dictionary
 			cwippjson[tag][timestamp] = metdata 
 
-			#calculate intensity
+			#calculate intensity based on user-defined method
+			if source['method'] == 'hc':
+				logging.info('...calculating CW intensity using heat transfer method')
+				I = get_intensity_hc(source, metdata)
+			elif source['method'] == 'mass':
+				logging.info('...calculating CW intensity using mass flux method')
+				I = get_intensity_mass(source, metdata, emissions)
+				logging.info('...Cross-wind intensity I = {} K m2/s'.format(I))			
 			#cwippjson[tag][timestamp]['I'] = source['intensity']
-			logging.debug('... BL height is: {}'.format(metdata['PBLH']))
-			delT = (source['temperature'] + 273) - metdata['T'][0]
-			logging.debug('... delT is: {} K'.format(delT))
-			H = delT * source['hc']
-			logging.debug('... H is: {} W/m2'.format(H))
-			#convert to kinematic flux and integrate along the diameter
-			I = H * source['diameter'] / (1.2 * 1005) 
-			logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
+			#logging.debug('... BL height is: {}'.format(metdata['PBLH']))
+			#delT = (source['temperature'] + 273) - metdata['T'][0]
+			#logging.debug('... delT is: {} K'.format(delT))
+			#H = delT * source['hc']
+			#logging.debug('... H is: {} W/m2'.format(H))
+			##convert to kinematic flux and integrate along the diameter
+			#I = H * source['diameter'] / (1.2 * 1005) 
+			#logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
 			cwippjson[tag][timestamp]['I'] = I
 
 	#write out the cwipp json

@@ -74,6 +74,7 @@ if __name__ == '__main__':
 		dispersion.main()
 
 	if 'post_process' in run_modules:
+		#TODO RENAME THIS CONFIG AND EVERYWHERE ELSE: ANNOYING UNDERSCORE
 		post_process.main()
 
 	if 'extras' in run_modules:
