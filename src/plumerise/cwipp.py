@@ -246,7 +246,7 @@ class Plume:
 		profile = np.empty((len(self.interpZ))) * np.nan
 		i_zCL = np.nanargmin(abs(self.interpZ - self.zCL))
 
-		'''	
+		'''
 		if not self.penetrative:
 			#for BL plumes: uniform distribution
 			profile[:i_zCL] = 1./i_zCL
