@@ -17,19 +17,18 @@ from set_vog_env import *
 #logging.getLogger("requests").setLevel(logging.ERROR)
 
 ### Inputs ###
-#url = 'https://hvo-api.wr.usgs.gov/api/so2emissions?channel=SUMDFW&starttime='
-url = 'https://hvo-api.wr.usgs.gov/api/v1/so2emissions/'
-select_data = {'channel': 'SUMDFW', 'rank': 2, 'timezone': 'UTC', 'series': ['so2']}
+url = 'https://hvo-api.wr.usgs.gov/api/so2emissions?channel=SUMDFW&starttime='
+series = '&series=so2' #TODO add comma-delimited options: so2,so2sd,windspeed,winddir,samples
 
 ### Functions ###
 
-def pull_from_api(url,days,select_data,keypath):
+def pull_from_api(url,days,series,keypath):
 	'''
 	Set up api call and pull data
 	'''
-	api_call = url +  str(days) + 'd'
+	api_call = url + '-' + str(days) + 'd' + series
 	login = read_config(keypath)
-	response = requests.post(api_call,auth=(login['hvo']['user'],login['hvo']['pwd']),data=json.dumps(select_data))
+	response = requests.get(api_call,auth=(login['hvo']['user'],login['hvo']['pwd']))
 
 	return response.json()
 
@@ -49,10 +48,12 @@ def get_days_offset():
 
 	now = dt.datetime.utcnow()
 	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
-	offset = now - fc_date  
+	offset = now - fc_date
 
-	#return adjusting for HST indexing
-	return offset.days + 1
+	#add offset to account for HST and API indexing
+	hst_adjust = 2
+
+	return offset.days + hst_adjust
 
 def get_hvo_data(keypath):
 	'''
@@ -69,31 +70,32 @@ def get_hvo_data(keypath):
 		day = 1
 
 	#loop until we find some data
-	while no_data(pull_from_api(url,day,select_data,keypath)):
+	while no_data(pull_from_api(url,day,series,keypath)):
 		day = day + 1
 
 	#get the data we need
-	response = pull_from_api(url,day,select_data,keypath)
+	response = pull_from_api(url,day,series,keypath)
 
 	#get the correct index of the record (if forecast mode: use most recent)
 	if 'forecast' in os.environ:
 		#get all record timestamps manually adding UTC offset (HVO data is in HST)
 		nr = int(response['nr'])
-		obs_dates = [response['results'][i]['date'] for i in range(nr)]
-		obs_datetimes_utc = [dt.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z') for date in obs_dates]
+		obs_dates = [response['records']['SUMDFW'][i]['date']+' -1000' for i in range(nr)]
+		obs_datetimes_utc = [dt.datetime.strptime(date, '%Y-%m-%d %H:%M:%S %z').astimezone(dt.timezone.utc) for date in obs_dates]
 
 		#use pandas to locate nearest record to emission start datetime and get index
 		pdtime = pd.DatetimeIndex(obs_datetimes_utc)
 		em_date = dt.datetime.strptime(os.environ['forecast']+'UTC', '%Y%m%d%H%Z') + dt.timedelta(hours=int(os.environ['spinup']))
 		logging.debug('...emissions start hour in UTC is {}'.format(em_date))
 		record_idx = pdtime.get_loc(em_date, method='nearest')
+		#nearest = min(obs_datetimes, key=lambda d: abs(d - date))
 	else:
 		#get the most recent record
 		record_idx = -1
 
-	so2 = int(response['results'][record_idx]['so2'])
-	obs_date = response['results'][record_idx]['date']
-	logging.info('...nearest record found found: {}'.format(obs_date))
+	so2 = int(response['records']['SUMDFW'][record_idx]['so2'])
+	obs_date = response['records']['SUMDFW'][record_idx]['date']
+	logging.info('...nearest record found found: %s HST' %obs_date)
 
 	return so2, obs_date
 

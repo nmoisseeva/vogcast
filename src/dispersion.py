@@ -45,7 +45,11 @@ def link_hysplit():
 	hycs_ens = os.path.join(os.environ['hys_path'],'exec','hycs_ens')
 	os.symlink(hycs_ens,'./hycs_ens')
 
-
+	
+	##TODO: this section is for testing existing GFS runs only
+	#os.system('mv d01.arl ../meteorology/.')
+	#link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','L900','wrf0.9km_{}'.format(os.environ['forecast']))
+	#os.symlink(link_gfs_arl, './d01.arl')
 	return
 
 def edit_hys_config(json_data):

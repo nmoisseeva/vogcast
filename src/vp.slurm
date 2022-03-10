@@ -10,10 +10,11 @@
 module purge
 source ~/.bash_profile 
 source ../venv/bin/activate
-'''
+
 sed -i s/"freq : 12"/"freq : 16"/g ../vog.config
 sed -i s/"spinup : 6"/"spinup : 2"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210930 00
+: <<'END'
 
 sed -i s/"freq : 16"/"freq : 12"/g ../vog.config
 sed -i s/"spinup : 2"/"spinup : 6"/g ../vog.config
@@ -35,6 +36,7 @@ python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211004 00
 sed -i s/"540000"/"520000"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211004 12
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211005 00
+
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211005 12
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211006 00
 
@@ -67,5 +69,6 @@ sed -i s/"temperature: 250"/"temperature: 300"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211011 00
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211011 12
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211012 00
-'''
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211012 12
+
+END

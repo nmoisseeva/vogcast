@@ -35,7 +35,6 @@ function get_file() {
             if [[ $count -eq 10 ]]; then
                 warn_string="File $file has not been found for $count minutes."
                 echo $warn_string
-                #/nfs/mgmt6/fcst/scripts/slack.sh -c "wrf_slack_test" -u "$username" -t "Cloud IBCS download taking too long" "${warn_string}"
             fi
 
         done
@@ -100,8 +99,6 @@ else
 	echo "Creating directory for storing IBCs: ${dest_dir}"
 fi
 
-#[[ ! -d ${dest_dir} ]] || rm -r ${dest_dir}
-#mkdir -pv ${dest_dir}
 cd ${dest_dir}
 
 # Check that remote host is up
@@ -121,11 +118,8 @@ for step in ${STEPS[@]}; do
     pad_step2=$(printf "%02d\n" $step)
     rnam=nam.t${hour}z.hawaiinest.hiresf${pad_step2}.tm00.grib2
     #pad_step3=$(printf "%03d\n" $step)
-    #lnam=nam.t${hour}z.awip32.f${pad_step3}
     log_msg "Downloading files for hour ${step}"
-    #wget -v $srce_dir/$rnam
     get_file $srce_dir $rnam
-    #mv $rnam $lnam
     touch $lnam.OK
 done
 
