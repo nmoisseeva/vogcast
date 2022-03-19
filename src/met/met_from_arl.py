@@ -64,10 +64,18 @@ def decode_hystxt(metdata,variables):
 	
 
 	#get 3D variables
-	'''
+
+	for iL, line in enumerate(lines):
+		if '3D Fields' in line:
+			names3d = lines[iL+1].split()
+			vert_data = pd.read_csv('profile.txt', skiprows=iL+3, delim_whitespace=True, names=['JUNK']+names3d)
+	#drop the unnamed pressue coordinate
+	vert_data = vert_data.drop('JUNK', 1)
 	for var3d in variables['3d']:
 		#etract vertical profile
-	'''
+		metdata[step][var3d] = vert_data[var3d].tolist()
+	
+
 	rawfile.close()
 	
 	return metdata
@@ -110,7 +118,7 @@ def main(locations):
 			#convert data into dataframe and export to json
 			metdata[lcn] = decode_hystxt(metdata[lcn],getdata['vars'])	
 
-	print(metdata)
+	write_json('arlmet_{}.json'.format(lcn),metdata)
 
 	return
 

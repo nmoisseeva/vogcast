@@ -49,7 +49,7 @@ def main():
 	if 'hazard_map' in extras.keys():
 		hazard.main(extras['hazard_map'])
 	if 'arlmet' in extras.keys():
-		test_data = {'arlfile' : 'd01.arl', 'stns': { 'src1' : {'lat': 19.4055, 'lon' :-155.2811 } }, 'vars' : {'2d' : ['SHGT','PRSS','PBLH','T02M','U10M','V10M', 'WDIR','WSPD']}}
+		test_data = {'arlfile' : 'd01.arl', 'stns': { 'src1' : {'lat': 19.4055, 'lon' :-155.2811 } }, 'vars' : {'2d' : ['SHGT','PRSS','PBLH','T02M','U10M','V10M', 'WDIR','WSPD'], '3d': ['PRES','UWND','VWND','WWND','SPHU','TPOT','WDIR','WSPD']}}
 		#arlmet.main(extras['arlmet'])
 		arlmet.main(test_data)
 	#FOR ADDITIONAL SUBMODULES ADD AN EXTRA CALL HERE
