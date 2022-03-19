@@ -31,12 +31,12 @@ def setup_cwipp_dir():
 	logging.debug('...creating plumerise working subdirectory: {}'.format(cwipp_path))
 
 	os.chdir(cwipp_path)
-	os.system('find -type l -delete')
+	#os.system('find -type l -delete')
 
 	#link meteorology - always use the finest domain (max_dom)
 	metpath = os.path.join(os.environ['run_path'],'meteorology','wrfout_d0{}'.format(os.environ['max_dom']))+'*'
 	logging.debug('...linking wrf data: {}'.format(metpath))
-	os.system('ln -s {} ./wrfout.nc'.format(metpath))
+	os.system('ln -sf {} ./wrfout.nc'.format(metpath))
 
 
 	return

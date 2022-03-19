@@ -14,7 +14,7 @@ def clean_hysdir():
 	#clean up dispersion folder
 
 	logging.debug('Cleaning up HYSPLIT direcotry')
-	os.system('find -type l -delete')
+	#os.system('find -type l -delete')
 	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err *.log > /dev/null 2>&1')
 
 	return

@@ -11,13 +11,18 @@ module purge
 source ~/.bash_profile 
 source ../venv/bin/activate
 
-sed -i s/"freq : 12"/"freq : 16"/g ../vog.config
-sed -i s/"spinup : 6"/"spinup : 2"/g ../vog.config
+
+#sed -i s/"runhrs: 18"/"runhrs: 30"/g ../vog.config
+#sed -i s/"freq : 12"/"freq : 17"/g ../vog.config
+#sed -i s/"spinup : 6"/"spinup : 13"/g ../vog.config
+#python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210929 00
+
+sed -i s/"runhrs: 30"/"runhrs: 18"/g ../vog.config
+sed -i s/"freq : 17"/"freq : 12"/g ../vog.config
+sed -i s/"spinup : 13"/"spinup : 6"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210930 00
 : <<'END'
 
-sed -i s/"freq : 16"/"freq : 12"/g ../vog.config
-sed -i s/"spinup : 2"/"spinup : 6"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210930 12
 
 sed -i s/"temperature: 350"/"temperature: 200"/g ../vog.config

@@ -23,27 +23,24 @@ function log_msg() {
 
 
 function link_wrf_files() {
-    #clean broken links
-    find -type l -delete
-
     #link tables
-    ln -s ${wrf_path}/run/GENPARM.TBL .
-    ln -s ${wrf_path}/run/LANDUSE.TBL .
-    ln -s ${wrf_path}/run/SOILPARM.TBL .
-    ln -s ${wrf_path}/run/VEGPARM.TBL .
+    ln -sf ${wrf_path}/run/GENPARM.TBL .
+    ln -sf ${wrf_path}/run/LANDUSE.TBL .
+    ln -sf ${wrf_path}/run/SOILPARM.TBL .
+    ln -sf ${wrf_path}/run/VEGPARM.TBL .
 
     #physics packages data
-    ln -s ${wrf_path}/run/RRTM_DATA .
-    ln -s ${wrf_path}/run/RRTMG_LW_DATA .
-    ln -s ${wrf_path}/run/RRTMG_SW_DATA .
-    ln -s ${wrf_path}/run/ozone.formatted .
-    ln -s ${wrf_path}/run/ozone_lat.formatted .
-    ln -s ${wrf_path}/run/ozone_plev.formatted .
-    ln -s ${wrf_path}/run/CCN_ACTIVATE.BIN .
+    ln -sf ${wrf_path}/run/RRTM_DATA .
+    ln -sf ${wrf_path}/run/RRTMG_LW_DATA .
+    ln -sf ${wrf_path}/run/RRTMG_SW_DATA .
+    ln -sf ${wrf_path}/run/ozone.formatted .
+    ln -sf ${wrf_path}/run/ozone_lat.formatted .
+    ln -sf ${wrf_path}/run/ozone_plev.formatted .
+    ln -sf ${wrf_path}/run/CCN_ACTIVATE.BIN .
 
     #link executables
-    ln -s ${wrf_path}/main/real.exe .
-    ln -s ${wrf_path}/main/wrf.exe .
+    ln -sf ${wrf_path}/main/real.exe .
+    ln -sf ${wrf_path}/main/wrf.exe .
 }
 
 function config_namelist() {
@@ -77,10 +74,10 @@ function config_namelist() {
     sed -i s/"{max_dom}"/${max_dom}/g namelist.input
 
     #configure i/o
-    ln -s ${vog_root}/config/wrf/removefields.txt .
+    ln -sf ${vog_root}/config/wrf/removefields.txt .
 
     #copy slurm setup
-    ln -s ${vog_root}/config/slurm/wrf.slurm .
+    ln -sf ${vog_root}/config/slurm/wrf.slurm .
 }
 
 function clean_wrfdir() {
@@ -89,9 +86,6 @@ function clean_wrfdir() {
 
     #clean up IBCs
     rm wrfbdy_* wrfinput_*
-
-    #clean up links
-    find -type l -delete
 
     #clean up rsl files
     rm rsl.*

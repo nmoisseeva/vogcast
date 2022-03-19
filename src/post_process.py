@@ -24,11 +24,14 @@ def link_exec(hysexec):
 	local_path = './{}'.format(hysexec)
 
 	#create symlink
+	symlink_force(exec_path, local_path)
+	'''
 	try:
 		os.symlink(exec_path, local_path)
 	except:
 		os.remove(local_path)
 		os.symlink(exec_path, local_path)
+	'''
 	return
 
 def ensmean(pproc_settings):
@@ -37,7 +40,7 @@ def ensmean(pproc_settings):
 	'''
 	#move into dispersion working directory, clean up
 	os.chdir(os.environ['hys_rundir'])
-	os.system('find -type l -delete')
+	#os.system('find -type l -delete')
 
 	#TODO check that that dispersion completed
 	#TODO fix for consistency with POE plots
@@ -65,9 +68,8 @@ def get_poe(pproc_settings):
 	
 	#move into dispersion working directory, clean up
 	os.chdir(os.environ['hys_rundir'])
-	os.system('find -type l -delete')
+	#os.system('find -type l -delete')
 	
-	#TODO check that that dispersion completed
 
 	#link executables
 	link_exec('conprob')
@@ -159,29 +161,11 @@ def clean_hysdir():
 	#clean up dispersion folder
 
 	logging.debug('...cleaning up HYSPLIT direcotry')
-	os.system('find -type l -delete')
+	#os.system('find -type l -delete')
 	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err *.log > /dev/null 2>&1')
 
 	return
 
-def archive(archive_path):
-	#archiving script: compresses the main run folder and pushes to remote archive
-	logging.info('...compressing data and pushing to remote archive')
-	logging.warning('...this step may take a LONG time')
-	
-	#move out of forecast direcotry
-	os.chdir(os.environ['run_dir'])
-
-	#run tar command - THIS WILL BE SLOW
-	tar_cmd = 'tar -zcf {}TEST.tar.gz {}'.format(os.environ['forecast'], os.environ['forecast'])
-	os.system(tar_cmd)
-
-	#push archived data to remote set by user (requires ssh key)
-	scp_cmd = 'scp {}TEST.tar.gz {}'.format(os.environ['forecast'],archive_path)
-	logging.debug('...copying to remote: {}'.format(scp_cmd))
-	os.system(scp_cmd)
-
-	return
 
 def main():
 	'''

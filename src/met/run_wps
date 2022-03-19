@@ -26,20 +26,17 @@ function link_grib() {
 }
 
 function link_tables() {
-    #clean old links
-    find -type l -delete
-
     #ungrib
-    ln -s ${wps_path}/ungrib/Variable_Tables/Vtable.NAM ./Vtable 
-    ln -s ${wps_path}/ungrib.exe .
+    ln -sf ${wps_path}/ungrib/Variable_Tables/Vtable.NAM ./Vtable 
+    ln -sf ${wps_path}/ungrib.exe .
 
     #geogrid
-    ln -s ${wps_path}/geogrid/GEOGRID.TBL.ARW ./GEOGRID.TBL
-    ln -s ${wps_path}/geogrid.exe .
+    ln -sf ${wps_path}/geogrid/GEOGRID.TBL.ARW ./GEOGRID.TBL
+    ln -sf ${wps_path}/geogrid.exe .
 
     #metgrid    
-    ln -s ${wps_path}/metgrid/METGRID.TBL.ARW ./METGRID.TBL
-    ln -s ${wps_path}/metgrid.exe .
+    ln -sf ${wps_path}/metgrid/METGRID.TBL.ARW ./METGRID.TBL
+    ln -sf ${wps_path}/metgrid.exe .
 }
 
 function config_namelist() {

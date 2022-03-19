@@ -23,33 +23,40 @@ def link_hysplit():
 	os.chdir(os.environ['hys_rundir'])
 
 	#set up necessary configuration files
-	os.system('find -type l -delete')
+	#os.system('find -type l -delete')
 	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err cdump* CONC.CFG > /dev/null 2>&1')
 	hys_config_path = os.path.join(os.environ['vog_root'],'config','hysplit')
 	os.system('cp ' + hys_config_path + '/CONTROL .')
 	os.system('cp ' + hys_config_path + '/SETUP.CFG .')
 
 	#link static config files
-	os.symlink(hys_config_path + '/CHEMRATE.TXT', 'CHEMRATE.TXT')
+	#os.symlink(hys_config_path + '/CHEMRATE.TXT', 'CHEMRATE.TXT')
+	symlink_force(hys_config_path + '/CHEMRATE.TXT', 'CHEMRATE.TXT')
 	slurm_config_path = os.path.join(os.environ['vog_root'],'config','slurm')
-	os.symlink(slurm_config_path + '/hysplit.slurm', 'hysplit.slurm')
+	#os.symlink(slurm_config_path + '/hysplit.slurm', 'hysplit.slurm')
+	symlink_force(slurm_config_path + '/hysplit.slurm', 'hysplit.slurm')
 
 	#link bdyfiles
 	#TODO get from wrf: https://www.ready.noaa.gov/documents/TutorialX/html/emit_fine.html
-	os.symlink(hys_config_path + '/ASCDATA.CFG', 'ASCDATA.CFG')
+	#os.symlink(hys_config_path + '/ASCDATA.CFG', 'ASCDATA.CFG')
+	symlink_force(hys_config_path + '/ASCDATA.CFG', 'ASCDATA.CFG')
 	bdy_path = os.path.join(os.environ['hys_path'],'bdyfiles','bdyfiles0p1')
-	os.symlink(bdy_path + '/LANDUSE.ASC', 'LANDUSE.ASC')
-	os.symlink(bdy_path + '/ROUGLEN.ASC', 'ROUGLEN.ASC')
+	#os.symlink(bdy_path + '/LANDUSE.ASC', 'LANDUSE.ASC')
+	#os.symlink(bdy_path + '/ROUGLEN.ASC', 'ROUGLEN.ASC')
+	symlink_force(bdy_path + '/LANDUSE.ASC', 'LANDUSE.ASC')
+	symlink_force(bdy_path + '/ROUGLEN.ASC', 'ROUGLEN.ASC')	
 
 	#link executable
 	hycs_ens = os.path.join(os.environ['hys_path'],'exec','hycs_ens')
-	os.symlink(hycs_ens,'./hycs_ens')
-
+	#os.symlink(hycs_ens,'./hycs_ens')
+	symlink_force(hycs_ens,'./hycs_ens')
 	
 	##TODO: this section is for testing existing GFS runs only
 	#os.system('mv d01.arl ../meteorology/.')
 	#link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','L900','wrf0.9km_{}'.format(os.environ['forecast']))
 	#os.symlink(link_gfs_arl, './d01.arl')
+	#symlink_force(link_gfs_arl, './d01.arl')
+
 	return
 
 def edit_hys_config(json_data):
@@ -101,7 +108,8 @@ def edit_hys_config(json_data):
 		logging.debug('...linking carryover vog from: %s' %carryover_file)
 		#loop through ensemble members
 		for i in range(1,28):
-			os.symlink(carryover_file, 'PARINIT.{:03d}'.format(i))
+			#os.symlink(carryover_file, 'PARINIT.{:03d}'.format(i))
+			symlink_force(carryover_file, 'PARINIT.{:03d}'.format(i))
 	else:
 		logging.warning('...WARNING: No carryover found from previous cycle')
 

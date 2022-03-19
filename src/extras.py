@@ -9,6 +9,7 @@ from set_vog_env import *
 import pproc.to_webserver as web
 import pproc.archive as archive
 import pproc.hazard_map as hazard
+import met.met_from_arl as arlmet
 import logging
 import json
 import os
@@ -32,6 +33,7 @@ def main():
 	- graphics copy to web server
 	- data cleanup and archiving to thredds
 	- create hazard maps	
+	- extract met at point locations from arl file
 	'''
 
 	logging.info('===========EXTRAS: USER-SPECIFIC SUBMODULES=========')
@@ -46,7 +48,10 @@ def main():
 		archive.main(extras['archive'])
 	if 'hazard_map' in extras.keys():
 		hazard.main(extras['hazard_map'])
-		
+	if 'arlmet' in extras.keys():
+		test_data = {'arlfile' : 'd01.arl', 'stns': { 'src1' : {'lat': 19.4055, 'lon' :-155.2811 } }, 'vars' : {'2d' : ['SHGT','PRSS','PBLH','T02M','U10M','V10M', 'WDIR','WSPD']}}
+		#arlmet.main(extras['arlmet'])
+		arlmet.main(test_data)
 	#FOR ADDITIONAL SUBMODULES ADD AN EXTRA CALL HERE
 	else:
 		logging.info('No other modules requested')

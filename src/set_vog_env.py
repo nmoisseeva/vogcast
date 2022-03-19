@@ -147,3 +147,14 @@ def update_user_settings(run_modules):
 
 	return
 
+def symlink_force(target,link_path):
+	'''
+	Link executables or config files with forced link overwrite
+	'''	
+
+	os.symlink(target, link_path + '.tmp')
+	os.rename(link_path + '.tmp', link_path)
+
+	return
+
+	

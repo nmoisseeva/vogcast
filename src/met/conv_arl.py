@@ -21,7 +21,7 @@ def create_hys_dir():
 	#create subdirectory for hysplit files, clean up
 	Path(os.environ['hys_rundir']).mkdir(exist_ok=True)
 	os.chdir(os.environ['hys_rundir'])
-	os.system('find -type l -delete')
+	#os.system('find -type l -delete')
 
 	return
 
@@ -38,11 +38,13 @@ def setup_hys_dir():
 
 	#link conversion table
 	wrfcfg = os.path.join(os.environ['vog_root'],'config','hysplit','WRFDATA.CFG')	
-	os.symlink(wrfcfg, 'WRFDATA.CFG')
+	#os.symlink(wrfcfg, 'WRFDATA.CFG')
+	symlink_force(wrfcfg, 'WRFDATA.CFG')
 
 	#link necessary executables
 	arw2arl = os.path.join(os.environ['hys_path'],'exec','arw2arl')
-	os.symlink(arw2arl,'./arw2arl')
+	#os.symlink(arw2arl,'./arw2arl')
+	symlink_force(arw2arl,'./arw2arl')
 
 	return
 	
@@ -85,9 +87,6 @@ def main():
 	Perform all the conversion steps
 	'''
 	logging.info('Running conversion to ARL format')	
-
-	#TODO: figure out a more elegant way to deal with ITS environment modules
-	#os.system('source ~/.bash_profile')
 
 	#check for met completion
 	met_ok = os.path.join(os.environ['run_path'],'meteorology','met.OK')
