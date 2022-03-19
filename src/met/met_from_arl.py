@@ -49,18 +49,19 @@ def decode_hystxt(metdata,variables):
 			names2d = lines[iL+1].split()
 			vals2d = lines[iL+3].split()
 			#check that the values don't end up merged, because hysplit just assumes 6 character lengths
-			if any(len(s) > 5 for s in vals2d):
-				print(vals2d)
-				vals2d = [[s[:-6],s[-6:]] if len(s) > 5 else s for s in vals2d]
+			if any(len(s) > 6 for s in vals2d):
+				vals2d = [[float(s[:-6]),float(s[-6:])] if len(s) > 5 else [float(s)] for s in vals2d]
 				#flatten the list
-				vals2d = [s for splitval in vals2d for s in splitval]
-				print(vals2d)
+				vals2d = [val for sublist in vals2d for val in sublist] 
+			#if all is good simply convert to float
+			else:
+				vals2d = [float(val) for val in vals2d]
+
 	for var2d in variables['2d']:
 		nVar = names2d.index(var2d)
 		#+1 accounts for the extra unlabeled pressure coordinate in profile files	
 		metdata[step][var2d] = 	vals2d[nVar+1]
 	
-	print(metdata[step])
 
 	#get 3D variables
 	'''
@@ -108,6 +109,8 @@ def main(locations):
 			
 			#convert data into dataframe and export to json
 			metdata[lcn] = decode_hystxt(metdata[lcn],getdata['vars'])	
+
+	print(metdata)
 
 	return
 
