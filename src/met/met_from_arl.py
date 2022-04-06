@@ -15,6 +15,7 @@ import post_process as pproc
 import pandas as pd
 import datetime as dt
 import linecache
+import numpy as np
 
  ### Fucntions ###
 
@@ -24,6 +25,31 @@ def compile_input():
 	print('compiling input')
 	return
 
+def derive_height(stepdata):
+	'''
+	Convert pressure coordinates to height
+	'''
+	
+	#constants
+	Rd = 287 	#J K-1 kg-1
+	g = 9.81	#gravity
+
+	numZ = len(stepdata['PRES'])
+	#convert specific humidity to mixing ratio r: r = q / (1 - q)
+	q = np.array(stepdata['SPHU']) / 1000 	#convert to kg/kg
+	r = q / (1 - q)
+
+	#calculate average vertical tempareture for each layer: Tv = Tp(1 + 0.61r)
+	Tv = np.array(stepdata['TPOT']) * (1 + 0.61 * r)
+
+	#use hypsometric equation to get layer height: h = z2 - z1 = (Rd * Tv /g)  * ln (p1 / p2)
+	Z = np.zeros(numZ)
+	for iZ in range(numZ-1):
+		Tv_mean = np.mean([Tv[iZ], Tv[iZ + 1]])
+		h = (Rd * Tv_mean / g) * np.log( stepdata['PRES'][iZ] / stepdata['PRES'][iZ + 1] )
+		Z[iZ+1] = int(Z[iZ] + h)
+
+	return list(Z)
 
 def decode_hystxt(metdata,variables):
 	'''
@@ -74,9 +100,11 @@ def decode_hystxt(metdata,variables):
 	for var3d in variables['3d']:
 		#etract vertical profile
 		metdata[step][var3d] = vert_data[var3d].tolist()
-	
 
 	rawfile.close()
+
+	#TODO add height coordinate
+	metdata[step]['Z'] = derive_height(metdata[step])
 	
 	return metdata
 
@@ -109,8 +137,7 @@ def main(locations):
 		stn = getdata['stns'][lcn]
 		metdata[lcn] = {}
 		#loop through timesteps
-		#TODO remove the timestep hardcoding
-		for tidx in range(18):
+		for tidx in range(int(os.environ['runhrs'])):
 			#run the hyslpit profile utility
 			profile_cmd = './profile -d./ -f{} -y{} -x{}  -o{} -w1'.format(getdata['arlfile'],stn['lat'],stn['lon'],tidx)
 			os.system(profile_cmd)

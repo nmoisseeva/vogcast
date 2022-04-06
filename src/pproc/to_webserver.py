@@ -78,6 +78,7 @@ def main(web_path):
 	logging.info('Generating and copying web display data')
 
 	#create a config json for Leaflet display
+	#TODO currently writes to local "src" folder
 	json_name = 'vogfcst.json'
 	make_fcst_json(json_name)
 
