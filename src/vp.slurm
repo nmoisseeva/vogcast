@@ -2,7 +2,7 @@
 #SBATCH --job-name=vp-main
 #SBATCH --account=vmap
 #SBATCH --partition=vmap
-#SBATCH --time=0-12:00:00
+#SBATCH --time=0-36:00:00
 ##SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=12G
 #SBATCH --exclude=node-[0012-0021]
@@ -12,17 +12,12 @@ source ~/.bash_profile
 source ../venv/bin/activate
 
 
-#sed -i s/"runhrs: 18"/"runhrs: 30"/g ../vog.config
-#sed -i s/"freq : 12"/"freq : 17"/g ../vog.config
-#sed -i s/"spinup : 6"/"spinup : 13"/g ../vog.config
-#python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210929 00
-
-sed -i s/"runhrs: 30"/"runhrs: 18"/g ../vog.config
-sed -i s/"freq : 17"/"freq : 12"/g ../vog.config
-sed -i s/"spinup : 13"/"spinup : 6"/g ../vog.config
+sed -i s/"freq : 12"/"freq : 16"/g ../vog.config
+sed -i s/"spinup : 6"/"spinup : 2"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210930 00
-: <<'END'
 
+sed -i s/"freq : 16"/"freq : 12"/g ../vog.config
+sed -i s/"spinup : 2"/"spinup : 6"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20210930 12
 
 sed -i s/"temperature: 350"/"temperature: 200"/g ../vog.config
@@ -59,6 +54,8 @@ python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211008 12
 
 sed -i s/"temperature: 250"/"temperature: 150"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211009 00
+
+: <<'END'
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211009 12
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211010 00
 
@@ -76,4 +73,56 @@ python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211011 12
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211012 00
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211012 12
 
+sed -i s/"150000"/"200000"/g ../vog.config
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211013 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211013 12
+
+sed -i s/"200000"/"150000"/g ../vog.config
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211014 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211014 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211015 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211015 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211016 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211016 12
+
+sed -i s/"150000"/"100000"/g ../vog.config
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211017 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211017 12
+
+sed -i s/"100000"/"80000"/g ../vog.config
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211018 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211018 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211019 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211019 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211020 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211020 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211021 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211021 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211022 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211022 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211023 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211023 12
+
+sed -i s/"80000"/"70000"/g ../vog.config
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211024 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211024 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211025 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211025 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211026 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211026 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211027 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211027 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211028 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211028 12
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211029 00
+python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211029 12
+
+
+
+#This part should change whatever we left on back to starting point
+#sed -i s/"70000"/"520000"/g ../vog.config
+#sed -i s/"temperature: 300"/"temperature: 350"/g ../vog.config
+
+#use "END" bits to block comment
+: <<'END'
 END

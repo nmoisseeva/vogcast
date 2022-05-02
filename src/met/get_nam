@@ -120,7 +120,6 @@ for step in ${STEPS[@]}; do
     #pad_step3=$(printf "%03d\n" $step)
     log_msg "Downloading files for hour ${step}"
     get_file $srce_dir $rnam
-    touch $lnam.OK
 done
 
 # Clean up & exit

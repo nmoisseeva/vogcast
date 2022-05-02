@@ -28,7 +28,7 @@ def main():
 		set_env_var(met_settings, 'ibc_path')
 		set_env_var(met_settings, 'wps_path')
 		set_env_var(met_settings, 'wrf_path')
-
+		#'''
 		#download initial conditionsi
 		#TODO check for existing files before downloading, create ibc.OK
 		os.system('bash %s//met/get_nam -d %s %s > /dev/null' %(os.environ['src'],os.environ['rundate'],os.environ['cycle']))
@@ -40,7 +40,7 @@ def main():
 		#run wrf
 		os.system('bash %s/met/run_wrf -d %s %s %s' %(os.environ['src'],os.environ['rundate'],os.environ['runhrs'],os.environ['cycle']))
 		logging.info('Completed WRF run')
-
+		#'''
 		conv_arl.main()
 
 	elif met_settings['model'] == 'nam':

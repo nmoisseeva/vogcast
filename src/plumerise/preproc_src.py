@@ -81,6 +81,7 @@ def get_met_data(ds,hr,met_idx):
 
 	#get vertical temperature profile
 	T0 = ds.variables['T'][hr,:,ilat,ilon] + 300
+	P = (ds.variables['P'][hr,:,ilat,ilon] + ds.variables['PB'][hr,:,ilat,ilon]) * 0.01
 
 	#get wind magnitude profile 
 	M  = (ds.variables['U'][hr,:,ilat,ilon].squeeze()**2 + ds.variables['V'][hr,:,ilat,ilon].squeeze()**2)**(0.5)
@@ -91,6 +92,7 @@ def get_met_data(ds,hr,met_idx):
 	#compile output dict
 	metdata = {}
 	metdata['T'] = T0.squeeze().tolist()
+	metdata['P'] = P.squeeze().tolist()
 	metdata['PBLH'] = int(pblh)
 	metdata['Z'] = agl_height.squeeze().tolist()
 	metdata['U'] = M.squeeze().tolist()

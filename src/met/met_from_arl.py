@@ -19,12 +19,7 @@ import numpy as np
 
  ### Fucntions ###
 
-
-def compile_input():
-
-	print('compiling input')
-	return
-
+#THIS IS WRONG for upper atmosphere
 def derive_height(stepdata):
 	'''
 	Convert pressure coordinates to height
@@ -85,9 +80,12 @@ def decode_hystxt(metdata,variables):
 
 	for var2d in variables['2d']:
 		nVar = names2d.index(var2d)
-		#+1 accounts for the extra unlabeled pressure coordinate in profile files	
-		metdata[step][var2d] = 	vals2d[nVar+1]
-	
+		#+1 accounts for the extra unlabeled pressure coordinate in profile files
+		#deal with HYSPLIT failing to calculate WDIR and WSPD
+		try:
+			metdata[step][var2d] = 	vals2d[nVar+1]
+		except: 
+			metdata[step][var2d] = 0
 
 	#get 3D variables
 
@@ -103,14 +101,14 @@ def decode_hystxt(metdata,variables):
 
 	rawfile.close()
 
-	#TODO add height coordinate
+	#add height coordinate
 	metdata[step]['Z'] = derive_height(metdata[step])
 	
 	return metdata
 
 def main(locations):
 	'''
-	Extract met data for point locations, for given 'getdata' dictionary
+	Extract met data for point locations, for given locations dictionary
 	
 	'''
 	logging.info('Extracting met data from arl files')	
@@ -123,29 +121,20 @@ def main(locations):
 	#create storage dataframe
 	metdata = {}
 
-	#check what's provided as input: file path or dictionary
-	if isinstance(locations, str):
-		getdata = compile_input(locations)
-	elif isinstance(locations, dict):	
-		getdata = locations			
-	else:
-		logging.CRITICAL('Accepted input types for arl data extraction: str or dict')
-		
-
 	#loop through locations
-	for lcn in getdata['stns']:
-		stn = getdata['stns'][lcn]
+	for lcn in locations['stns']:
+		stn = locations['stns'][lcn]
 		metdata[lcn] = {}
 		#loop through timesteps
 		for tidx in range(int(os.environ['runhrs'])):
 			#run the hyslpit profile utility
-			profile_cmd = './profile -d./ -f{} -y{} -x{}  -o{} -w1'.format(getdata['arlfile'],stn['lat'],stn['lon'],tidx)
+			profile_cmd = './profile -d./ -f{} -y{} -x{}  -o{} -w1'.format(locations['arlfile'],stn['lat'],stn['lon'],tidx)
 			os.system(profile_cmd)
 			
 			#convert data into dataframe and export to json
-			metdata[lcn] = decode_hystxt(metdata[lcn],getdata['vars'])	
+			metdata[lcn] = decode_hystxt(metdata[lcn],locations['vars'])	
 
-	write_json('arlmet_{}.json'.format(lcn),metdata)
+	write_json('stn_met_arl.json',metdata)
 
 	return
 

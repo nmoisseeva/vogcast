@@ -51,11 +51,12 @@ def link_hysplit():
 	#os.symlink(hycs_ens,'./hycs_ens')
 	symlink_force(hycs_ens,'./hycs_ens')
 	
-	##TODO: this section is for testing existing GFS runs only
-	#os.system('mv d01.arl ../meteorology/.')
+	#TODO: this section is for testing existing GFS runs only
+	#os.system('mv d01.arl ../meteorology/.') 	#moving to met folder for storage
 	#link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','L900','wrf0.9km_{}'.format(os.environ['forecast']))
+	link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','5km','wrf4.5km_{}'.format(os.environ['forecast']))
 	#os.symlink(link_gfs_arl, './d01.arl')
-	#symlink_force(link_gfs_arl, './d01.arl')
+	symlink_force(link_gfs_arl, './d01.arl')
 
 	return
 
