@@ -280,6 +280,7 @@ class Plume:
 			else:
 				sigma_bottom = sigma_top
 
+
 			#prescribe gaussian profile
 			profile[i_zCL:] = np.exp(-0.5*((self.interpZ[i_zCL:] - self.zCL)/sigma_top)**2)
 			profile[:i_zCL+1] = np.exp(-0.5*((self.interpZ[:i_zCL+1] - self.zCL)/sigma_bottom)**2)
@@ -290,9 +291,24 @@ class Plume:
 			profile = profile/intC
 
 			#allocate to 5 source layers
-			#TODO make this dynamic like BSP
-			self.layer_heights = [self.zCL-2*sigma_bottom, self.zCL-sigma_bottom, self.zCL, self.zCL+sigma_top, self.zCL+2*sigma_top]
-			self.layer_fractions = [0.092, 0.238, 0.34, 0.238, 0.092]
+			#TODO make this dynamic like BSP (user-selected layers)
+			#get layer thickness below and above injection height, assuming three layers below and 1 obove zCL
+			h1 = int(i_zCL/4)
+			h2 = 2*h1
+			h3 = 3*h1	
+			h4 = 4*h1  #this is i_zCL
+			h5 = np.nanargmin(abs(self.interpZ - (self.zCL+sigma_top)))
+			#get half-layer indeces
+			l1 = int(h1*1.5)
+			l2 = int(h1*2.5)
+			l3 = int(h1*3.5)
+			l4 = int((h4+h5)/2)
+
+			self.layer_heights = [self.zCL/4, self.zCL/2, self.zCL*3/4, self.zCL, self.zCL+sigma_top]
+			self.layer_fractions = [sum(profile[:l1]), sum(profile[l1:l2]), sum(profile[l2:l3]), sum(profile[l3:l4]),sum(profile[l4:])]			
+			logging.debug('Sanity check: sum of layer fractions is %s' %sum(self.layer_fractions))
+			#self.layer_heights = [self.zCL-2*sigma_bottom, self.zCL-sigma_bottom, self.zCL, self.zCL+sigma_top, self.zCL+2*sigma_top]
+			#self.layer_fractions = [0.092, 0.238, 0.34, 0.238, 0.092]
 
 
 		self.profile = profile.squeeze().tolist()

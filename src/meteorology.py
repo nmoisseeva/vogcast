@@ -29,9 +29,18 @@ def main():
 		set_env_var(met_settings, 'wps_path')
 		set_env_var(met_settings, 'wrf_path')
 		#'''
-		#download initial conditionsi
-		#TODO check for existing files before downloading, create ibc.OK
-		os.system('bash %s//met/get_nam -d %s %s > /dev/null' %(os.environ['src'],os.environ['rundate'],os.environ['cycle']))
+		#locate initial conditions
+		ibc = met_settings['ibc']
+		logging.info('Input boundary conditions: {}'.format(ibc))
+		if ibc == 'historic':
+			ok = os.path.join(met_settings['ibc_path'],os.environ['forecast'],'ibc.OK')
+			os.system('touch {}'.format(ok))
+		else:
+			#check for valid input
+			if ibc not in ["nam", "gfs"]:
+				logging.CRITICAL('ERROR: "{}" not a valid IBC type'.format(ibc))
+			download_script_path = os.path.join(os.environ['src'],'met',"get_" + ibc)
+			os.system('bash {} -d {} {} > /dev/null'.format(download_script_path,os.environ['rundate'],os.environ['cycle']))
 
 		#run wps
 		os.system('bash %s/met/run_wps -d %s %s %s' %(os.environ['src'],os.environ['rundate'],os.environ['runhrs'],os.environ['cycle']))
@@ -50,7 +59,7 @@ def main():
 
 		#download nam data from arl (already in arl format)
 		logging.info('...pulling data from ARL FTP server')
-		arl_file = '{}_hysplit.t00z.namsa.HI'.format(os.environ['rundate'])
+		arl_file = '{}_hysplit.t{}z.namsa.HI'.format(os.environ['rundate'],os.environ['cycle'])
 		os.system('wget ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{}'.format(arl_file))
 		os.system('mv {} d01.arl'.format(arl_file))
 

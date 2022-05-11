@@ -23,40 +23,33 @@ def link_hysplit():
 	os.chdir(os.environ['hys_rundir'])
 
 	#set up necessary configuration files
-	#os.system('find -type l -delete')
 	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err cdump* CONC.CFG > /dev/null 2>&1')
 	hys_config_path = os.path.join(os.environ['vog_root'],'config','hysplit')
 	os.system('cp ' + hys_config_path + '/CONTROL .')
 	os.system('cp ' + hys_config_path + '/SETUP.CFG .')
 
 	#link static config files
-	#os.symlink(hys_config_path + '/CHEMRATE.TXT', 'CHEMRATE.TXT')
 	symlink_force(hys_config_path + '/CHEMRATE.TXT', 'CHEMRATE.TXT')
 	slurm_config_path = os.path.join(os.environ['vog_root'],'config','slurm')
-	#os.symlink(slurm_config_path + '/hysplit.slurm', 'hysplit.slurm')
 	symlink_force(slurm_config_path + '/hysplit.slurm', 'hysplit.slurm')
 
 	#link bdyfiles
 	#TODO get from wrf: https://www.ready.noaa.gov/documents/TutorialX/html/emit_fine.html
-	#os.symlink(hys_config_path + '/ASCDATA.CFG', 'ASCDATA.CFG')
 	symlink_force(hys_config_path + '/ASCDATA.CFG', 'ASCDATA.CFG')
 	bdy_path = os.path.join(os.environ['hys_path'],'bdyfiles','bdyfiles0p1')
-	#os.symlink(bdy_path + '/LANDUSE.ASC', 'LANDUSE.ASC')
-	#os.symlink(bdy_path + '/ROUGLEN.ASC', 'ROUGLEN.ASC')
 	symlink_force(bdy_path + '/LANDUSE.ASC', 'LANDUSE.ASC')
 	symlink_force(bdy_path + '/ROUGLEN.ASC', 'ROUGLEN.ASC')	
 
 	#link executable
 	hycs_ens = os.path.join(os.environ['hys_path'],'exec','hycs_ens')
-	#os.symlink(hycs_ens,'./hycs_ens')
 	symlink_force(hycs_ens,'./hycs_ens')
 	
 	#TODO: this section is for testing existing GFS runs only
 	#os.system('mv d01.arl ../meteorology/.') 	#moving to met folder for storage
 	#link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','L900','wrf0.9km_{}'.format(os.environ['forecast']))
-	link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','5km','wrf4.5km_{}'.format(os.environ['forecast']))
+	#link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','5km','wrf4.5km_{}'.format(os.environ['forecast']))
 	#os.symlink(link_gfs_arl, './d01.arl')
-	symlink_force(link_gfs_arl, './d01.arl')
+	#symlink_force(link_gfs_arl, './d01.arl')
 
 	return
 
@@ -148,10 +141,6 @@ def save_carryover(json_data):
 	Save carryover smoke for next run cycle
 	'''
 	
-	##randomly select a PARDUMP file for carryover smoke
-	#irand = randrange(1, 27)
-	#parfile = 'PARDUMP.{:03d}'.format(irand)
-
 	#always save .001 as carryover (for reproducible runs)
 	parfile = 'PARDUMP.001'
 	savefile = 'PARINIT.{}'.format(os.environ['forecast'])
