@@ -2,7 +2,7 @@
 #SBATCH --job-name=vp-main
 #SBATCH --account=vmap
 #SBATCH --partition=vmap
-#SBATCH --time=0-36:00:00
+#SBATCH --time=0-72:00:00
 ##SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=12G
 #SBATCH --exclude=node-[0012-0021]
@@ -10,7 +10,7 @@
 module purge
 source ~/.bash_profile 
 source ../venv/bin/activate
-: <<'END'
+#: <<'END'
 #assume 3pm start
 sed -i s/"freq : 12"/"freq : 16"/g ../vog.config
 sed -i s/"spinup : 6"/"spinup : 2"/g ../vog.config
@@ -62,7 +62,6 @@ python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211010 00
 sed -i s/"200000"/"300000"/g ../vog.config
 sed -i s/"temperature: 150"/"temperature: 250"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211010 12
-END
 
 sed -i s/"300000"/"150000"/g ../vog.config
 sed -i s/"temperature: 250"/"temperature: 300"/g ../vog.config
@@ -75,8 +74,6 @@ sed -i s/"150000"/"200000"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211013 00
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211013 12
 
-: <<'END'
-
 sed -i s/"200000"/"150000"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211014 00
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211014 12
@@ -84,6 +81,7 @@ python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211015 00
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211015 12
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211016 00
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211016 12
+
 
 sed -i s/"150000"/"100000"/g ../vog.config
 python3 vog-run -c /home/moisseev/dev/vog-pipeline/vog.config -d 20211017 00
