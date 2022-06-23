@@ -7,6 +7,14 @@
 #SBATCH --mem-per-cpu=12G
 #SBATCH --exclude=node-[0012-0021]
 
+
+
+
+!!!FIX VTABLE BUG PLS!!!! (must like to correct one depending on nam/gfs
+
+
+
+
 module purge
 source ~/.bash_profile 
 source ../venv/bin/activate

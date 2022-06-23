@@ -199,6 +199,11 @@ def main():
 			#add data to out dictionary
 			cwippjson[tag][timestamp] = metdata 
 
+			#get vent parameters
+			if source['vent_params'] == 'flir':
+				logging.info('...pulling latest thermal image of the vent from HVO')
+				
+
 			#calculate intensity based on user-defined method
 			if source['method'] == 'hc':
 				logging.info('...calculating CW intensity using heat transfer method')

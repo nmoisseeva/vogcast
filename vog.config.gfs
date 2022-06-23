@@ -6,10 +6,10 @@
 {
 	vog_root : "/home/moisseev/dev/vog-pipeline"		#path to pipeline directory (str)
 	#run_dir : "/home/moisseev/dev/vog-pipeline/run"		#specify working directory (str)
-	run_dir : "/home/moisseev/vmap_lts/thermal"         #specify working directory (str)
+	run_dir : "/home/moisseev/vmap_lts/gfs"         #specify working directory (str)
 	runhrs: 18						#total simulation length
 	spinup : 6                                             #spinup hours (from beginning of met)
-	max_dom : 1						#total number of met domains
+	max_dom : 2						#total number of met domains
 	rerun: false						#partial rerun using existing vog_run.json (boolean)
 	modules: ['emissions','source','dispersion','post_process','extras']					#which modules to run (optional for reruns only)
         meteorology : {
@@ -20,23 +20,23 @@
                 wrf_path : "/home/moisseev/vmap/apps/wrf_system/wrfv4.3"
 		wps_path : "/home/moisseev/opt/WRF-SFIRE/WPS"	#path to wps (str)
                 #ibc_path : "/home/moisseev/lus_scratch/ibc"	#path to initial conditions (str) TODO: specify server and file
-		ibc_path : "/home/moisseev/vmap_lts/plumerise/ibc"    #path to initial conditions (str)
+		ibc_path : "/home/moisseev/vmap_lts/gfs/ibc"    #path to initial conditions (str)
 		ibc : "historic"				#ibc input analysis (str): "nam"/"gfs"/"historic"
        },
 	source : {
 		src1 : {
 			lat : 19.4055 				#emissions source lat
 			lon : -155.2811				#emissions source lon
+			area: 80000				#source area (m2), assumes circle currently
 			##Plume-rise settings: "static_area
 			#pr_model : "static_area"                #plume rise model options (str): "static_area"/"cwipp"
 			#height : 600				#emission hight mAGL
 			##Plume-rise settings: "cwipp"
-			pr_model : "cwipp"	                #plume rise model options (str): "static_area"/"cwipp"
-                        method : "mass"                         #how to calculate intensity (str): "hc"/"mass"
-                        hc : 10                                 #heat transfer coefficient (W /m2 K) (for 'hc' method only)	
-			vent_params : "flir"			#vent parameters source (str): "flir"/"prescribed")	
-			temperature : 300 			#lava surface temperature (degrees C; "prescribed" vent_params only)
-			area : 80000                             #source area (m2), assumes circle currently ("prescribed" vent_params only)
+			pr_model : "cwipp"	                #plume rise model options (str): "static_area"/"cwipp"	
+			#intensity: 4000			#TODO (remove?) kinematic source heat flux integrated over cross-wind direction in K m^2 /s
+			temperature: 300 			#lava surface temperature (degrees C)
+			method: "mass"				#how to calculate intensity (str): "hc"/"mass"
+			hc: 10					#heat transfer coefficient (W /m2 K) (for 'hc' method only)
 		}
 	},
         emissions : {
@@ -48,7 +48,8 @@
 	},
 	dispersion : {
 		hys_path : "/home/moisseev/opt/hysplit.v5.1.0" 		#path to hysplit model (str)
-		carryover_path : "/home/moisseev/vmap_lts/thermal/carryover"	#path to carryover vog files (str)
+		carryover_path : "/home/moisseev/vmap_lts/gfs/carryover_mass"	#path to carryover vog files (str)
+		#carryover_path : "/home/moisseev/data/carryover"        #path to carryover vog files (str)
 		freq : 12						#dump frequency for carryover in hours, chould equal run freq
 		vert_motion : 1						#vertical motion setting for hysplit 2=isothermal 
 		min_zi : 150						#hysplit min mixing depth
@@ -66,7 +67,7 @@
 		},
 		stns : {				#extract station traces
 			SO2 : { 			#pollutant 
-				tag : "mass_wrf_IR"	#file naming tag (str)
+				tag : "mass_wrf_gfs"	#file naming tag (str)
 				stn_file : "/home/moisseev/dev/vog-pipeline/config/hysplit/obs_stns.txt"	#stn locations file (str)
 			}
 		},
