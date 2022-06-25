@@ -10,9 +10,11 @@ import datetime as dt
 import logging
 import json
 import os
+import glob
 import pandas as pd
 from set_vog_env import *
-
+from bs4 import BeautifulSoup
+import pymatreader as mat
 
 #logging.getLogger("requests").setLevel(logging.ERROR)
 
@@ -22,68 +24,118 @@ from set_vog_env import *
 
 ### Inputs ###
 #url = 'https://hvo-api.wr.usgs.gov/api/so2emissions?channel=SUMDFW&starttime='
-url = 'https://hvo-api.wr.usgs.gov/api/v1/so2emissions/'
-select_data = {'channel': 'SUMDFW', 'rank': 2, 'timezone': 'UTC', 'series': ['so2']}
+url = 'https://hvovalve.wr.usgs.gov/cams/data/F1cam/images/mat/'
+ext = 'mat'
+
 
 ### Functions ###
-
-def pull_from_api(url,days,select_data,keypath):
+def get_dir_listing(url,keypath,ext=''):
 	'''
-	Set up api call and pull data
+	Get a listing of all files in hvo directory
 	'''
-	api_call = url +  str(days) + 'd'
 	login = read_config(keypath)
-	response = requests.post(api_call,auth=(login['hvo']['user'],login['hvo']['pwd']),data=json.dumps(select_data))
-
-	return response.json()
-
-def no_data(response):
-	'''
-	Check if so2 data is available for the given day
-	'''
-	if response['nr']==0:
-		return True
+	page = requests.get(url,auth=(login['hvo']['user'],login['hvo']['pwd']))
+	if page.ok:
+		soup = BeautifulSoup(page.text,'html.parser')
+		listing = [url + '/' + node.get('href') for node in soup.find_all('a') if node.get('href').endswith(ext)]
+		
+		return listing
 	else:
-		return False
+		return logging.crititcal('ERROR: Cannot reach HVO server. Continuing with whatever data is available locally.')
 
-def get_days_offset():
+
+def download_images(listing, keypath, flir_path):
 	'''
-	Calculate number of days between now and forecast day
+	Download all images and save to disk
+	'''
+	login = read_config(keypath)
+	for item in listing:
+ 		response = requests.get(item,auth=(login['hvo']['user'],login['hvo']['pwd']))
+		#save file data to local disk
+		filename = os.path.basename(item)
+		logging.debug(f'...downloading thermal image {filename}')
+		savepath = os.path.join(flir_path, filename)
+		with open(savepath, 'wb') as file:
+			file.write(response.content)
+
+	return
+
+def get_nearest_image(source, hr):
+	'''
+	Get the nearest file for each forecast hour
+	'''
+	#get the timestamp of the current forecast step
+	fc_date = dt.datetime.strptime(os.environ['forecast'] + '+0000', '%Y%m%d%H%z')
+	fcst_hr = fc_date + dt.timedelta(hours=hr)
+ 
+	#get a listing of availble files and convert to a list of datetimes
+	images_dirlist = os.path.join(source['flir_path'], '*.mat')
+	local_images = glob.glob(image_dirlist)
+	
+	img_dates = []
+	for img in local_images:
+		img_name = os.path.split(img)[-1]
+		img_dt_str = img_name.split('_')[0]
+		# convert to date, assuming filenames are in HST
+		img_dt = dt.datetime.strptime(img_dt_str+'-1000','%Y%m%d%H%M%S%z')
+		img_dates.append(img_dt)
+
+	
+	#get closest availble image
+	nearest = min(img_dates, key=lambda x: abs(x - fc_date))
+	nearest_img_name = dt.datetime.strftime(nearest,'%Y%m%d%H%M%S_F1.mat')
+	if (fcst_hr - nearest) > dt.timedelta(days = 3):
+		logging.warning(f'WARNING: time mismatch with thermal image {nearest_img_name} is more than 3 days')
+
+	#get data from file as array
+	img_path = os.path.join(source['flir_path'],nearest_img_name)
+	flir_data = mat.read_mat(img_path)['img']
+
+	return flir_data
+
+
+
+### MAIN SCRIPT ###
+
+def main(source):
+	'''
+	Main script for extracing data from thermal images
 	'''
 
-	now = dt.datetime.utcnow()
-	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
-	offset = now - fc_date  
+	#read user settings
+	json_data = read_run_json()	
+	keypath = json_data['user_defined']['keys']
 
-	#return adjusting for HST indexing
-	return offset.days + 1
+	#downlaod mat files
+	listing = get_dir_listing(url,keypath,ext)
+	download_images(listing, keypath, source['flir_path'])	
 
-def get_hvo_data(keypath):
-	'''
-	Run all the steps for pulling emissions form HVO
-	'''
-	logging.info('...pulling emissions data from HVO-API')
+	#get data for each hour
+	#for future/missing times, assume closts/most recent values
+	temperature, area = [], []
+	for hr in int(os.envion['runhrs']):
+		#locate most relevant file and read data
+		flir_data = get_nearest_image(source, hr)
+		#extract temperature
+		#extract area
 
-	#check if a forecast date is set in environ
-	if 'forecast' in os.environ:
-		day = get_days_offset()
-		logging.debug('...Historic run: number of days offset for emissions pull is {}'.format(day))
-	else:
-		logging.debug('...No forecast date set, getting the most recent data')
-		day = 1
+	#update json file
+	
 
-	#loop until we find some data
-	while no_data(pull_from_api(url,day,select_data,keypath)):
-		day = day + 1
 
-	#get the data we need
-	response = pull_from_api(url,day,select_data,keypath)
+if __name__ == '__main__':
+        main(source)
 
-	#get the correct index of the record (if forecast mode: use most recent)
-	if 'forecast' in os.environ:
-		#get all record timestamps manually adding UTC offset (HVO data is in HST)
-		nr = int(response['nr'])
-		obs_dates = [response['results'][i]['date'] for i in range(nr)]
+
+
+
+
+
+
+
+
+
+
 		obs_datetimes_utc = [dt.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z') for date in obs_dates]
 
 		#use pandas to locate nearest record to emission start datetime and get index
@@ -91,22 +143,12 @@ def get_hvo_data(keypath):
 		em_date = dt.datetime.strptime(os.environ['forecast']+'UTC', '%Y%m%d%H%Z') + dt.timedelta(hours=int(os.environ['spinup']))
 		logging.debug('...emissions start hour in UTC is {}'.format(em_date))
 		record_idx = pdtime.get_loc(em_date, method='nearest')
-	else:
-		#get the most recent record
-		record_idx = -1
 
-	so2 = int(response['results'][record_idx]['so2'])
-	obs_date = response['results'][record_idx]['date']
-	logging.info('...nearest record found found: {}'.format(obs_date))
-
-	return so2, obs_date
 
 def main():
 	'''
 	Main script steps: find most recent day, get data, write out json
 	'''
-	logging.info('===========EMISSIONS MODULE============')
-
 	#read user settings
 	json_data = read_run_json()
 
@@ -139,11 +181,4 @@ def main():
 
 	#update run json
 	update_run_json(json_data)
-
-	logging.info('Emissions update completed')
-
-if __name__ == '__main__':
-	main()
-
-
 

@@ -63,7 +63,7 @@ def get_hvo_data(keypath):
 	#check if a forecast date is set in environ
 	if 'forecast' in os.environ:
 		day = get_days_offset()
-		logging.debug('...Historic run: number of days offset for emissions pull is {}'.format(day))
+		logging.debug('...Number of days offset for emissions pull is {}'.format(day))
 	else:
 		logging.debug('...No forecast date set, getting the most recent data')
 		day = 1
@@ -77,7 +77,7 @@ def get_hvo_data(keypath):
 
 	#get the correct index of the record (if forecast mode: use most recent)
 	if 'forecast' in os.environ:
-		#get all record timestamps manually adding UTC offset (HVO data is in HST)
+		#get all record timestamps 
 		nr = int(response['nr'])
 		obs_dates = [response['results'][i]['date'] for i in range(nr)]
 		obs_datetimes_utc = [dt.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z') for date in obs_dates]
@@ -120,7 +120,7 @@ def main():
 		#get emissions based on user preferences
 		if emis_settings['input'] == 'hvo':
 			#pull from hvo-api
-			so2, obs_date = get_hvo_data(emis_settings['keys'])
+			so2, obs_date = get_hvo_data(json_data['user_defined']['keys'])
 			logging.info('...HVO emissions value: {} tonnes/day'.format(so2))
 		elif emis_settings['input'] == 'manual':
 			#assign user defined value

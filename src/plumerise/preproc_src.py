@@ -11,6 +11,7 @@ from pathlib import Path
 import logging
 import glob
 from set_vog_env import *
+import get_hvo_flir
 import netCDF4 as nc
 from sklearn.neighbors import KDTree
 from scipy.interpolate import interp1d
@@ -187,6 +188,10 @@ def main():
 
 		cwippjson[tag] = {}
 
+		#get vent parameters
+		if source['vent_params'] == 'flir':
+			logging.info('...pulling latest thermal image of the vent from HVO')
+
 		#loop through hours of simulation
 		for hr in range(int(os.environ['spinup']),int(os.environ['runhrs'])):
 			
@@ -202,8 +207,7 @@ def main():
 			#get vent parameters
 			if source['vent_params'] == 'flir':
 				logging.info('...pulling latest thermal image of the vent from HVO')
-				
-
+				get_hvo_flir.main(source)	
 			#calculate intensity based on user-defined method
 			if source['method'] == 'hc':
 				logging.info('...calculating CW intensity using heat transfer method')
