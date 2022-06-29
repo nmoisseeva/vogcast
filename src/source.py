@@ -143,7 +143,7 @@ def run_cwipp():
 	write_json('cwipp_output.json',output)
 	return
 
-def generate_emitimes(source,emissions):
+def generate_emitimes(vent,emissions):
 	'''
 	Create hysplit source files for time-varying emissions
 	'''
@@ -170,7 +170,7 @@ def generate_emitimes(source,emissions):
 			logging.debug('...processing source: {}'.format(tag))
 
 			#loop through aemitimes
-			for dtime in cwippdata[tag].keys():
+			for t, dtime in enumerate(cwippdata[tag].keys()):
 				#convert to datetime for convenience
 				emitdate = dt.datetime.strptime(dtime, '%Y%m%d%H')
 		
@@ -187,7 +187,7 @@ def generate_emitimes(source,emissions):
 
 					#get height and location data as strings
 					hgt = str(int(cwippdata[tag][dtime]['heights'][layer]))
-					lat, lon, area = str(source['lat']), str(source['lon']), str(source['area'])					
+					lat, lon, area = str(vent['lat']), str(vent['lon']), str(vent['area'][t])					
 
 					#generate source lines for SO2 and SO4
 					#TODO THIS IS SO HARDCODED!! FIX!!
@@ -247,7 +247,7 @@ def main():
 			#dynamic plume rise model adapted from widlfire
 			prepcwipp.main()
 			run_cwipp()
-			generate_emitimes(source,emissions)
+			generate_emitimes(json_data['vent'][tag],emissions)
 		else:
 			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
 

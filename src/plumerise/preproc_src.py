@@ -11,7 +11,7 @@ from pathlib import Path
 import logging
 import glob
 from set_vog_env import *
-import get_hvo_flir
+import plumerise.get_hvo_flir as get_hvo_flir
 import netCDF4 as nc
 from sklearn.neighbors import KDTree
 from scipy.interpolate import interp1d
@@ -19,6 +19,11 @@ import wrf
 import pandas as pd
 import numpy as np
 import datetime as dt
+
+
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 
  ### Fucntions ###
 
@@ -110,25 +115,25 @@ def parse_timestamp(json_data,hr):
 
 	return tstamp_str
 
-def get_intensity_hc(source, metdata):
+def get_intensity_hc(source, metdata, hr):
 	'''
 	Calculate equivalent cross-wind intensity using heat transfer estimate
 	'''
 	#get mean heat flux
 	logging.debug('... BL height is: {}'.format(metdata['PBLH']))
-	delT = (source['temperature'] + 273) - metdata['T'][0]
+	delT = (source['temperature'][hr] + 273) - metdata['T'][0]
 	logging.debug('... delT is: {} K'.format(delT))
 	H = delT * source['hc']
 	logging.debug('... H is: {} W/m2'.format(H))
 
 	#convert to kinematic flux and integrate along the diameter
-	diameter = 2* ((source['area']/3.14)**0.5)
+	diameter = 2* ((source['area'][hr]/3.14)**0.5)
 	I = H * diameter / (1.2 * 1005)
 	logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
 
 	return I
 
-def get_intensity_mass(source, metdata, emissions):
+def get_intensity_mass(source, metdata, emissions, hr):
 	'''
 	Calculate equivalent cross-wind intensity using mass-flux method
 	NOTE: this assumes constnant plume composition of 88% H20, 2% CO2, 10% SO2 (ref. Tricia Nadeau)
@@ -143,9 +148,9 @@ def get_intensity_mass(source, metdata, emissions):
 	#get kinemtaic mass flux
 	so2_kg_per_sec = emissions['so2'] * 1000 / ( 24 * 60 * 60 )
 	tot_mass = (mean_rho/rho_so2) * so2_kg_per_sec / 0.1
-	mass_flux = tot_mass / (mean_rho * source['area'])
-	mass_flux_cw = mass_flux * 2* ((source['area']/3.14)**0.5)
-	I = mass_flux_cw * (source['temperature'] + 273)
+	mass_flux = tot_mass / (mean_rho * source['area'][hr])
+	mass_flux_cw = mass_flux * 2* ((source['area'][hr]/3.14)**0.5)
+	I = mass_flux_cw * (source['temperature'][hr] + 273)
 	
 	#logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
 
@@ -172,6 +177,10 @@ def main():
 	
 	#loop through sources
 	num_src = len(json_data['user_defined']['source'])
+
+	#create slot for data in run_json
+	json_data['vent'] = {}
+
 	for iSrc in range(num_src):
 		tag = 'src'+str(iSrc+1)
 		source = json_data['user_defined']['source'][tag]
@@ -189,8 +198,19 @@ def main():
 		cwippjson[tag] = {}
 
 		#get vent parameters
+		json_data['vent'][tag] = {}
 		if source['vent_params'] == 'flir':
 			logging.info('...pulling latest thermal image of the vent from HVO')
+			#update source dictionary
+			#TODO write this updated file out
+			source = get_hvo_flir.main(source)
+		elif source['vent_params'] == 'prescribed':
+			logging.info('....using prescribed vent temperature and area')
+			#assume static vent conditions for all run hours
+			source['temperature'] = [source['temperature']] * int(os.environ['runhrs'])
+			source['area'] = [source['area']] * int(os.environ['runhrs'])
+		else:
+			logging.critical('ERROR: unrecognized vent parameter input. Available options: "prescribed"/"flir"')
 
 		#loop through hours of simulation
 		for hr in range(int(os.environ['spinup']),int(os.environ['runhrs'])):
@@ -204,31 +224,25 @@ def main():
 			#add data to out dictionary
 			cwippjson[tag][timestamp] = metdata 
 
-			#get vent parameters
-			if source['vent_params'] == 'flir':
-				logging.info('...pulling latest thermal image of the vent from HVO')
-				get_hvo_flir.main(source)	
 			#calculate intensity based on user-defined method
 			if source['method'] == 'hc':
-				logging.info('...calculating CW intensity using heat transfer method')
-				I = get_intensity_hc(source, metdata)
+				logging.info(f'...calculating CW intensity using heat transfer method: hour = {hr}')
+				I = get_intensity_hc(source, metdata, hr)
 			elif source['method'] == 'mass':
-				logging.info('...calculating CW intensity using mass flux method')
-				I = get_intensity_mass(source, metdata, emissions)
-				logging.info('...Cross-wind intensity I = {} K m2/s'.format(I))			
-			#cwippjson[tag][timestamp]['I'] = source['intensity']
-			#logging.debug('... BL height is: {}'.format(metdata['PBLH']))
-			#delT = (source['temperature'] + 273) - metdata['T'][0]
-			#logging.debug('... delT is: {} K'.format(delT))
-			#H = delT * source['hc']
-			#logging.debug('... H is: {} W/m2'.format(H))
-			##convert to kinematic flux and integrate along the diameter
-			#I = H * source['diameter'] / (1.2 * 1005) 
-			#logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
+				logging.info(f'...calculating CW intensity using mass flux method: hour = {hr}')
+				I = get_intensity_mass(source, metdata, emissions, hr)
+				logging.info(f'...Cross-wind intensity I = {I} K m2/s')		
+	
 			cwippjson[tag][timestamp]['I'] = I
+
+		#save vent data for reference
+		json_data['vent'][tag] = source
 
 	#write out the cwipp json
 	write_json('cwipp_inputs.json',cwippjson)
+
+	#update run json
+	update_run_json(json_data)
 
 	logging.info('... cwipp preprocessing is complete')
 

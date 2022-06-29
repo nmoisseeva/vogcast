@@ -12,6 +12,7 @@ import json
 import os
 import glob
 import pandas as pd
+import numpy as np
 from set_vog_env import *
 from bs4 import BeautifulSoup
 import pymatreader as mat
@@ -25,7 +26,7 @@ import pymatreader as mat
 ### Inputs ###
 #url = 'https://hvo-api.wr.usgs.gov/api/so2emissions?channel=SUMDFW&starttime='
 url = 'https://hvovalve.wr.usgs.gov/cams/data/F1cam/images/mat/'
-ext = 'mat'
+#ext = 'mat'
 
 
 ### Functions ###
@@ -50,13 +51,16 @@ def download_images(listing, keypath, flir_path):
 	'''
 	login = read_config(keypath)
 	for item in listing:
- 		response = requests.get(item,auth=(login['hvo']['user'],login['hvo']['pwd']))
+		response = requests.get(item,auth=(login['hvo']['user'],login['hvo']['pwd']))
 		#save file data to local disk
 		filename = os.path.basename(item)
 		logging.debug(f'...downloading thermal image {filename}')
 		savepath = os.path.join(flir_path, filename)
-		with open(savepath, 'wb') as file:
-			file.write(response.content)
+		if os.path.exists(savepath):
+			logging.debug('WARNING: file already exists, skipping...')
+		else:
+			with open(savepath, 'wb') as file:
+				file.write(response.content)
 
 	return
 
@@ -69,7 +73,7 @@ def get_nearest_image(source, hr):
 	fcst_hr = fc_date + dt.timedelta(hours=hr)
  
 	#get a listing of availble files and convert to a list of datetimes
-	images_dirlist = os.path.join(source['flir_path'], '*.mat')
+	image_dirlist = os.path.join(source['flir_path'], '*.mat')
 	local_images = glob.glob(image_dirlist)
 	
 	img_dates = []
@@ -94,6 +98,29 @@ def get_nearest_image(source, hr):
 	return flir_data
 
 
+def get_lava_temperature(flir_data):
+	'''
+	Get mean temperature of all active lava pixels
+	'''
+	#mask everything below active-lava threshold (set in inputs in the beginning of this module)
+	active_lava = flir_data[:]
+	active_lava[active_lava<300] = None
+
+	#get nanmean
+	mean_lava_temperature = np.nanmean(active_lava)
+
+	return mean_lava_temperature
+
+def get_lava_area(flir_data):
+	'''
+	Get total area of all active lava pixels
+	'''
+	#TODO
+	#THIS IS JUST A PLACEHOLDER FOR NOW
+	area = 50000	
+
+	return area
+
 
 ### MAIN SCRIPT ###
 
@@ -107,21 +134,24 @@ def main(source):
 	keypath = json_data['user_defined']['keys']
 
 	#downlaod mat files
-	listing = get_dir_listing(url,keypath,ext)
+	listing = get_dir_listing(url,keypath,'mat')
 	download_images(listing, keypath, source['flir_path'])	
 
 	#get data for each hour
 	#for future/missing times, assume closts/most recent values
 	temperature, area = [], []
-	for hr in int(os.envion['runhrs']):
+	for hr in range(int(os.environ['runhrs'])):
 		#locate most relevant file and read data
 		flir_data = get_nearest_image(source, hr)
 		#extract temperature
+		temperature.append(get_lava_temperature(flir_data))
 		#extract area
-
-	#update json file
+		area.append(get_lava_area(flir_data))
 	
+	source['temperature'] = temperature
+	source['area'] = area
 
+	return source
 
 if __name__ == '__main__':
         main(source)
@@ -134,7 +164,7 @@ if __name__ == '__main__':
 
 
 
-
+'''
 
 		obs_datetimes_utc = [dt.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z') for date in obs_dates]
 
@@ -146,9 +176,6 @@ if __name__ == '__main__':
 
 
 def main():
-	'''
-	Main script steps: find most recent day, get data, write out json
-	'''
 	#read user settings
 	json_data = read_run_json()
 
@@ -182,3 +209,4 @@ def main():
 	#update run json
 	update_run_json(json_data)
 
+'''
