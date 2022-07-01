@@ -1,6 +1,7 @@
 #!/usr/bin/python3.7
 
 #This script pulls vent thermal image from HVO and determines source area and temperature
+#This script contains adaptation of Matt Patrick's methods (USGS) for calculatting thermal image pixel area
 
 __date__ = 'June 2022'
 __author__ = 'Nadya Moisseeva (nadya.moisseeva@hawaii.edu)'
@@ -9,24 +10,31 @@ import requests
 import datetime as dt
 import logging
 import json
+from math import cos, sin, tan, atan, radians
 import os
 import glob
+import time
+from copy import deepcopy
 import pandas as pd
 import numpy as np
 from set_vog_env import *
 from bs4 import BeautifulSoup
 import pymatreader as mat
 
-#logging.getLogger("requests").setLevel(logging.ERROR)
-
-### MAKE SURE TO RESENT TEMP AND AREA (set to None) BEFORE DOING ANYTHING ###
-
 
 
 ### Inputs ###
-#url = 'https://hvo-api.wr.usgs.gov/api/so2emissions?channel=SUMDFW&starttime='
 url = 'https://hvovalve.wr.usgs.gov/cams/data/F1cam/images/mat/'
-#ext = 'mat'
+url_lava = 'https://hvo-api.wr.usgs.gov/api/v1/laserlavalevel/'
+channels_lava = {'channel': 'HMM','rank':1, 'series': ['sealevel']} 	#this is set to summit vent only
+
+Tactive = 300 		#threshold for "active lava" (deg C)
+#lake_level = 670	#lava lake level in m ASL
+camX, camY, camH = 259336, 2147516, 1141	#F1 camera coordinates in meters
+camFOVx, camFOVy = 45, 33.75 			#F1 horizontal and vertical FOV angles, assuming 4:3 pixel ratio
+camDip = 23.7					#F1 camera dip angle
+dimX, dimY = 640, 480				#F1 image dimensions in pixels
+alpha = 93 					#F1 viewing azimuth (degress)
 
 
 ### Functions ###
@@ -42,6 +50,7 @@ def get_dir_listing(url,keypath,ext=''):
 		
 		return listing
 	else:
+		#TODO add two-min wait
 		return logging.crititcal('ERROR: Cannot reach HVO server. Continuing with whatever data is available locally.')
 
 
@@ -49,9 +58,17 @@ def download_images(listing, keypath, flir_path):
 	'''
 	Download all images and save to disk
 	'''
+
 	login = read_config(keypath)
 	for item in listing:
-		response = requests.get(item,auth=(login['hvo']['user'],login['hvo']['pwd']))
+		#allow a 2min wait to avoid issues during server update times (~58min after each hour)
+		try:
+			response = requests.get(item,auth=(login['hvo']['user'],login['hvo']['pwd']))
+		except:
+			logging.warning('...HVO server not available. Retrying in 2 minutes')
+			time.sleep(2)
+			response = requests.get(item,auth=(login['hvo']['user'],login['hvo']['pwd']))
+			
 		#save file data to local disk
 		filename = os.path.basename(item)
 		logging.debug(f'...downloading thermal image {filename}')
@@ -64,10 +81,53 @@ def download_images(listing, keypath, flir_path):
 
 	return
 
+
+
+def get_lake_level(keypath):
+	'''
+	Get the lava lake level in m ASL from HVO-API
+	'''
+	#format date for api
+	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
+	#fc_hr = fc_date + dt.timedelta(hours = (hr))
+	runhrs = int(os.environ['runhrs'])
+	hr_range = pd.date_range(fc_date, fc_date + dt.timedelta(hours = runhrs), freq = '1H')
+	start_hst= fc_date + dt.timedelta(hours = - 10)
+	end_hst = fc_date + dt.timedelta(hours = (runhrs - 10))
+
+	api_call = url_lava + dt.datetime.strftime(start_hst,'%Y%m%d%H%M%S') + '/' + dt.datetime.strftime(end_hst,'%Y%m%d%H%M%S')
+	logging.debug(f'...pulling lake level data from: {api_call}')
+
+	login = read_config(keypath)
+	response = requests.post(api_call,auth=(login['hvo']['user'],login['hvo']['pwd']),data=json.dumps(channels_lava))
+	
+	#if theres no data, set to default
+	response = response.json()
+	if response['nr']==0:
+		lake_level = [870] * runhrs
+		logging.warning(f'WARNING: Did not find lava lake data for the given time. Defaulting to {lake_level} m ASL')
+	else:
+		lake_level = []
+		#find closest time and get lake data
+		dtstamps = [dt.datetime.strptime(i['date'],'%Y-%m-%dT%H:%M:%S%z') for i in response['results']]
+		pdtime = pd.DatetimeIndex(dtstamps)
+
+		for h in hr_range:
+			record_idx = pdtime.get_loc(h, method='nearest')
+			obs_level = int(response['results'][record_idx]['sealevel'])
+			lake_level.append(obs_level)
+			obs_date = response['results'][record_idx]['date']
+			logging.info(f'...Lava lake level on {obs_date}: {obs_level}m ASL')
+
+
+	return lake_level
+
+
 def get_nearest_image(source, hr):
 	'''
 	Get the nearest file for each forecast hour
 	'''
+
 	#get the timestamp of the current forecast step
 	fc_date = dt.datetime.strptime(os.environ['forecast'] + '+0000', '%Y%m%d%H%z')
 	fcst_hr = fc_date + dt.timedelta(hours=hr)
@@ -103,21 +163,89 @@ def get_lava_temperature(flir_data):
 	Get mean temperature of all active lava pixels
 	'''
 	#mask everything below active-lava threshold (set in inputs in the beginning of this module)
-	active_lava = flir_data[:]
-	active_lava[active_lava<300] = None
+	active_lava = deepcopy(flir_data)
+	active_lava[active_lava < Tactive] = None
 
 	#get nanmean
 	mean_lava_temperature = np.nanmean(active_lava)
 
 	return mean_lava_temperature
 
-def get_lava_area(flir_data):
+
+def get_pixel_coordinates(lake_level, pxY, pxX):
+	'''
+	Calculate area of the pixel by georeferencing the coordinates and lake height
+	-adapted from Matt Patric
+	'''
+	#get sensor height above lake (in meteres) and top angle (degrees)
+	h = camH - lake_level
+	topangle = camDip - 0.5 * camFOVy
+
+	#get vertical and horizonal focal lengths in pixels
+	ctrY, ctrX = (dimY / 2.), (dimX / 2.) 		#center pixel
+	half_FOVy_r, half_FOVx_r = radians(0.5 * camFOVy), radians(0.5 * camFOVx)
+	foc_Y_px = ctrY / tan(half_FOVy_r)
+	foc_X_px = ctrX / tan(half_FOVx_r)
+
+	#get vertical coordinate of pixel in meters
+	offsetY = abs(ctrY - pxY) 	#distance from center in pixels
+	thetaY = atan(offsetY/foc_Y_px)
+	if pxY <= ctrY:
+		theta_net = half_FOVy_r - thetaY
+	elif pxY > ctrY:
+		theta_net = thetaY + half_FOVy_r
+	thetaYtilt = radians(topangle) + theta_net
+	hY = h/tan(thetaYtilt)
+	sY = h/sin(thetaYtilt)
+
+	#get horizontal coordinate of pixel in meteres
+	offsetX = abs(ctrX - pxX)
+	phi_fov = atan(offsetX/foc_X_px)
+	if pxX <= ctrX:
+		phi = -1 * phi_fov
+	elif pxX > ctrX:
+		phi = phi_fov
+	xY = hY
+	xX = sY * tan(phi)
+
+	#viewing azimuth of camera
+	azimuth = radians(-alpha)
+	es = xX * cos(azimuth) - xY * sin(azimuth)
+	no = xY * cos(azimuth) + xX * sin(azimuth)
+
+	#get final georeferenced easting and northing
+	E = es + camX
+	N = no + camY
+
+	return E, N 
+
+
+def get_lava_area(flir_data, lake_level):
 	'''
 	Get total area of all active lava pixels
 	'''
-	#TODO
-	#THIS IS JUST A PLACEHOLDER FOR NOW
-	area = 50000	
+	
+	#mask everything below active-lava threshold, this time with 0 to use numpy nonzero
+	active_lava = deepcopy(flir_data)
+	active_lava[active_lava < Tactive] = 0
+	
+
+	#get list of index-pairs that are non-zero
+	active_pixels = np.nonzero(active_lava)
+
+	pixel_areas = []
+	for pxX, pxY in zip(*active_pixels):
+		e1, n1 = get_pixel_coordinates(lake_level, pxY-.5, pxX-.5)
+		e2, n2 = get_pixel_coordinates(lake_level, pxY-.5, pxX+.5)
+		e3, n3 = get_pixel_coordinates(lake_level, pxY+.5, pxX+.5)
+		e4, n4 = get_pixel_coordinates(lake_level, pxY+.5, pxX-.5)
+		E = [e1, e2, e3, e4]
+		N = [n1, n2, n3, n4]
+		#get area using Shoeslace formula
+		px_area = 0.5*np.abs(np.dot(E,np.roll(N,1))-np.dot(N,np.roll(E,1)))
+		pixel_areas.append(px_area)
+	area = int(sum(pixel_areas))
+	logging.info(f'...total area of active lava lake: {area} m2')	
 
 	return area
 
@@ -133,20 +261,23 @@ def main(source):
 	json_data = read_run_json()	
 	keypath = json_data['user_defined']['keys']
 
-	#downlaod mat files
-	listing = get_dir_listing(url,keypath,'mat')
-	download_images(listing, keypath, source['flir_path'])	
+	#downlaod mat files if running as a forecast, otherwise will use images in flir directory
+	if os.environ['runtype'] == 'realtime':
+		listing = get_dir_listing(url,keypath,'mat')
+		download_images(listing, keypath, source['flir_path'])	
+
 
 	#get data for each hour
 	#for future/missing times, assume closts/most recent values
 	temperature, area = [], []
+	lake_level = get_lake_level(keypath)
 	for hr in range(int(os.environ['runhrs'])):
 		#locate most relevant file and read data
 		flir_data = get_nearest_image(source, hr)
 		#extract temperature
 		temperature.append(get_lava_temperature(flir_data))
 		#extract area
-		area.append(get_lava_area(flir_data))
+		area.append(get_lava_area(flir_data, lake_level[hr]))
 	
 	source['temperature'] = temperature
 	source['area'] = area
@@ -157,56 +288,3 @@ if __name__ == '__main__':
         main(source)
 
 
-
-
-
-
-
-
-
-'''
-
-		obs_datetimes_utc = [dt.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z') for date in obs_dates]
-
-		#use pandas to locate nearest record to emission start datetime and get index
-		pdtime = pd.DatetimeIndex(obs_datetimes_utc)
-		em_date = dt.datetime.strptime(os.environ['forecast']+'UTC', '%Y%m%d%H%Z') + dt.timedelta(hours=int(os.environ['spinup']))
-		logging.debug('...emissions start hour in UTC is {}'.format(em_date))
-		record_idx = pdtime.get_loc(em_date, method='nearest')
-
-
-def main():
-	#read user settings
-	json_data = read_run_json()
-
-	#get number of emissions sources
-	num_src = len(json_data['user_defined']['emissions'])
-	json_data['emissions'] = {}
-
-	#get emissions for each source
-	for iSrc in range(num_src):
-		tag = 'src' + str(iSrc + 1)
-		emis_settings = json_data['user_defined']['emissions'][tag]
-
-		logging.debug('...getting emissions for {}:'.format(tag))
-
-		#get emissions based on user preferences
-		if emis_settings['input'] == 'hvo':
-			#pull from hvo-api
-			so2, obs_date = get_hvo_data(emis_settings['keys'])
-			logging.info('...HVO emissions value: {} tonnes/day'.format(so2))
-		elif emis_settings['input'] == 'manual':
-			#assign user defined value
-			so2 = emis_settings['rate']
-			obs_date = 'manual update'
-			logging.info('...manual emissions assignment requested: rate = {} tonnes/day)'.format(so2))
-		else:
-			logging.critical('ERROR: Emissions input not recognized. Availble options are: "hvo","manual"')
-
-		#write to main json file
-		json_data['emissions'][tag] = {'so2' : so2, 'obs_date': obs_date }
-
-	#update run json
-	update_run_json(json_data)
-
-'''

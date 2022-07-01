@@ -67,7 +67,7 @@ def edit_hys_config(json_data):
 	#edit CONTROL:source count
 	src_cnt = str(json_data['plumerise']['src_cnt'])
 	sed_command('{src_cnt}', src_cnt, 'CONTROL')
-	logging.debug('...source count set to: %s' %src_cnt)
+	logging.debug(f'...number of emissions strating points (including vertical) is set to: {src_cnt}')
 	#edit CONTROL: hysplit run hours
 	hys_hrs = str(user['runhrs'] - int(os.environ['spinup']))
 	sed_command('{hys_hrs}', hys_hrs, 'CONTROL')

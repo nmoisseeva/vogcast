@@ -23,10 +23,12 @@ if __name__ == '__main__':
 	args = parse_inputs()				
 	if args.date:
 		rundate = args.date
-		logging.info('Performing historic run for: %s%s' %(rundate, args.cycle))	
+		logging.info('Performing historic run for: %s%s' %(rundate, args.cycle))
+		os.environ['runtype'] = 'historic'	
 	else:
 		rundate = dt.datetime.now().strftime('%Y%m%d')	
 		logging.info('Performing real-time run for: %s%s' %(rundate,args.cycle))	
+		os.environ['runtype'] = 'realtime'
 	forecast = '%s%s' %(rundate,args.cycle)
 	os.environ['config_path'] = args.config
 	os.environ['forecast'] = forecast

@@ -19,6 +19,11 @@ import datetime as dt
 #turn off font warnings in logging
 logging.getLogger('matplotlib.font_manager').disabled = True
 
+### Inputs ####
+# Some of these are specific to selected options (may or not be used in a given workflow)
+emit_levels = 5 		#number of layers to approximate veritical emissions distribution with (CWIPP)
+
+
  ### Fucntions ###
 def locate_source():
 	'''
@@ -180,7 +185,7 @@ def generate_emitimes(vent,emissions):
 
 				#TODO check if this is what hysplit is looking for
 				control_lines = ''			
-				for layer in range(5):
+				for layer in range(emit_levels):
 					# conversion of emisisons
 					to_mg_per_hr = (1./24) * 1e9    #converstion factor from tonnes/day to mg/hr
 					so2 = str(int(to_mg_per_hr * emissions['so2'] * cwippdata[tag][dtime]['fractions'][layer])) 
@@ -200,8 +205,7 @@ def generate_emitimes(vent,emissions):
 					control_lines = control_lines + lat + ' ' + lon + ' ' + hgt + ' ' + so2 + ' ' + area + '\\n'
 
 	#count total number of source lines for control file
-	#src_cnt = len(cwippdata.keys()) * len(cwippdata[tag].keys()) * 5
-	src_cnt = 5
+	src_cnt = len(cwippdata.keys()) * emit_levels
 
 	#remove newline character from the last line
 	control_lines = control_lines[:-2]
