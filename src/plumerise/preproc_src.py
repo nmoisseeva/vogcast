@@ -23,7 +23,7 @@ import datetime as dt
 
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
-
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
  ### Fucntions ###
 
@@ -129,7 +129,7 @@ def get_intensity_hc(source, metdata, hr):
 	#convert to kinematic flux and integrate along the diameter
 	diameter = 2* ((source['area'][hr]/3.14)**0.5)
 	I = H * diameter / (1.2 * 1005)
-	logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
+	logging.info(f'... Cross-wind intensity I for hour {hr}:  {int(I)} K m2/s')
 
 	return I
 
@@ -152,7 +152,7 @@ def get_intensity_mass(source, metdata, emissions, hr):
 	mass_flux_cw = mass_flux * 2* ((source['area'][hr]/3.14)**0.5)
 	I = mass_flux_cw * (source['temperature'][hr] + 273)
 	
-	#logging.info('... Cross-wind intensity I = {} K m2/s'.format(I))
+	logging.info(f'...Cross-wind intensity I for hour {hr}: {int(I)} K m2/s')
 
 	return I
 
@@ -226,12 +226,9 @@ def main():
 
 			#calculate intensity based on user-defined method
 			if source['method'] == 'hc':
-				logging.info(f'...calculating CW intensity using heat transfer method: hour = {hr}')
 				I = get_intensity_hc(source, metdata, hr)
 			elif source['method'] == 'mass':
-				logging.info(f'...calculating CW intensity using mass flux method: hour = {hr}')
 				I = get_intensity_mass(source, metdata, emissions, hr)
-				logging.info(f'...Cross-wind intensity I = {I} K m2/s')		
 	
 			cwippjson[tag][timestamp]['I'] = I
 

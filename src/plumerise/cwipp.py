@@ -306,7 +306,7 @@ class Plume:
 
 			self.layer_heights = [self.zCL/4, self.zCL/2, self.zCL*3/4, self.zCL, self.zCL+sigma_top]
 			self.layer_fractions = [sum(profile[:l1]), sum(profile[l1:l2]), sum(profile[l2:l3]), sum(profile[l3:l4]),sum(profile[l4:])]			
-			logging.debug('Sanity check: sum of layer fractions is %s' %sum(self.layer_fractions))
+			#logging.debug('Sanity check: sum of layer fractions is %s' %sum(self.layer_fractions))
 			#self.layer_heights = [self.zCL-2*sigma_bottom, self.zCL-sigma_bottom, self.zCL, self.zCL+sigma_top, self.zCL+2*sigma_top]
 			#self.layer_fractions = [0.092, 0.238, 0.34, 0.238, 0.092]
 

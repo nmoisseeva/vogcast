@@ -27,14 +27,7 @@ import pymatreader as mat
 url = 'https://hvovalve.wr.usgs.gov/cams/data/F1cam/images/mat/'
 url_lava = 'https://hvo-api.wr.usgs.gov/api/v1/laserlavalevel/'
 channels_lava = {'channel': 'HMM','rank':1, 'series': ['sealevel']} 	#this is set to summit vent only
-
 Tactive = 300 		#threshold for "active lava" (deg C)
-#lake_level = 670	#lava lake level in m ASL
-camX, camY, camH = 259336, 2147516, 1141	#F1 camera coordinates in meters
-camFOVx, camFOVy = 45, 33.75 			#F1 horizontal and vertical FOV angles, assuming 4:3 pixel ratio
-camDip = 23.7					#F1 camera dip angle
-dimX, dimY = 640, 480				#F1 image dimensions in pixels
-alpha = 93 					#F1 viewing azimuth (degress)
 
 
 ### Functions ###
@@ -167,16 +160,69 @@ def get_lava_temperature(flir_data):
 	active_lava[active_lava < Tactive] = None
 
 	#get nanmean
-	mean_lava_temperature = np.nanmean(active_lava)
+	mean_lava_temperature = int(np.nanmean(active_lava))
+	
+	logging.info(f'...mean lava temperature: {mean_lava_temperature} deg C')
 
 	return mean_lava_temperature
 
 
-def get_pixel_coordinates(lake_level, pxY, pxX):
+def get_pixel_coordinates(lake_level, pY, pX):
+	'''
+	Get horizontal coordinates of pixel relative to camera location
+	'''
+	dZ = 1142		#camera heigth (m ASL)
+	fovY, fovX = 33.75, 45	#camera FOV (vertical and horizontal)
+	dipY = 23.7		#camera dip angle
+	dimY, dimX = 640, 480	#image size in pixels
+
+	mZ = dZ - lake_level 
+	#get angle below horizon
+	top = dipY - .5*fovY
+
+	#get vertical and horizonal focal lengths in pixels
+	ctrY, ctrX = (dimY / 2.), (dimX / 2.)
+	Oy, Ox  = radians(0.5 * fovY), radians(0.5 * fovX)
+	ly = ctrY / tan(Oy) 
+	lx = ctrX / tan(Ox)
+
+	#recall that images are flipped on the sensor
+	#deal with vertical projection
+	dy = abs(ctrY - pY)
+	theta = atan(dy/ly)
+	if pY <= ctrY:
+		theta = -1 * theta
+	gamma = radians(top) + Oy + theta
+	mY = mZ / tan(gamma)
+	L = mZ / sin(gamma)
+	
+	#deal with horizonal projection
+	dx = abs(ctrX- pX)
+	phi = atan(dx/lx)
+	mX = L * sin(phi)
+	if pX <= ctrX:
+		mX = -1 * mX
+	
+	#logging.debug(f'...pY = {pY}, pX = {pX}') 
+	#logging.debug(f'...mY = {mY} m; L = {L} m, mX = {mX} m  ')
+
+	return mX, mY
+	
+def get_pixel_utm_coordinates(lake_level, pxY, pxX):
 	'''
 	Calculate area of the pixel by georeferencing the coordinates and lake height
 	-adapted from Matt Patric
+	-THIS MIGHT HAVE ERRORS, USE WITH CAUTION!!!
+	-the angles are misnamed (around if statements)
+	-for better names of other variables refer to the get_pixel_coordinates function above
 	'''
+
+	camX, camY, camH = 259336, 2147516, 1141        #F1 camera coordinates in meters
+	camFOVx, camFOVy = 45, 33.75                    #F1 horizontal and vertical FOV angles, assuming 4:3 pixel ratio
+	camDip = 23.7                                   #F1 camera dip angle
+	dimX, dimY = 640, 480                           #F1 image dimensions in pixels
+	alpha = 93                                      #F1 viewing azimuth (degrees)
+
 	#get sensor height above lake (in meteres) and top angle (degrees)
 	h = camH - lake_level
 	topangle = camDip - 0.5 * camFOVy
@@ -197,6 +243,7 @@ def get_pixel_coordinates(lake_level, pxY, pxX):
 	thetaYtilt = radians(topangle) + theta_net
 	hY = h/tan(thetaYtilt)
 	sY = h/sin(thetaYtilt)
+	logging.debug(f'pY = {pxY}, pX = {pxX}')
 
 	#get horizontal coordinate of pixel in meteres
 	offsetX = abs(ctrX - pxX)
@@ -205,13 +252,13 @@ def get_pixel_coordinates(lake_level, pxY, pxX):
 		phi = -1 * phi_fov
 	elif pxX > ctrX:
 		phi = phi_fov
-	xY = hY
-	xX = sY * tan(phi)
+	yy = hY
+	xx = sY * tan(phi)
 
 	#viewing azimuth of camera
 	azimuth = radians(-alpha)
-	es = xX * cos(azimuth) - xY * sin(azimuth)
-	no = xY * cos(azimuth) + xX * sin(azimuth)
+	es = xx * cos(azimuth) - yy * sin(azimuth)
+	no = yy * cos(azimuth) + xx * sin(azimuth)
 
 	#get final georeferenced easting and northing
 	E = es + camX
@@ -234,15 +281,15 @@ def get_lava_area(flir_data, lake_level):
 	active_pixels = np.nonzero(active_lava)
 
 	pixel_areas = []
-	for pxX, pxY in zip(*active_pixels):
-		e1, n1 = get_pixel_coordinates(lake_level, pxY-.5, pxX-.5)
-		e2, n2 = get_pixel_coordinates(lake_level, pxY-.5, pxX+.5)
-		e3, n3 = get_pixel_coordinates(lake_level, pxY+.5, pxX+.5)
-		e4, n4 = get_pixel_coordinates(lake_level, pxY+.5, pxX-.5)
-		E = [e1, e2, e3, e4]
-		N = [n1, n2, n3, n4]
+	for pY, pX in zip(*active_pixels):
+		x1, y1 = get_pixel_coordinates(lake_level, pY-.5, pX-.5)
+		x2, y2 = get_pixel_coordinates(lake_level, pY-.5, pX+.5)
+		x3, y3 = get_pixel_coordinates(lake_level, pY+.5, pX+.5)
+		x4, y4 = get_pixel_coordinates(lake_level, pY+.5, pX-.5)
+		X = [x1, x2, x3, x4]
+		Y = [y1, y2, y3, y4]
 		#get area using Shoeslace formula
-		px_area = 0.5*np.abs(np.dot(E,np.roll(N,1))-np.dot(N,np.roll(E,1)))
+		px_area = 0.5*np.abs(np.dot(X,np.roll(Y,1))-np.dot(Y,np.roll(X,1)))
 		pixel_areas.append(px_area)
 	area = int(sum(pixel_areas))
 	logging.info(f'...total area of active lava lake: {area} m2')	
