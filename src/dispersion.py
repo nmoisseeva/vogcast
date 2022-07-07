@@ -49,7 +49,7 @@ def link_hysplit():
 	#link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','L900','wrf0.9km_{}'.format(os.environ['forecast']))
 	#link_gfs_arl = os.path.join(os.environ['run_dir'],'wrf_gfs','5km','wrf4.5km_{}'.format(os.environ['forecast']))
 	#symlink_force(link_gfs_arl, './d01.arl')
-	symlink_force('../meteorology/d01.arl', './d01.arl')
+	#symlink_force('../meteorology/d01.arl', './d01.arl')
 
 	return
 

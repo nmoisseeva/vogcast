@@ -247,6 +247,7 @@ class Plume:
 		i_zCL = np.nanargmin(abs(self.interpZ - self.zCL))
 
 		'''
+		#This bit adds uniform profile for non-penetrative plumes
 		if not self.penetrative:
 			#for BL plumes: uniform distribution
 			profile[:i_zCL] = 1./i_zCL
@@ -259,6 +260,7 @@ class Plume:
 		
 		elif self.penetrative:
 		'''
+		#This always assumes gaussians above and below zCL (penetrative or not)
 		if self.penetrative or not self.penetrative:
 			#get fire velocity scale
 			self.get_wf()
@@ -284,7 +286,6 @@ class Plume:
 			#prescribe gaussian profile
 			profile[i_zCL:] = np.exp(-0.5*((self.interpZ[i_zCL:] - self.zCL)/sigma_top)**2)
 			profile[:i_zCL+1] = np.exp(-0.5*((self.interpZ[:i_zCL+1] - self.zCL)/sigma_bottom)**2)
-			#profile[:i_zCL+1] = np.exp(-0.5*((self.interpZ[:i_zCL+1] - self.zCL)/sigma_top)**2)			
 
 			#convert to normalized distribution (sum area = 1)
 			intC = sum(profile[:])
@@ -307,8 +308,6 @@ class Plume:
 			self.layer_heights = [self.zCL/4, self.zCL/2, self.zCL*3/4, self.zCL, self.zCL+sigma_top]
 			self.layer_fractions = [sum(profile[:l1]), sum(profile[l1:l2]), sum(profile[l2:l3]), sum(profile[l3:l4]),sum(profile[l4:])]			
 			#logging.debug('Sanity check: sum of layer fractions is %s' %sum(self.layer_fractions))
-			#self.layer_heights = [self.zCL-2*sigma_bottom, self.zCL-sigma_bottom, self.zCL, self.zCL+sigma_top, self.zCL+2*sigma_top]
-			#self.layer_fractions = [0.092, 0.238, 0.34, 0.238, 0.092]
 
 
 		self.profile = profile.squeeze().tolist()

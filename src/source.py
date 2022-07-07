@@ -192,7 +192,7 @@ def generate_emitimes(vent,emissions):
 
 					#get height and location data as strings
 					hgt = str(int(cwippdata[tag][dtime]['heights'][layer]))
-					lat, lon, area = str(vent['lat']), str(vent['lon']), str(vent['area'][t])					
+					lat, lon, area = str(vent[tag]['lat']), str(vent[tag]['lon']), str(vent[tag]['area'][t])					
 
 					#generate source lines for SO2 and SO4
 					#TODO THIS IS SO HARDCODED!! FIX!!
@@ -213,6 +213,7 @@ def generate_emitimes(vent,emissions):
 	#append main run json with area source data
 	json_data = read_run_json()
 	json_data['plumerise'] = {'sources': control_lines, 'src_cnt' : src_cnt}
+	json_data['vent'] = vent
 	update_run_json(json_data)
 
 
@@ -242,16 +243,17 @@ def main():
 		logging.info('{} plumerise model: {}'.format(tag,source['pr_model']))
 		
 		if source['pr_model']=='ops':
-			#this is legacy option up to 2021 (NOTE: note included in config)
+			#this is legacy option up to 2021 (NOTE: not included in config)
 			static_line(source, emissions)
 		elif source['pr_model']=='static_area':
 			#standard hysplit area source option
 			static_area(source, emissions)
 		elif source['pr_model']=='cwipp':
 			#dynamic plume rise model adapted from widlfire
-			prepcwipp.main()
+			vent = prepcwipp.main()
 			run_cwipp()
-			generate_emitimes(json_data['vent'][tag],emissions)
+			logging.info(json_data)
+			generate_emitimes(vent,emissions)
 		else:
 			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
 

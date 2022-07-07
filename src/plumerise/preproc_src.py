@@ -20,7 +20,7 @@ import pandas as pd
 import numpy as np
 import datetime as dt
 
-
+#turn off excessive logging
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
@@ -179,7 +179,8 @@ def main():
 	num_src = len(json_data['user_defined']['source'])
 
 	#create slot for data in run_json
-	json_data['vent'] = {}
+	#json_data['vent'] = {}
+	vent_data = {}
 
 	for iSrc in range(num_src):
 		tag = 'src'+str(iSrc+1)
@@ -198,11 +199,11 @@ def main():
 		cwippjson[tag] = {}
 
 		#get vent parameters
-		json_data['vent'][tag] = {}
+		#json_data['vent'][tag] = {}
+		vent_data[tag] = {}
 		if source['vent_params'] == 'flir':
 			logging.info('...pulling latest thermal image of the vent from HVO')
 			#update source dictionary
-			#TODO write this updated file out
 			source = get_hvo_flir.main(source)
 		elif source['vent_params'] == 'prescribed':
 			logging.info('....using prescribed vent temperature and area')
@@ -233,17 +234,18 @@ def main():
 			cwippjson[tag][timestamp]['I'] = I
 
 		#save vent data for reference
-		json_data['vent'][tag] = source
+		#json_data['vent'][tag] = source
+		vent_data[tag] = source
 
 	#write out the cwipp json
 	write_json('cwipp_inputs.json',cwippjson)
 
 	#update run json
-	update_run_json(json_data)
+	#update_run_json(json_data)
 
 	logging.info('... cwipp preprocessing is complete')
 
-	return
+	return vent_data
 
  ### Main ###
 

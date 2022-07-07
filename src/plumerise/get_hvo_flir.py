@@ -321,6 +321,7 @@ def main(source):
 	for hr in range(int(os.environ['runhrs'])):
 		#locate most relevant file and read data
 		flir_data = get_nearest_image(source, hr)
+		#TODO add logic to test image and make sure temperatures are reasonable
 		#extract temperature
 		temperature.append(get_lava_temperature(flir_data))
 		#extract area
