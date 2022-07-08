@@ -116,6 +116,7 @@ def get_lake_level(keypath):
 	return lake_level
 
 
+
 def get_nearest_image(source, hr):
 	'''
 	Get the nearest file for each forecast hour
@@ -139,14 +140,28 @@ def get_nearest_image(source, hr):
 
 	
 	#get closest availble image
-	nearest = min(img_dates, key=lambda x: abs(x - fc_date))
+	nearest = min(img_dates, key=lambda x: abs(x - fcst_hr))
 	nearest_img_name = dt.datetime.strftime(nearest,'%Y%m%d%H%M%S_F1.mat')
+	logging.debug(f'...nearest thermal image found: {nearest_img_name}')
 	if (fcst_hr - nearest) > dt.timedelta(days = 3):
 		logging.warning(f'WARNING: time mismatch with thermal image {nearest_img_name} is more than 3 days')
 
 	#get data from file as array
 	img_path = os.path.join(source['flir_path'],nearest_img_name)
 	flir_data = mat.read_mat(img_path)['img']
+
+	#test data (should not contain negative temperatures)
+	#TODO: fix this ugly repetitive coding (move to a separate function)
+	while (flir_data[-1,:].mean() < 0) or (len(flir_data[flir_data > Tactive]) < 100):
+		logging.warning(f'WARNING: thermal image contains negative values or <100 active pixels, pulling previous image')
+		hr = hr - 1
+		fcst_hr = fc_date + dt.timedelta(hours=hr)
+		nearest = min(img_dates, key=lambda x: abs(x - fcst_hr))
+		nearest_img_name = dt.datetime.strftime(nearest,'%Y%m%d%H%M%S_F1.mat')
+		img_path = os.path.join(source['flir_path'],nearest_img_name)
+		flir_data = mat.read_mat(img_path)['img']
+	logging.debug(f'...nearest usable thermal image found: {nearest_img_name}')
+		
 
 	return flir_data
 

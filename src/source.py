@@ -252,7 +252,6 @@ def main():
 			#dynamic plume rise model adapted from widlfire
 			vent = prepcwipp.main()
 			run_cwipp()
-			logging.info(json_data)
 			generate_emitimes(vent,emissions)
 		else:
 			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
