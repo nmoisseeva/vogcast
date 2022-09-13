@@ -61,7 +61,12 @@ def convert_to_arl():
 	for d in range(1,int(os.environ['max_dom'])+1):
 		#clean up old config
 		if d > 1:
-			os.remove('ARLDATA.CFG')
+			try:
+				os.remove('ARLDATA.CFG')
+			except:
+				logging.critical('ERROR: WRF to ARL conversion failed, check logs in "hysplit" subforlder')
+				sys.exit()
+		
 		
 		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d) + '*')[0]
 		logging.debug('Wrfout file: %s' %nc_file)
@@ -89,9 +94,10 @@ def main():
 	logging.info('Running conversion to ARL format')	
 
 	#check for met completion
-	met_ok = os.path.join(os.environ['run_path'],'meteorology','met.OK')
-	if not os.path.isfile(met_ok):
-		logging.critical("Missing met.OK file: ensure meteorology has completed. Aborting.")
+	met_path = os.path.join(os.environ['run_path'],'meteorology','wrfout*')
+	if len(glob.glob(met_path))==0:
+	#if not os.path.isfile(met_ok):
+		logging.critical("ERROR: Did not find and wrfout files. Ensure met is availble. Aborting.")
 		sys.exit()
 		
 	#set up hysplit directory

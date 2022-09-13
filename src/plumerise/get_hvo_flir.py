@@ -97,7 +97,9 @@ def get_lake_level(keypath):
 	#if theres no data, set to default
 	response = response.json()
 	if response['nr']==0:
+		#TODO: change default back to 870 for ops runs!!
 		lake_level = [870] * runhrs
+		lake_level =[550, 550, 550, 550, 550, 550, 550, 550, 550, 550, 560, 565, 567, 570, 573, 575, 577, 580, 583, 585, 587, 590, 593, 595]
 		logging.warning(f'WARNING: Did not find lava lake data for the given time. Defaulting to {lake_level} m ASL')
 	else:
 		lake_level = []
@@ -149,20 +151,19 @@ def get_nearest_image(source, hr):
 	#get data from file as array
 	img_path = os.path.join(source['flir_path'],nearest_img_name)
 	flir_data = mat.read_mat(img_path)['img']
-
 	#test data (should not contain negative temperatures)
 	#TODO: fix this ugly repetitive coding (move to a separate function)
+	loophr = hr + 0
 	while (flir_data[-1,:].mean() < 0) or (len(flir_data[flir_data > Tactive]) < 100):
-		logging.warning(f'WARNING: thermal image contains negative values or <100 active pixels, pulling previous image')
-		hr = hr - 1
-		fcst_hr = fc_date + dt.timedelta(hours=hr)
+		#hr = hr - 1
+		loophr = loophr - 1
+		fcst_hr = fc_date + dt.timedelta(hours=loophr)
 		nearest = min(img_dates, key=lambda x: abs(x - fcst_hr))
 		nearest_img_name = dt.datetime.strftime(nearest,'%Y%m%d%H%M%S_F1.mat')
 		img_path = os.path.join(source['flir_path'],nearest_img_name)
 		flir_data = mat.read_mat(img_path)['img']
-	logging.debug(f'...nearest usable thermal image found: {nearest_img_name}')
+		logging.warning(f'WARNING: thermal image contains negative values or <100 active pixels, pulling previous image {nearest_img_name}')
 		
-
 	return flir_data
 
 
@@ -175,7 +176,11 @@ def get_lava_temperature(flir_data):
 	active_lava[active_lava < Tactive] = None
 
 	#get nanmean
-	mean_lava_temperature = int(np.nanmean(active_lava))
+	try:
+		mean_lava_temperature = int(np.nanmean(active_lava))
+	except:
+		logging.warning('WARNING: no active lava pixels found, setting T = 50C')
+		mean_lava_temperature = 50.
 	
 	logging.info(f'...mean lava temperature: {mean_lava_temperature} deg C')
 
@@ -334,14 +339,17 @@ def main(source):
 	temperature, area = [], []
 	lake_level = get_lake_level(keypath)
 	for hr in range(int(os.environ['runhrs'])):
-		#locate most relevant file and read data
-		flir_data = get_nearest_image(source, hr)
-		#TODO add logic to test image and make sure temperatures are reasonable
-		#extract temperature
-		temperature.append(get_lava_temperature(flir_data))
-		#extract area
-		area.append(get_lava_area(flir_data, lake_level[hr]))
-	
+		if hr < int(os.environ['spinup']):
+			temperature.append(0)
+			area.append(0)
+		else:
+			#locate most relevant file and read data
+			flir_data = get_nearest_image(source, hr)
+			#TODO add logic to test image and make sure temperatures are reasonable
+			#extract temperature
+			temperature.append(get_lava_temperature(flir_data))
+			#extract area
+			area.append(get_lava_area(flir_data, lake_level[hr]))
 	source['temperature'] = temperature
 	source['area'] = area
 

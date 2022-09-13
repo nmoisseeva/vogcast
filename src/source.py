@@ -6,6 +6,7 @@ __author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
 __date__="July 2021"
 
 import os
+import sys
 import logging
 #import wrf
 from set_vog_env import *
@@ -109,11 +110,17 @@ def run_cwipp():
 	#set up output dictionary
 	output = {}
 
+	#extra high-resolution output for research
+	#TODO: remove
+	hires_out = {}
+
 	#loop through available timestamps
 	for tag in cwippinputs.keys():
 		logging.debug('...processing source: {}'.format(tag))
 		output[tag] = {}
-
+		
+		hires_out[tag] = {}
+		
 		#loop through all hours
 		for dtime in cwippinputs[tag].keys():
 			src = cwippinputs[tag][dtime]
@@ -131,6 +138,10 @@ def run_cwipp():
 			output[tag][dtime]['heights'] = plume.layer_heights
 			logging.debug('...{}: estimated mean injection height is {:.1f} m'.format(dtime,plume.zCL))
 	
+			hires_out[tag][dtime] = {}
+			hires_out[tag][dtime]['profile'] = plume.profile
+			hires_out[tag][dtime]['interpZ'] = plume.interpZ.tolist()
+
 			plt.figure()
 			ax1 = plt.gca()
 			ax1.set(xlabel='potential temperature (K)', ylabel='height (m)')
@@ -146,6 +157,8 @@ def run_cwipp():
 			plt.savefig(save_dir + '/{}.pdf'.format(dtime))
 			plt.close()
 	write_json('cwipp_output.json',output)
+	write_json('hires_output.json',hires_out)
+
 	return
 
 def generate_emitimes(vent,emissions):
@@ -219,6 +232,21 @@ def generate_emitimes(vent,emissions):
 
 	return
 
+def check_model_compatibility(json_data,tag):
+	'''
+	Check that the plume-rise model is compatible with other options selected
+	'''
+	pr_model = json_data['user_defined']['source'][tag]['pr_model']
+	met_model = json_data['user_defined']['meteorology']['model']
+
+	if (pr_model == 'cwipp') and (met_model != 'wrf'):
+		logging.critical('ERROR: "cwipp" plume-rise model currently requires WRF meteorology. Aborting!')
+		sys.exit()		
+
+	return
+
+
+
 def main():
 	'''
 	Run plume rise/source model
@@ -241,6 +269,7 @@ def main():
 
 		#call the selected plume rise approach
 		logging.info('{} plumerise model: {}'.format(tag,source['pr_model']))
+		check_model_compatibility(json_data,tag)
 		
 		if source['pr_model']=='ops':
 			#this is legacy option up to 2021 (NOTE: not included in config)
@@ -254,7 +283,8 @@ def main():
 			run_cwipp()
 			generate_emitimes(vent,emissions)
 		else:
-			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area", "bl_mixing" and "cwipp". Aborting!')
+			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area" and "cwipp". Aborting!')
+			sys.exit()
 
 	return
 

@@ -94,6 +94,9 @@ def get_met_data(ds,hr,met_idx):
 
 	#get zi
 	pblh = ds.variables['PBLH'][hr,ilat,ilon]
+	
+	#get surface heat flux in kinematic form
+	hfx = (ds.variables['HFX'][hr,ilat,ilon]) * 1.2/1005
 
 	#compile output dict
 	metdata = {}
@@ -102,6 +105,7 @@ def get_met_data(ds,hr,met_idx):
 	metdata['PBLH'] = int(pblh)
 	metdata['Z'] = agl_height.squeeze().tolist()
 	metdata['U'] = M.squeeze().tolist()
+	metdata['HFX'] = int(hfx)
 
 	return metdata
 

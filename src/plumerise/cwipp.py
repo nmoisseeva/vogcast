@@ -217,14 +217,18 @@ class Plume:
 
 	def get_uBL(self, inputs):
 		"""
-		Get BL wind magnitude
+		Get BL wind magnitude, heat flux
 		"""
 		#get index of BL top
 		i_zi = np.nanargmin(abs(self.interpZ - self.zi))
 
 		uBL = np.mean(inputs['U'][:i_zi])
+		hfx = float(inputs['HFX'])
 
 		self.uBL = uBL
+		self.hfx = hfx
+		
+		return
 
 
 	def get_profile(self):
@@ -265,8 +269,11 @@ class Plume:
 			#get fire velocity scale
 			self.get_wf()
 
+
 			#get Deadorff's velocity for spread
-			wD = (g * self.zi * 0.13 / self.THs)**(1/3.) #!!!! HARDCODED SURFACE HEAT FLUX: use wrf?
+			wD = (g * self.zi * 0.3 / self.THs)**(1/3.) #!!!! HARDCODED SURFACE HEAT FLUX (originally 0.13)
+
+			#wD = (g * self.zi * self.hfx  / self.THs)**(1/3.) #!!!!TODO: testing VARIABLE HEATFLUX
 
 			#get smoke spread above zCL
 			sigma_top = (self.zCL - self.zs)/3.
@@ -309,5 +316,8 @@ class Plume:
 			self.layer_fractions = [sum(profile[:l1]), sum(profile[l1:l2]), sum(profile[l2:l3]), sum(profile[l3:l4]),sum(profile[l4:])]			
 			#logging.debug('Sanity check: sum of layer fractions is %s' %sum(self.layer_fractions))
 
+
+			#TODO THIS IS FOR SINGLE LEVEL TESTING ONLY - REMOVE!!!!
+			#self.layer_fractions = [0, 0, 0, 1, 0]
 
 		self.profile = profile.squeeze().tolist()

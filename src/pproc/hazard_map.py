@@ -15,6 +15,7 @@ from scipy.ndimage import gaussian_filter
 import datetime as dt
 import pandas as pd
 import os
+import sys
 from pproc.graphics import get_tdim
 #import cartopy.crs as ccrs
 
@@ -70,7 +71,7 @@ def get_nc_data(fcst_tag, pollutant, lvl):
 	fcst_path = os.path.join(os.environ['run_dir'],fcst_tag,'hysplit') 
 	if os.path.exists(fcst_path) is False:
 		logging.CRITICAL('ERROR: {} forecast is missing. Aborting.'.format(fcst_path))
-
+		sys.exit()
 	
 	#get dataset
 	fcst_file = 'poe_lvl{}_{}.nc'.format(lvl,pollutant)

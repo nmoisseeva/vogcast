@@ -18,16 +18,31 @@ from set_vog_env import *
 
 ### Inputs ###
 #url = 'https://hvo-api.wr.usgs.gov/api/so2emissions?channel=SUMDFW&starttime='
-url = 'https://hvo-api.wr.usgs.gov/api/v1/so2emissions/'
-select_data = {'channel': 'SUMDFW', 'rank': 2, 'timezone': 'UTC', 'series': ['so2']}
+url = 'https://hvo-api.wr.usgs.gov/api/v1/'
+select_data_campaign = {'channel': 'SUMDFW', 'rank': 2, 'timezone': 'UTC', 'series': ['so2']}
+select_data_flyspec = {'channel': 'FLYA', 'timezone': 'UTC', 'series': ['dailybstfluxmean']}
+
+
 
 ### Functions ###
 
-def pull_from_api(url,days,select_data,keypath):
+
+def pull_from_api(url,hvo_subdir,days,select_data,keypath):
 	'''
 	Set up api call and pull data
 	'''
-	api_call = url +  str(days) + 'd'
+	if hvo_subdir == 'so2emissions':
+		api_call = url + hvo_subdir + '/' +  str(days) + 'd'
+	elif hvo_subdir == 'flyspec':
+		#make specific api call with limited date to avoid massive empty data dump
+		now = dt.datetime.utcnow()
+		em_start = dt.datetime.strftime(now - dt.timedelta(hours=24*days), '%Y%m%d') + '000000'
+		em_end = dt.datetime.strftime(now - dt.timedelta(hours=24*(days-1)), '%Y%m%d') + '000000'
+		
+		api_call = url + hvo_subdir + '/' + em_start + '/' + em_end
+		logging.debug(api_call) 
+
+
 	login = read_config(keypath)
 	response = requests.post(api_call,auth=(login['hvo']['user'],login['hvo']['pwd']),data=json.dumps(select_data))
 
@@ -37,10 +52,25 @@ def no_data(response):
 	'''
 	Check if so2 data is available for the given day
 	'''
+
 	if response['nr']==0:
 		return True
 	else:
 		return False
+
+def no_daily_ave(response):
+	'''
+	Check if flyspec so2 data was sufficient for daily average
+	'''
+	i = -1
+	while response['results'][i]['dailybstfluxmean'] == None and abs(i) < response['nr']:
+		i = i-1
+	
+	if response['results'][i]['dailybstfluxmean']  == None:
+		return True
+	else:
+		return False
+
 
 def get_days_offset():
 	'''
@@ -54,11 +84,11 @@ def get_days_offset():
 	#return adjusting for HST indexing
 	return offset.days + 1
 
-def get_hvo_data(keypath):
+def get_campaign_data(keypath,hvo_subdir):
 	'''
-	Run all the steps for pulling emissions form HVO
+	Run all the steps for pulling campaign emissions form HVO
 	'''
-	logging.info('...pulling emissions data from HVO-API')
+	logging.info('...pulling campaign emissions data from HVO-API')
 
 	#check if a forecast date is set in environ
 	if 'forecast' in os.environ:
@@ -69,11 +99,11 @@ def get_hvo_data(keypath):
 		day = 1
 
 	#loop until we find some data
-	while no_data(pull_from_api(url,day,select_data,keypath)):
+	while no_data(pull_from_api(url,hvo_subdir,day,select_data_campaign,keypath)):
 		day = day + 1
 
 	#get the data we need
-	response = pull_from_api(url,day,select_data,keypath)
+	response = pull_from_api(url,hvo_subdir,day,select_data_campaign,keypath)
 
 	#get the correct index of the record (if forecast mode: use most recent)
 	if 'forecast' in os.environ:
@@ -96,6 +126,40 @@ def get_hvo_data(keypath):
 	logging.info('...nearest record found found: {}'.format(obs_date))
 
 	return so2, obs_date
+
+def get_flyspec_data(keypath, hvo_subdir):
+	'''
+	Run all the steps for pulling flyspec data from HVO
+	'''
+	logging.info('...pulling flyspec emissions data from HVO-API')
+
+	#check if a forecast date is set in environ
+	if 'forecast' in os.environ:
+		day = get_days_offset()
+		logging.debug('...Number of days offset for emissions pull is {}'.format(day))
+	else:
+		logging.debug('...No forecast date set, getting the most recent data')
+		day = 1
+
+	#loop until we find some data
+	response = pull_from_api(url,hvo_subdir,day,select_data_flyspec,keypath)
+	while no_data(response) or no_daily_ave(response):
+		day = day + 1
+		response = pull_from_api(url,hvo_subdir,day,select_data_flyspec,keypath)
+
+	#get the last non-nan value
+	i= -1
+	while response['results'][i]['dailybstfluxmean'] == None and abs(i) < response['nr']:
+		i = i-1
+
+	#set the last averaged record
+	so2 = int(response['results'][i]['dailybstfluxmean'])
+	obs_date = response['results'][i]['date']
+	logging.info('...nearest record found found: {}'.format(obs_date))
+
+	return so2, obs_date
+
+
 
 def main():
 	'''
@@ -120,7 +184,13 @@ def main():
 		#get emissions based on user preferences
 		if emis_settings['input'] == 'hvo':
 			#pull from hvo-api
-			so2, obs_date = get_hvo_data(json_data['user_defined']['keys'])
+			keypath = json_data['user_defined']['keys']
+			if emis_settings['channel'] == 'campaign':
+				hvo_subdir = 'so2emissions'
+				so2, obs_date = get_campaign_data(keypath, hvo_subdir)
+			elif emis_settings['channel'] =='flyspec':
+				hvo_subdir = 'flyspec'
+				so2, obs_date = get_flyspec_data(keypath, hvo_subdir)
 			logging.info('...HVO emissions value: {} tonnes/day'.format(so2))
 		elif emis_settings['input'] == 'manual':
 			#assign user defined value

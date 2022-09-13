@@ -55,7 +55,7 @@ def make_aqi_cmap(pollutant):
 		clabel = r'SO$_2$ (ppm)'
 	elif pollutant.lower() =='so4':
 		#so4 standards are in ug/m3 - ensure correct conversion in config
-		bounds = [0, 12, 35, 55, 150, 250, 1000]
+		bounds = [0, 39, 89, 139, 352, 527, 1000]
 		clabel = r'SO$_4$ ($\mu$g/m$^3$)'
 	else:
 		logging.error('ERROR: pollutant not recognized - {}. Available options: "so2", "so4"'.format(pollutant))	
@@ -82,13 +82,13 @@ def make_aqi_cmap(pollutant):
 	norm = colors.BoundaryNorm(lvls, aqi.N)	
 
 	#save colormap - for some reason prodcues a massive log dump
-	#cmplot = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=len(bounds)-1)
-	#span = np.array([[0, bounds[-1]]])
-	#img = plt.imshow(span, cmap=cmplot)
-	#plt.gca().set_visible(False)
-	#cbar = plt.colorbar(orientation='horizontal', extend='max', label=clabel, ticks=np.arange(0, max(bounds),max(bounds)/(len(bounds)-1)))
-	#cbar.ax.set_xticklabels(bounds[:-1]) 
-	#plt.savefig('colorbar_{}.png'.format(pollutant),bbox_inches = 'tight', pad_inches = 0.1, dpi=200)
+	cmplot = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=len(bounds)-1)
+	span = np.array([[0, bounds[-1]]])
+	img = plt.imshow(span, cmap=cmplot)
+	plt.gca().set_visible(False)
+	cbar = plt.colorbar(orientation='horizontal', extend='max', label=clabel, ticks=np.arange(0, max(bounds),max(bounds)/(len(bounds)-1)))
+	cbar.ax.set_xticklabels(bounds[:-1]) 
+	plt.savefig('colorbar_{}.png'.format(pollutant),bbox_inches = 'tight', pad_inches = 0.1, dpi=200)
 
 	return aqi, norm
 

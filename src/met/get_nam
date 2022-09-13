@@ -85,10 +85,12 @@ datetime="${date}${hour}"
 ncep_dir=/pub/data/nccf/com/nam/prod/nam.$date
 SRCE_ROOT=$ncep_dir
 #ncep_srv=ftpprd.ncep.noaa.gov
-ncep_srv=ftp.ncep.noaa.gov
+#ncep_srv=ftp.ncep.noaa.gov
+ncep_srv=nomads.ncep.noaa.gov
 
 # Build source & destination directories, check if data is already downloaded
-srce_dir=ftp://${ncep_srv}${ncep_dir}
+#srce_dir=ftp://${ncep_srv}${ncep_dir}
+srce_dir=https://${ncep_srv}${ncep_dir}
 dest_dir="$ibc_path/${datetime}"
 if [ -d ${dest_dir} -a -f ${dest_dir}/ibc.OK ]
 then
