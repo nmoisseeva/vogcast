@@ -18,10 +18,9 @@ def create_hys_dir():
 	'''
 	Create a hysplit subdirectory within main run folder, if necessary 
 	'''
-	#create subdirectory for hysplit files, clean up
+	#create subdirectory for hysplit files
 	Path(os.environ['hys_rundir']).mkdir(exist_ok=True)
 	os.chdir(os.environ['hys_rundir'])
-	#os.system('find -type l -delete')
 
 	return
 
@@ -35,15 +34,14 @@ def setup_hys_dir():
 		os.remove('ARLDATA.CFG')
 	except:
 		pass
-
-	#link conversion table
-	wrfcfg = os.path.join(os.environ['vog_root'],'config','hysplit','WRFDATA.CFG')	
-	#os.symlink(wrfcfg, 'WRFDATA.CFG')
-	symlink_force(wrfcfg, 'WRFDATA.CFG')
+	
+	#TODO: echk if ok to remove
+	##link conversion table
+	#wrfcfg = os.path.join(os.environ['vog_root'],'config','hysplit','WRFDATA.CFG')	
+	#symlink_force(wrfcfg, 'WRFDATA.CFG')
 
 	#link necessary executables
 	arw2arl = os.path.join(os.environ['hys_path'],'exec','arw2arl')
-	#os.symlink(arw2arl,'./arw2arl')
 	symlink_force(arw2arl,'./arw2arl')
 
 	return
@@ -69,12 +67,15 @@ def convert_to_arl():
 		
 		
 		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d) + '*')[0]
-		logging.debug('Wrfout file: %s' %nc_file)
+		logging.debug('... met file: %s' %nc_file)
 		arl_file = 'd0' + str(d) + '.arl'
 
 		#run the conversion
-		os.system('./arw2arl -i%s -o%s -c1 > arw2arl_d0%s.log' %(nc_file, os.path.join(os.environ['hys_rundir'],  arl_file), d))
-		
+		#NOTE: usage with explicit options throws too many errors, testing USAGE1 with just file name
+		#os.system('./arw2arl -i%s -o%s -c1 > arw2arl_d0%s.log' %(nc_file, os.path.join(os.environ['hys_rundir'],  arl_file), d))
+		os.system(f'./arw2arl {nc_file} > arw2arl_d0{d}.log')		
+		os.rename('ARLDATA.BIN', arl_file)		
+
 		lines = lines + '.\/\\n' + arl_file + '\\n'
 
 	#remove newline character from the last line

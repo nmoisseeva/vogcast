@@ -79,24 +79,30 @@ def get_met_data(ds,hr,met_idx):
 	#get indecies in two differet formats for convenience
 	iz,ilat,ilon =  np.unravel_index(met_idx[0],shape = np.shape(ds.variables['XLAT']))
 
+	#get time index
+	min_from_start = hr * 60
+	it = np.argmin(abs(ds.variables['XTIME'][:] - min_from_start))
+	time = str(wrf.extract_times(ds,it))
+	logging.debug(f'Getting data for time: {time}')
+
 	#get destaggered height vector, convert to AGL
-	zstag = (ds.variables['PHB'][hr,:,ilat,ilon] + ds.variables['PH'][hr,:,ilat,ilon])//9.81
+	zstag = (ds.variables['PHB'][it,:,ilat,ilon] + ds.variables['PH'][it,:,ilat,ilon])//9.81
 	z0 = wrf.destagger(zstag,0)
-	sfc_elev = ds.variables['HGT'][hr,ilat,ilon]
+	sfc_elev = ds.variables['HGT'][it,ilat,ilon]
 	agl_height = z0 - sfc_elev
 
 	#get vertical temperature profile
-	T0 = ds.variables['T'][hr,:,ilat,ilon] + 300
-	P = (ds.variables['P'][hr,:,ilat,ilon] + ds.variables['PB'][hr,:,ilat,ilon]) * 0.01
+	T0 = ds.variables['T'][it,:,ilat,ilon] + 300
+	P = (ds.variables['P'][it,:,ilat,ilon] + ds.variables['PB'][it,:,ilat,ilon]) * 0.01
 
 	#get wind magnitude profile 
-	M  = (ds.variables['U'][hr,:,ilat,ilon].squeeze()**2 + ds.variables['V'][hr,:,ilat,ilon].squeeze()**2)**(0.5)
+	M  = (ds.variables['U'][it,:,ilat,ilon].squeeze()**2 + ds.variables['V'][it,:,ilat,ilon].squeeze()**2)**(0.5)
 
 	#get zi
-	pblh = ds.variables['PBLH'][hr,ilat,ilon]
+	pblh = ds.variables['PBLH'][it,ilat,ilon]
 	
 	#get surface heat flux in kinematic form
-	hfx = (ds.variables['HFX'][hr,ilat,ilon]) * 1.2/1005
+	hfx = (ds.variables['HFX'][it,ilat,ilon]) * 1.2/1005
 
 	#compile output dict
 	metdata = {}

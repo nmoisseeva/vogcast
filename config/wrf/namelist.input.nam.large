@@ -30,8 +30,8 @@
  !----- for nested runs edit these manually -----
  time_step                           = 9,
  max_dom                             = {max_dom},
- e_we                                = 460, 
- e_sn                                = 340, 	
+ e_we                                = 560, 
+ e_sn                                = 400, 	
  e_vert                              = 55,
  p_top_requested                     = 5000,
  num_metgrid_levels                  = 43,

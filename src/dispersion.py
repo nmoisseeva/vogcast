@@ -67,11 +67,11 @@ def edit_hys_config(json_data):
 	#edit CONTROL:source count
 	src_cnt = str(json_data['plumerise']['src_cnt'])
 	sed_command('{src_cnt}', src_cnt, 'CONTROL')
-	logging.debug(f'...number of emissions strating points (including vertical) is set to: {src_cnt}')
+	logging.debug(f'Number of single cycle emissions strating points (including vertical) is set to: {src_cnt}')
 	#edit CONTROL: hysplit run hours
 	hys_hrs = str(user['runhrs'] - int(os.environ['spinup']))
 	sed_command('{hys_hrs}', hys_hrs, 'CONTROL')
-	logging.debug('...Hysplit run hours set to: %s ' %hys_hrs)
+	logging.debug('Hysplit run hours set to: %s ' %hys_hrs)
 	#edit CONTROL max domain
 	sed_command('{max_dom}', os.environ['max_dom'], 'CONTROL')
 	#copy arl path data into CONTROL
@@ -91,6 +91,7 @@ def edit_hys_config(json_data):
 	#edit SETUP.CFG	
 	sed_command('{freq}', os.environ['freq'], 'SETUP.CFG')
 	sed_command('{min_zi}', str(user['dispersion']['min_zi']), 'SETUP.CFG')
+	sed_command('{numpar}', str(user['dispersion']['numpar']), 'SETUP.CFG')
 
 	#link carryover vog
 	fc_date = dt.datetime.strptime(os.environ['forecast'], '%Y%m%d%H')
@@ -99,13 +100,13 @@ def edit_hys_config(json_data):
 	carryover_file = os.path.join(user['dispersion']['carryover_path'],'PARINIT.{}'.format(co_date_str))
 	if os.path.isfile(carryover_file):
 		#os.symlink(carryover_file, 'PARINIT')
-		logging.debug('...linking carryover vog from: %s' %carryover_file)
+		logging.debug('Linking carryover vog from: %s' %carryover_file)
 		#loop through ensemble members
 		for i in range(1,28):
 			#os.symlink(carryover_file, 'PARINIT.{:03d}'.format(i))
 			symlink_force(carryover_file, 'PARINIT.{:03d}'.format(i))
 	else:
-		logging.warning('...WARNING: No carryover found from previous cycle')
+		logging.warning('WARNING: No carryover found from previous cycle')
 
 	return
 	
@@ -148,7 +149,7 @@ def save_carryover(json_data):
 
 	#make a copy
 	os.system('cp {} {}'.format(parfile,save_path))
-	logging.debug('...saving carryover: %s as %s' %(parfile, save_path))
+	logging.debug('Saving carryover: %s as %s' %(parfile, save_path))
 
 	return
 

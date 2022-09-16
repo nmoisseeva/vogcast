@@ -239,7 +239,7 @@ def check_model_compatibility(json_data,tag):
 	pr_model = json_data['user_defined']['source'][tag]['pr_model']
 	met_model = json_data['user_defined']['meteorology']['model']
 
-	if (pr_model == 'cwipp') and (met_model != 'wrf'):
+	if (pr_model == 'cwipp') and (met_model not in ['wrf','prerun']):
 		logging.critical('ERROR: "cwipp" plume-rise model currently requires WRF meteorology. Aborting!')
 		sys.exit()		
 

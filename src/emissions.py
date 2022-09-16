@@ -10,6 +10,7 @@ import datetime as dt
 import logging
 import json
 import os
+import sys
 import pandas as pd
 from set_vog_env import *
 
@@ -179,7 +180,7 @@ def main():
 		tag = 'src' + str(iSrc + 1)
 		emis_settings = json_data['user_defined']['emissions'][tag]
 
-		logging.debug('...getting emissions for {}:'.format(tag))
+		logging.debug('Getting emissions for {}:'.format(tag))
 
 		#get emissions based on user preferences
 		if emis_settings['input'] == 'hvo':
@@ -191,15 +192,18 @@ def main():
 			elif emis_settings['channel'] =='flyspec':
 				hvo_subdir = 'flyspec'
 				so2, obs_date = get_flyspec_data(keypath, hvo_subdir)
-			logging.info('...HVO emissions value: {} tonnes/day'.format(so2))
+			else:
+				logging.critical('ERROR: missing emissions channel: must specify "flyspec"/"campaign". Aborting. ')
+				sys.exit()
+			logging.info('HVO emissions value: {} tonnes/day'.format(so2))
 		elif emis_settings['input'] == 'manual':
 			#assign user defined value
 			so2 = emis_settings['rate']
 			obs_date = 'manual update'
-			logging.info('...manual emissions assignment requested: rate = {} tonnes/day)'.format(so2))
+			logging.info('Manual emissions assignment requested: rate = {} tonnes/day)'.format(so2))
 		else:
 			logging.critical('ERROR: Emissions input not recognized. Availble options are: "hvo","manual"')
-
+			sys.exit()
 		#write to main json file
 		json_data['emissions'][tag] = {'so2' : so2, 'obs_date': obs_date }
 

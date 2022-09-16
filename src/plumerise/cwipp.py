@@ -222,7 +222,11 @@ class Plume:
 		#get index of BL top
 		i_zi = np.nanargmin(abs(self.interpZ - self.zi))
 
-		uBL = np.mean(inputs['U'][:i_zi])
+		#get index of 1/2 BL (to exclude surface roughness effects on wind)
+		i_half_zi = np.nanargmin(abs(self.interpZ - (self.zi*0.5)))
+		
+		
+		uBL = np.mean(inputs['U'][i_half_zi:i_zi])
 		hfx = float(inputs['HFX'])
 
 		self.uBL = uBL
@@ -271,23 +275,62 @@ class Plume:
 
 
 			#get Deadorff's velocity for spread
-			wD = (g * self.zi * 0.3 / self.THs)**(1/3.) #!!!! HARDCODED SURFACE HEAT FLUX (originally 0.13)
+			#wD = (g * self.zi * 0.3 / self.THs)**(1/3.) #!!!! HARDCODED SURFACE HEAT FLUX 
+			wD = (g * self.zi * self.hfx  / self.THs)**(1/3.) #!!!!TODO: testing VARIABLE HEATFLUX
 
-			#wD = (g * self.zi * self.hfx  / self.THs)**(1/3.) #!!!!TODO: testing VARIABLE HEATFLUX
 
-			#get smoke spread above zCL
-			sigma_top = (self.zCL - self.zs)/3.
+			#formulation of daytime	
+			if self.zi > 400:
+				#spread above zCL
+				sigma_top = (self.zCL - self.zs)/3.
+
+				#spread below zCL
+				#if no surface heat flux, avoid div by 0
+				if wD == 0:
+					Rw = self.uBL/self.wf
+				else:
+					if self.wf/wD < 1.5:
+						Rw = self.uBL/self.wf
+					else:
+						Rw = self.uBL/(self.wf - wD)
+
+				if Rw > 1:
+					sigma_bottom = Rw * sigma_top
+				else:
+					sigma_bottom = sigma_top
+
+			#shallow/nocturnal BL's
+			else:
+				#theoretical spread above
+				sigma_top = self.zCL/3.
+				logging.debug(f'NOTE: shallow BL, sigma_top = {sigma_top}')
+
+				#spread below zCL (no deadorff's velocity effects)
+				Rw = self.uBL/self.wf
+				logging.debug(f'NOTE: Rw = {Rw}')
+				if Rw > 1:
+					sigma_bottom = Rw * sigma_top
+				else:
+					sigma_bottom = sigma_top
+
+
+			#if self.zi < 400:
+			#	sigma_top = self.zCL/3.
+			#	logging.debug(f'NOTE: shallow BL, sigma_top = {sigma_top}')
+			#else:
+			#	sigma_top = (self.zCL - self.zs)/3.
 
 			#get smoke spread below zCL
-			if self.wf/wD < 1.5:
-				Rw = self.uBL/self.wf
-			else:
-				Rw = self.uBL/(self.wf - wD)
+			#if self.wf/wD < 1.5:
+			#	Rw = self.uBL/self.wf
+			#else:
+			#	Rw = self.uBL/(self.wf - wD)
 
-			if Rw > 1:
-				sigma_bottom = Rw * sigma_top
-			else:
-				sigma_bottom = sigma_top
+			#logging.debug(f'NOTE: Rw = {Rw}')
+			#if Rw > 1:
+			#	sigma_bottom = Rw * sigma_top
+			#else:
+			#	sigma_bottom = sigma_top
 
 
 			#prescribe gaussian profile
