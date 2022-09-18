@@ -20,13 +20,9 @@ from set_vog_env import *
 ### Inputs ###
 #url = 'https://hvo-api.wr.usgs.gov/api/so2emissions?channel=SUMDFW&starttime='
 url = 'https://hvo-api.wr.usgs.gov/api/v1/'
-select_data_campaign = {'channel': 'SUMDFW', 'rank': 2, 'timezone': 'UTC', 'series': ['so2']}
-select_data_flyspec = {'channel': 'FLYA', 'timezone': 'UTC', 'series': ['dailybstfluxmean']}
-
 
 
 ### Functions ###
-
 
 def pull_from_api(url,hvo_subdir,days,select_data,keypath):
 	'''
@@ -85,7 +81,7 @@ def get_days_offset():
 	#return adjusting for HST indexing
 	return offset.days + 1
 
-def get_campaign_data(keypath,hvo_subdir):
+def get_campaign_data(keypath,hvo_subdir,select_data):
 	'''
 	Run all the steps for pulling campaign emissions form HVO
 	'''
@@ -100,11 +96,11 @@ def get_campaign_data(keypath,hvo_subdir):
 		day = 1
 
 	#loop until we find some data
-	while no_data(pull_from_api(url,hvo_subdir,day,select_data_campaign,keypath)):
+	while no_data(pull_from_api(url,hvo_subdir,day,select_data,keypath)):
 		day = day + 1
 
 	#get the data we need
-	response = pull_from_api(url,hvo_subdir,day,select_data_campaign,keypath)
+	response = pull_from_api(url,hvo_subdir,day,select_data,keypath)
 
 	#get the correct index of the record (if forecast mode: use most recent)
 	if 'forecast' in os.environ:
@@ -128,7 +124,7 @@ def get_campaign_data(keypath,hvo_subdir):
 
 	return so2, obs_date
 
-def get_flyspec_data(keypath, hvo_subdir):
+def get_flyspec_data(keypath, hvo_subdir,select_data):
 	'''
 	Run all the steps for pulling flyspec data from HVO
 	'''
@@ -143,10 +139,10 @@ def get_flyspec_data(keypath, hvo_subdir):
 		day = 1
 
 	#loop until we find some data
-	response = pull_from_api(url,hvo_subdir,day,select_data_flyspec,keypath)
+	response = pull_from_api(url,hvo_subdir,day,select_data,keypath)
 	while no_data(response) or no_daily_ave(response):
 		day = day + 1
-		response = pull_from_api(url,hvo_subdir,day,select_data_flyspec,keypath)
+		response = pull_from_api(url,hvo_subdir,day,select_data,keypath)
 
 	#get the last non-nan value
 	i= -1
@@ -186,14 +182,16 @@ def main():
 		if emis_settings['input'] == 'hvo':
 			#pull from hvo-api
 			keypath = json_data['user_defined']['keys']
-			if emis_settings['channel'] == 'campaign':
+			if emis_settings['stream'] == 'campaign':
 				hvo_subdir = 'so2emissions'
-				so2, obs_date = get_campaign_data(keypath, hvo_subdir)
-			elif emis_settings['channel'] =='flyspec':
+				select_data = {'channel': emis_settings['channel'], 'rank': 2, 'timezone': 'UTC', 'series': ['so2']}
+				so2, obs_date = get_campaign_data(keypath, hvo_subdir, select_data)
+			elif emis_settings['stream'] =='flyspec':
 				hvo_subdir = 'flyspec'
-				so2, obs_date = get_flyspec_data(keypath, hvo_subdir)
+				select_data = {'channel': 'FLYA', 'timezone': 'UTC', 'series': ['dailybstfluxmean']}
+				so2, obs_date = get_flyspec_data(keypath, hvo_subdir, select_data)
 			else:
-				logging.critical('ERROR: missing emissions channel: must specify "flyspec"/"campaign". Aborting. ')
+				logging.critical('ERROR: unrecognized emissions stream: must specify "flyspec"/"campaign". Aborting. ')
 				sys.exit()
 			logging.info('HVO emissions value: {} tonnes/day'.format(so2))
 		elif emis_settings['input'] == 'manual':

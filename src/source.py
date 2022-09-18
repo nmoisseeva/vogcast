@@ -75,7 +75,7 @@ def static_line(source, emissions):
 
 	return
 
-def static_area(source, emissions):
+def static_area(source, emissions,iSrc):
 	'''
 	New "low buoyancy" approach for a single level area source
 	'''
@@ -90,7 +90,11 @@ def static_area(source, emissions):
 
 	#append main run json with area source data
 	json_data = read_run_json()
-	json_data['plumerise'] = {'sources': lines, 'src_cnt' : 1}
+	if iSrc == 0:
+		json_data['plumerise'] = {'sources': lines, 'src_cnt' : 1}
+	else:
+		json_data['plumerise']['sources'] = json_data['plumerise']['sources'] + '\\n' + lines
+		json_data['plumerise']['src_cnt'] = iSrc + 1
 	update_run_json(json_data)
 
 	return
@@ -276,7 +280,7 @@ def main():
 			static_line(source, emissions)
 		elif source['pr_model']=='static_area':
 			#standard hysplit area source option
-			static_area(source, emissions)
+			static_area(source, emissions,iSrc)
 		elif source['pr_model']=='cwipp':
 			#dynamic plume rise model adapted from widlfire
 			vent = prepcwipp.main()
