@@ -1,6 +1,6 @@
 #!/usr/bin/python3.7
  
-# Script for generating colormaps, plots and other graphics
+# Script for generating exposure maps
 
 __author__="Nadya Moisseeva (nadya.moisseeva@hawaii.edu)"
 __date__="February 2022"
@@ -17,7 +17,9 @@ import pandas as pd
 import os
 import sys
 from pproc.graphics import get_tdim
-#import cartopy.crs as ccrs
+import cartopy.crs as ccrs
+import cartopy.io.img_tiles as cimgt
+import cartopy.feature as cfeature
 
 #turn off font warnings for logging
 logging.getLogger('matplotlib.font_manager').disabled = True
@@ -127,35 +129,59 @@ def plot_hazard(mean_poe, hazard_cmap,  settings):
 	Create surface hazard plots plots for averaged conditions
 	'''
 
-	##plotting using cartopy
-	##TODO this is hardcoded: remove for future and provide as input
-	##NOTE: consider adding bounds in hysplit step (calculate from settings)
-	#bounds =   (-160.5, -154.5, 18.25, 22.75)
+	#TODO this is hardcoded: remove for future and provide as input
+	#NOTE: consider adding bounds in hysplit step (calculate from settings)
+	bounds =   [-160.5, -154.5, 18.25, 22.75]
+	stamen_terrain = cimgt.Stamen(desired_tile_form='L', style='terrain-background')
 
-	##plot as separate figure (assumes lat/lon coordiantes from HYSPLIT)
+
+	#plot as separate figure (assumes lat/lon coordiantes from HYSPLIT)
 	#plt.figure()
 	#ax = plt.axes(projection=ccrs.PlateCarree())
 	#im = ax.imshow(mean_poe, origin='lower',cmap=hazard_cmap,vmin=0, vmax=100, extent=bounds, transform=ccrs.PlateCarree())	
 	#ax.coastlines(resolution='50m',color='grey', linewidth=0.5)
-	#ax.gridlines(draw_labels=True)
 	#plt.colorbar()
 	#plt.title('ANALYSIS PERIOD: {} - {}'.format(settings['start'], settings['end']))
-	
-	#plotting for leaflet display
-	img = plt.imshow(mean_poe,cmap=hazard_cmap, origin='lower', vmin = 0, vmax=100)
-	#hide all padding, margins and axes
-	plt.axis('off')
-	plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-	plt.margins(0,0)
-	plt.gca().xaxis.set_major_locator(plt.NullLocator())
-	plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+	plt.figure()
+	ax = plt.axes(projection=stamen_terrain.crs)
+	ax.set_extent(bounds, crs=ccrs.Geodetic())
+	ax.add_image(stamen_terrain, 5, cmap='gray',alpha=0.4)	
+	im = ax.imshow(mean_poe, origin='lower',cmap=hazard_cmap,vmin=0, vmax=100, extent=bounds, transform=ccrs.PlateCarree())
+	ax.coastlines()
+	ax.add_feature(cfeature.OCEAN,color='white')
+	plt.colorbar(label = '%')
+	ax.set(title = f'ANALYSIS PERIOD: {settings["start"]} - {settings["end"]}')
+	#prettify gridlines
+	gl = ax.gridlines(crs=ccrs.PlateCarree(),draw_labels=True,linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+	gl.top_labels = False
+	gl.right_labels = False
 
 	#save
-	save_path = os.path.join(os.environ['run_dir'],'hazard_{}_lvl{}_{}_{}.png'.format(settings['pollutant'], \
-				settings['poe_lvl'], settings['start'], settings['end']))
-	plt.savefig(save_path, transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
-	#plt.savefig('./{}.{}'.format(time,fmt), dpi=200, bbox_inches = 'tight', pad_inches = 0)
+	fig_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'output')
+	os.system(f'mkdir -p {fig_path}')
+	save_path = os.path.join(fig_path,'hazard_{}_lvl{}_{}_{}.png'.format(settings['pollutant'], \
+						settings['poe_lvl'], settings['start'], settings['end'])) 
+	plt.savefig(save_path, dpi=150)
 	plt.close()
+
+
+	#NOTE keeping this for possible future use: leaflet version of poe plot for web (transparent png, no axes)
+	
+	##plotting for leaflet display
+	#img = plt.imshow(mean_poe,cmap=hazard_cmap, origin='lower', vmin = 0, vmax=100)
+	##hide all padding, margins and axes
+	#plt.axis('off')
+	#plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+	#plt.margins(0,0)
+	#plt.gca().xaxis.set_major_locator(plt.NullLocator())
+	#plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+	##save
+	#save_path = os.path.join(os.environ['run_dir'],'hazard_{}_lvl{}_{}_{}.png'.format(settings['pollutant'], \
+	#			settings['poe_lvl'], settings['start'], settings['end']))
+	#plt.savefig(save_path, transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
+	#plt.close()
 	
 	logging.debug('Hazard map saved as: {}'.format(save_path))
 	

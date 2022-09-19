@@ -61,11 +61,11 @@ def main():
 		if met_settings['type'] == "prod":
 			logging.info('...pulling production ARL data from NOMADS server')
 			arl_file = 'hysplit.t{}z.namsf.HI'.format(os.environ['cycle'])
-			os.system('wget https://nomads.ncep.noaa.gov/pub/data/nccf/com/hysplit/prod/hysplit.{}/{}'.format(os.environ['rundate'],arl_file))
+			os.system('wget -N https://nomads.ncep.noaa.gov/pub/data/nccf/com/hysplit/prod/hysplit.{}/{}'.format(os.environ['rundate'],arl_file))
 		elif met_settings['type'] == "archive":
 			logging.info('...pulling archived ARL data from NOAA FTP server')
 			arl_file = '{}_hysplit.t{}z.namsa.HI'.format(os.environ['rundate'],os.environ['cycle'])
-			os.system('wget ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{}'.format(arl_file))
+			os.system('wget -N ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{}'.format(arl_file))
 		else:
 			logging.critical('ERROR: missing "type" parameter for ARL data. Available options: "prod"/"archive"')
 
@@ -74,7 +74,7 @@ def main():
 		#arl_file = '{}_hysplit.t{}z.namsa.HI'.format(os.environ['rundate'],os.environ['cycle'])
 		#os.system('wget ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{}'.format(arl_file))
 		
-		os.system('mv {} d01.arl'.format(arl_file))
+		os.system('ln -sf {} d01.arl'.format(arl_file))
 
 		#update arl path
 		json_data['arl'] = '.\/\\nd01.arl'
