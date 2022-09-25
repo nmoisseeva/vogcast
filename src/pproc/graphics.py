@@ -40,6 +40,7 @@ def make_poe_cmap():
 	#plt.gca().set_visible(False)
 	#cbar = plt.colorbar(orientation='horizontal', label='Probability of Exceedance (%)', ticks=np.arange(0, 101,10))
 	#plt.savefig('colorbar_POE.png', dpi=100, bbox_inches = 'tight', pad_inches = 0.1)
+	plt.close()
 
 	return poe
 
@@ -89,6 +90,7 @@ def make_aqi_cmap(pollutant):
 	cbar = plt.colorbar(orientation='horizontal', extend='max', label=clabel, ticks=np.arange(0, max(bounds),max(bounds)/(len(bounds)-1)))
 	cbar.ax.set_xticklabels(bounds[:-1]) 
 	plt.savefig('colorbar_{}.png'.format(pollutant),bbox_inches = 'tight', pad_inches = 0.1, dpi=200)
+	plt.close()
 
 	return aqi, norm
 
@@ -177,7 +179,7 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 	
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
-		smooth_con = gaussian_filter(converted_fields[t,:,:], sigma=2)
+		smooth_con = gaussian_filter(converted_fields[t,:,:], sigma=1)
 		img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
 		#hide all padding, margins and axes
 		plt.axis('off')

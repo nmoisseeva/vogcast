@@ -48,16 +48,21 @@ def ensmean(pproc_settings):
 	#link executables
 	link_exec('conprob')
 	
-	for iP, pollutant in enumerate(pproc_settings['conversion']):
-		logging.info('...creating ensemble average: {}'.format(pollutant))
+	conv = pproc_settings['conversion']
+
+	for iP, pollutant in enumerate(conv.keys()):
+		logging.info(f'...creating ensemble average: {pollutant}')
+		#flat for pollutant number
 		pflag = '-p{}'.format(str(iP + 1))
-		#run hysplit averaging utility
-		os.system('./conprob -bcdump {}'.format(pflag)) 
-		to_netcdf('cmean', 'cmean_{}.nc'.format(pollutant))		
+		#flag for concentration conversion
+		xflag = '-x{}'.format(conv[pollutant])
+		#run calculation for first non-deposition layer (-z2)
+		os.system(f'./conprob -bcdump {pflag} -z2 {xflag}') 
+		to_netcdf('cmean', f'cmean_{pollutant}.nc')		
 
 		#save ncmean for pollutants with requested stn traces
-		logging.debug('...saving as cmean_{} for future use'.format(pollutant))
-		os.system('mv cmean cmean_{}'.format(pollutant))
+		logging.debug(f'...saving as cmean_{pollutant} for future use')
+		os.system(f'mv cmean cmean_{pollutant}')
 	return
 
 def get_poe(pproc_settings):
@@ -104,7 +109,7 @@ def get_poe(pproc_settings):
 		os.system('mv cmean cmean_{}'.format(pollutant))
 
 		#extract QUALITATIVE column integrated smoke for SO4
-		#TODO fix this ugly thing so it's not so hardcoded
+		#TODO check if the xflag is applied like you'd imagine
 		ci_cmd = './conprob -bcdump {} {}'.format(pflag,xflag)
 		logging.debug('...getting CI valuess for {}: {}'.format(pollutant, ci_cmd))
 		os.system(ci_cmd)
@@ -127,16 +132,9 @@ def stn_traces(tag, stn_file, conv):
 
 	#extract station data
 	out_file = 'hysplit.haw.{}.so2.{}.txt'.format(tag,os.environ['forecast'])
-	#out_file = 'HYSPLIT_so2.{}.{}.txt'.format(os.environ['forecast'],tag)
 	con2stn_cmd = './con2stn -d2 -icmean_SO2 -o{} -s{} -xi'.format(out_file,stn_file)
 	os.system(con2stn_cmd)
 
-	#copy to webserver (mkwc)
-	#TODO remove hardcoding and link to config json inputs once operational
-	#mkwc_file = 'hysplit.haw.{}.so2.{}.txt'.format(tag,os.environ['forecast'])
-	#scp_cmd = 'scp {} vmap@mkwc2.ifa.hawaii.edu:www/hysplit/text/{}'.format(out_file, mkwc_file)
-	#os.system(scp_cmd)
-	#logging.debug('...copying station data to mwkc as: {}'.format(mkwc_file))
 
 	return
 

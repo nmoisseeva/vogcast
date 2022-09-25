@@ -83,6 +83,7 @@ def convert_to_arl():
 
 	#append run json with arl file information
 	json_data = read_run_json()
+	json_data['arl_cnt'] = str(d)
 	json_data['arl'] = lines
 	update_run_json(json_data)
 

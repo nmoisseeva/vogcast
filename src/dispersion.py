@@ -75,6 +75,7 @@ def edit_hys_config(json_data):
 	#edit CONTROL max domain
 	sed_command('{max_dom}', os.environ['max_dom'], 'CONTROL')
 	#copy arl path data into CONTROL
+	sed_command('{arl_cnt}', json_data['arl_cnt'], 'CONTROL')
 	sed_command('{arl_paths}', json_data['arl'], 'CONTROL')
 	#copy all sources into CONTROL
 	sources = json_data['plumerise']['sources']

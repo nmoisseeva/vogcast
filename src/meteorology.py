@@ -10,6 +10,44 @@ import logging
 from set_vog_env import *
 import glob
 import met.conv_arl as conv_arl
+import datetime as dt
+
+
+def pull_archived_arl(met_settings):
+	'''
+	Designtated function to deal with archived arl data, accounting for multi-day rusn
+	'''
+	#if the run is less than one day, just donwload the single day file
+	runhrs = int(os.environ['runhrs'])
+	if runhrs < 24:
+		arl_file = '{}_hysplit.t{}z.namsa.HI'.format(os.environ['rundate'],os.environ['cycle'])
+		os.system('wget -N ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{} -P {}'.format(arl_file,met_settings['arl_path']))
+		os.system('ln -sf {} d01.arl'.format(os.path.join(met_settings['arl_path'],arl_file)))
+		control_lines = '.\/\\nd01.arl'
+		arl_cnt = 1
+	#for multiple days, link the files as separate domains (adding logic in dispersion module to account for that)
+	else:
+		logging.debug('WARNING: multi-day simulation with archived ARL data. Downloading multiple arl files')
+		rundays = int(runhrs/24.) + 1
+		control_lines = ''
+		for d in range(0, rundays):
+			fc_date = dt.datetime.strptime(os.environ['forecast'],'%Y%m%d%H')
+			arl_date = fc_date + dt.timedelta(hours=24*d)
+			date_str = dt.datetime.strftime(arl_date,'%Y%m%d')
+			arl_file = '{}_hysplit.t{}z.namsa.HI'.format(date_str,os.environ['cycle'])
+			os.system('wget -N ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{} -P {}'.format(arl_file,met_settings['arl_path']))
+			dd = d + 1			
+			arl_full_path = os.path.join(met_settings['arl_path'],arl_file)
+			os.system(f'ln -sf {arl_full_path} d{dd:02}.arl')
+
+			control_lines = control_lines + '.\/\\nd' + f'{dd:02}.arl' + '\\n'
+
+		#remove newline character from the last line
+		control_lines = control_lines[:-2]
+		arl_cnt = dd
+
+	return control_lines, arl_cnt
+
 
 
 def main():
@@ -62,10 +100,16 @@ def main():
 			logging.info('...pulling production ARL data from NOMADS server')
 			arl_file = 'hysplit.t{}z.namsf.HI'.format(os.environ['cycle'])
 			os.system('wget -N https://nomads.ncep.noaa.gov/pub/data/nccf/com/hysplit/prod/hysplit.{}/{}'.format(os.environ['rundate'],arl_file))
+			os.system('ln -sf {} d01.arl'.format(arl_file))
+			control_lines = '.\/\\nd01.arl'
+			arl_cnt = 1
+
 		elif met_settings['type'] == "archive":
 			logging.info('...pulling archived ARL data from NOAA FTP server')
-			arl_file = '{}_hysplit.t{}z.namsa.HI'.format(os.environ['rundate'],os.environ['cycle'])
-			os.system('wget -N ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{}'.format(arl_file))
+			control_lines, arl_cnt  = pull_archived_arl(met_settings)
+			#arl_file = '{}_hysplit.t{}z.namsa.HI'.format(os.environ['rundate'],os.environ['cycle'])
+			#os.system('wget -N ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{} -P {}'.format(arl_file,met_settings['arl_path']))
+			#os.system('ln -sf {} d01.arl'.format(os.path.join(settings['arl_path'],arl_file))
 		else:
 			logging.critical('ERROR: missing "type" parameter for ARL data. Available options: "prod"/"archive"')
 
@@ -74,10 +118,12 @@ def main():
 		#arl_file = '{}_hysplit.t{}z.namsa.HI'.format(os.environ['rundate'],os.environ['cycle'])
 		#os.system('wget ftp://anonymous@ftp.arl.noaa.gov/archives/nams/{}'.format(arl_file))
 		
-		os.system('ln -sf {} d01.arl'.format(arl_file))
+		#os.system('ln -sf {} d01.arl'.format(arl_file))
 
 		#update arl path
-		json_data['arl'] = '.\/\\nd01.arl'
+		#json_data['arl'] = '.\/\\nd01.arl'
+		json_data['arl'] = control_lines
+		json_data['arl_cnt'] = str(arl_cnt)
 		update_run_json(json_data)
 
 

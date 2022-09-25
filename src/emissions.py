@@ -79,7 +79,8 @@ def get_days_offset():
 	offset = now - fc_date  
 
 	#return adjusting for HST indexing
-	return offset.days + 1
+	#return offset.days + 1
+	return offset.days + 5	#TODO remove this, or confirm this is a reasonable approach
 
 def get_campaign_data(keypath,hvo_subdir,select_data):
 	'''
