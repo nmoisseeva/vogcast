@@ -26,7 +26,7 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 
 ### Functions ###
 
-def assemble_hourly_data(settings):
+def assemble_hourly_data(settings, pollutant):
 	'''
 	Compile an array of hourly data for the entire analysys period
 	'''
@@ -52,24 +52,24 @@ def assemble_hourly_data(settings):
 		#NOTE averaging is pretty ugly and might not be needed by all users. Revisit
 
 		try:
-			ds = get_nc_data(fcst_tag, settings)
+			ds = get_nc_data(fcst_tag, settings, pollutant)
 		except:
 			logging.warning(f'WARNING: forecast missing for {fcst_tag}, skipping!')
 			continue
 
 
 		tdim = get_tdim(ds)
-		pollutant = settings['pollutant']
 
 		#set up empty arrays for mean, in case save is requested
 		fcst_mean = []	
 
 		#loop through availble hours
-		for t, time in enumerate(tdim):
+		for t, time in enumerate(tdim[settings['skiphrs']:]):
 			if settings['plot'] == 'poe':
 				surface_field = get_surface_poe(ds, pollutant, settings['poe_lvl'], t)	
 			elif settings['plot'] == 'concentration':
-				surface_field = ds.variables[pollutant][t,0,:,:]
+				z = int(settings['zflag'])
+				surface_field = ds.variables[pollutant][t,z,:,:]
 			
 			#save data to various storage arrays
 			fcst_mean.append(surface_field)
@@ -85,19 +85,22 @@ def assemble_hourly_data(settings):
 		averaged_data[fcst_tag] = fc_mean
 
 	if 'dump_nc' in settings.keys():
-		logging.info(f'Averaged data dump requested: preparing netcdf output {settings["dump_nc"]}')
-		generate_nc_output(averaged_data, hysdims, settings)
+		if settings['dump_nc']:
+			logging.info(f'Averaged data dump requested: preparing netcdf output')
+			generate_nc_output(averaged_data, hysdims, settings, pollutant)
 
 
 	return compiled_data
 
 
-def generate_nc_output(averaged_data, hysdims, settings):
+def generate_nc_output(averaged_data, hysdims, settings, pollutant):
 	'''
 	Create an output netcdf file for compiled hourly data
 	'''
+	zflag = settings['zflag']
+	save_path = f'./daily_means_{pollutant}_z{zflag}.nc'
 
-	with nc.Dataset(settings['dump_nc'], 'w') as ncf:	
+	with nc.Dataset(save_path, 'w') as ncf:	
 		#set up dimensions
 		time = ncf.createDimension('time', len(averaged_data.keys()))
 		lat = ncf.createDimension('lat', len(hysdims['lats']) )
@@ -124,11 +127,11 @@ def generate_nc_output(averaged_data, hysdims, settings):
 			values[f,:,:] = averaged_data[fcst_tag][:,:]
 			xtime[f] = int(fcst_tag)
 		logging.debug(xtime[:])
-		
+		logging.debug(f'...saving as {save_path}')
 	return
 
 
-def get_nc_data(fcst_tag, settings):
+def get_nc_data(fcst_tag, settings, pollutant):
 	'''
 	Locates correct forecast subfolderes, ncfiles and pulls data for given pollutant, lvl, time
 	'''
@@ -138,7 +141,6 @@ def get_nc_data(fcst_tag, settings):
 	#if os.path.exists(fcst_path) is False:
 	#	logging.warning(f'WARNING: {fcst_path} forecast is missing. Skipping!!!.')
 	
-	pollutant = settings['pollutant']
 	#get dataset
 	if settings['plot'] == 'poe':
 		fcst_file = 'poe_lvl{}_{}.nc'.format(settings['poe_lvl'],pollutant)
@@ -196,7 +198,7 @@ def make_poe_cmap():
 	return hazard
 
 
-def plot_hazard(mean_field, settings):
+def plot_hazard(mean_field, settings, pollutant):
 	'''
 	Create surface hazard plots plots for averaged conditions
 	'''
@@ -217,7 +219,6 @@ def plot_hazard(mean_field, settings):
         
 	fig_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'output')
 	os.system(f'mkdir -p {fig_path}')
-	pollutant = settings['pollutant']
 	cm = make_poe_cmap()
 
 	plt.figure()
@@ -281,12 +282,14 @@ def main(settings):
 	'''
 	logging.info('Creating hazard maps')
 	
+	
 	#collect data from the user-specified forecast range
-	compiled_data = assemble_hourly_data(settings)
-	mean_field = sum(compiled_data.values()) / int(len(compiled_data.keys()))
+	for pollutant in settings['pollutants']:
+		compiled_data = assemble_hourly_data(settings,pollutant)
+		mean_field = sum(compiled_data.values()) / int(len(compiled_data.keys()))
 
-	#do plotting
-	plot_hazard(mean_field, settings)
+		#do plotting
+		plot_hazard(mean_field, settings, pollutant)
 
 	return
 

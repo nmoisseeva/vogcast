@@ -57,7 +57,8 @@ def ensmean(pproc_settings):
 		#flag for concentration conversion
 		xflag = '-x{}'.format(conv[pollutant])
 		#run calculation for first non-deposition layer (-z2)
-		os.system(f'./conprob -bcdump {pflag} -z2 {xflag}') 
+		#os.system(f'./conprob -bcdump {pflag} -z2 {xflag}')
+		os.system(f'./conprob -bcdump {pflag} {xflag}') 
 		to_netcdf('cmean', f'cmean_{pollutant}.nc')		
 
 		#save ncmean for pollutants with requested stn traces

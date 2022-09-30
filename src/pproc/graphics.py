@@ -175,7 +175,8 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 
 	#convert dataset fields to correct units
 	#converted_fields = ds.variables[pollutant][:,0,:,:] * conv 
-	converted_fields = ds.variables[pollutant][:,0,:,:]
+	logging.debug('...REMINDER: first vertical layer is assumed to be deposition only, extracting second layer')
+	converted_fields = ds.variables[pollutant][:,1,:,:]
 	
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
