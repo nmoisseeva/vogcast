@@ -12,7 +12,7 @@ INSTALLING PYTHON PACKAGES ON MANA
 * deactivate
 
 
-Loaded from cluter modules
+Loaded from cluster modules
 -------------------------
 SciPy
 NumPy
