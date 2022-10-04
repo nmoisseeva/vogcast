@@ -94,8 +94,9 @@ def get_poe(pproc_settings):
 		lvls = np.sort(poe_settings[pollutant])[::-1]
 		#flag for concentration levels
 		cflag = '-c{}:{}:{}'.format(lvls[0],lvls[1],lvls[2])
-		#run calculation for first non-deposition layer (-z2)
-		poe_cmd = './conprob -bcdump {} {} -z2 {}'.format(pflag,xflag,cflag)
+		##run calculation for first non-deposition layer (-z2)
+		#poe_cmd = './conprob -bcdump {} {} -z2 {}'.format(pflag,xflag,cflag)
+		poe_cmd = './conprob -bcdump {} {} {}'.format(pflag,xflag,cflag)
 		logging.debug('...running POE analysis for {}: {}'.format(pollutant, poe_cmd))
 		os.system(poe_cmd)
 
@@ -111,10 +112,10 @@ def get_poe(pproc_settings):
 
 		#extract QUALITATIVE column integrated smoke for SO4
 		#TODO check if the xflag is applied like you'd imagine
-		ci_cmd = './conprob -bcdump {} {}'.format(pflag,xflag)
-		logging.debug('...getting CI valuess for {}: {}'.format(pollutant, ci_cmd))
-		os.system(ci_cmd)
-		to_netcdf('cmean', 'CI_{}.nc'.format(pollutant))
+		#ci_cmd = './conprob -bcdump {} {}'.format(pflag,xflag)
+		#logging.debug('...getting CI valuess for {}: {}'.format(pollutant, ci_cmd))
+		#os.system(ci_cmd)
+		#to_netcdf('cmean', 'CI_{}.nc'.format(pollutant))
 
 	return
 
@@ -133,7 +134,8 @@ def stn_traces(tag, stn_file, conv):
 
 	#extract station data
 	out_file = 'hysplit.haw.{}.so2.{}.txt'.format(tag,os.environ['forecast'])
-	con2stn_cmd = './con2stn -d2 -icmean_SO2 -o{} -s{} -xi'.format(out_file,stn_file)
+	#con2stn_cmd = './con2stn -d2 -icmean_SO2 -o{} -s{} -xi'.format(out_file,stn_file)
+	con2stn_cmd = './con2stn -d2 -icmean_SO2 -o{} -s{} -xi -z2'.format(out_file,stn_file)
 	os.system(con2stn_cmd)
 
 
@@ -201,7 +203,6 @@ def main():
 
 
 	#create graphics
-	#TODO move graphics and plotting into a separate module to run in parallel
 	if 'plots' in pproc_settings.keys():
 		plot_settings = pproc_settings['plots']
 		for pollutant in plot_settings['concentration']:
@@ -212,7 +213,8 @@ def main():
 				make_poe_plots('./poe_', pollutant, 'png')
 		if 'ci' in plot_settings.keys():
 			for pollutant in plot_settings['ci']:
-				make_ci_contours('CI_{}.nc'.format(pollutant), pollutant, vert_lvls, 'png')
+				#make_ci_contours('CI_{}.nc'.format(pollutant), pollutant, vert_lvls, 'png')
+				make_ci_contours(f'cmean_{pollutant}.nc', pollutant, vert_lvls, 'png')
 	else:
 		logging.info('No plots requested in config file')	
 	

@@ -50,6 +50,7 @@ Just making a start now... Need to go back and complete this list
 * graphics
 	- cartopy
 	- matplotlib
+	- shapely : no binary install
 * cwipp
 	- sklearn (nearest neighbour search)
 

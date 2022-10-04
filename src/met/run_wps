@@ -101,8 +101,7 @@ if [ ! -f ${ibc_path}/${DATE}${HH}/ibc.OK ]
 then
     echo ${ibc_path}/${DATE}${HH}/ibc.OK
     #TODO fix this permissions issue
-    #echo "ERROR: IBC's are missing! Aborting"
-    echo "ERROR: IBC's are missing - or can't write: THIS IS A TEMPORARY MESSAGE. continuing..."
+    echo "WARNING: no ibs.OK file. Ignore for pre-downloaded files. Otherwise: check for missing boundary conditions. "
     #exit 1
 fi
 

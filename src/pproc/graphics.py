@@ -218,10 +218,11 @@ def make_poe_plots(nc_prefix, pollutant, fmt):
 		tdim = get_tdim(ds)
 		
 		#deal with Hysplit's weird naming: -p1 has keys CM00 etc, -pX uses pollutnat as key
+		logging.debug('...REMINDER: first vertical layer is assumed to be deposition only, extracting second layer')
 		try:
-			poe_field = ds.variables[hys_keys[i]][:,0,:,:]
+			poe_field = ds.variables[hys_keys[i]][:,1,:,:]
 		except:
-			poe_field = ds.variables[pollutant][:,0,:,:]
+			poe_field = ds.variables[pollutant][:,1,:,:]
 
 		#loop through all frams with smoothing
 		for t,time in enumerate(tdim):
