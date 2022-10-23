@@ -84,7 +84,9 @@ def make_aqi_cmap(pollutant):
 
 	#save colormap - for some reason prodcues a massive log dump
 	cmplot = colors.LinearSegmentedColormap.from_list('aqi', colornames, N=len(bounds)-1)
+
 	span = np.array([[0, bounds[-1]]])
+	#img = plt.imshow(span,cmap=aqi)
 	img = plt.imshow(span, cmap=cmplot)
 	plt.gca().set_visible(False)
 	cbar = plt.colorbar(orientation='horizontal', extend='max', label=clabel, ticks=np.arange(0, max(bounds),max(bounds)/(len(bounds)-1)))

@@ -166,14 +166,27 @@ class Plume:
 			#set inital guess for day vs night time
 			if self.zi < 400:
 				z0 = 1000
+			if self.zi == 0:
+				logging.warning('WARNING: zi = 0, setting to 200m for cwipp')
+				self.zi = 200
 			else:
-				z0 = self.zi
+				#z0 = self.zi
+				z0 = np.max([1200,self.zi])
 			try:
 				diagnostics = fsolve(toSolve, z0, factor=0.1, full_output=True)
 				zCL = diagnostics[0][0]
+				logging.debug(f'Success on first attempt: zi = {self.zi}, z0 = {z0}, zCL = {zCL}')
 			except:
-				logging.warning('FAILED TO CONVERGE: setting to BL top')
-				zCL = self.zi
+				logging.warning('WARNING: Failed to converge on solution: trying a higher initial guess')
+				try:
+					z0 = z0 * 2
+					logging.debug(f'Setting z0 = {z0}')
+					diagnostics = fsolve(toSolve, z0, factor=0.1, full_output=True)
+					zCL = diagnostics[0][0]
+					logging.debug(f'Convergence successful using higher initial guess: zi = {self.zi}, zCL = {zCL}')
+				except:
+					logging.warning('WARNING: second attempt to converge failed: setting injection to BL top')
+					zCL = self.zi
 			
 
 		#get related vars
@@ -307,7 +320,6 @@ class Plume:
 
 				#spread below zCL (no deadorff's velocity effects)
 				Rw = self.uBL/self.wf
-				logging.debug(f'NOTE: Rw = {Rw}')
 				if Rw > 1:
 					sigma_bottom = Rw * sigma_top
 				else:

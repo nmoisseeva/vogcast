@@ -82,6 +82,7 @@ def edit_hys_config(json_data):
 	sed_command('{sources}', sources, 'CONTROL')
 	#set vertical motion option
 	sed_command('{vert_motion}', str(user['dispersion']['vert_motion']), 'CONTROL')
+	logging.debug(f"Vertical motion option is set to {user['dispersion']['vert_motion']}")
 	#set vertical levels
 	lvls = user['dispersion']['lvls']
 	num_lvls = str(len(lvls))

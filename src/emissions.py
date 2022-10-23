@@ -170,11 +170,13 @@ def main():
 
 	#get number of emissions sources
 	num_src = len(json_data['user_defined']['emissions'])
+	tags = json_data['user_defined']['emissions'].keys()
 	json_data['emissions'] = {}
 
 	#get emissions for each source
-	for iSrc in range(num_src):
-		tag = 'src' + str(iSrc + 1)
+	#for iSrc in range(num_src):
+		#tag = 'src' + str(iSrc + 1)
+	for iSrc, tag in enumerate(tags):
 		emis_settings = json_data['user_defined']['emissions'][tag]
 
 		logging.debug('Getting emissions for {}:'.format(tag))

@@ -63,12 +63,16 @@ def convert_to_arl():
 				os.remove('ARLDATA.CFG')
 			except:
 				logging.critical('ERROR: WRF to ARL conversion failed, check logs in "hysplit" subforlder')
-				sys.exit()
+				sys.exit(1)
 		
 		
 		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d) + '*')[0]
 		logging.debug('... met file: %s' %nc_file)
 		arl_file = 'd0' + str(d) + '.arl'
+		
+		#TODO remove this (MAUNA LOA ONLY FOR NOW)
+		#os.system(f'cp ~/vmap_lts/maunaloa/vogcast/ARLDATA.CFG.d0{d} ARLDATA.CFG')
+		#os.system(f'./arw2arl ../../2018062200/meteorology/wrfout_d0{d}_2018-06-22_00:00:00 > d0{d}_met.log' )
 
 		#run the conversion
 		#NOTE: usage with explicit options throws too many errors, testing USAGE1 with just file name
@@ -100,7 +104,7 @@ def main():
 	if len(glob.glob(met_path))==0:
 	#if not os.path.isfile(met_ok):
 		logging.critical("ERROR: Did not find and wrfout files. Ensure met is availble. Aborting.")
-		sys.exit()
+		sys.exit(1)
 		
 	#set up hysplit directory
 	setup_hys_dir()

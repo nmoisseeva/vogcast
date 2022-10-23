@@ -34,15 +34,15 @@ def setup_cwipp_dir():
 	#create subdirectory for cwipp files, clean up
 	cwipp_path = os.path.join(os.environ['run_path'],'plumerise')
 	Path(cwipp_path).mkdir(exist_ok=True)
-	logging.debug('...creating plumerise working subdirectory: {}'.format(cwipp_path))
+	logging.debug('Creating plumerise working subdirectory: {}'.format(cwipp_path))
 
 	os.chdir(cwipp_path)
 	#os.system('find -type l -delete')
 
 	#link meteorology - always use the finest domain (max_dom)
 	metpath = os.path.join(os.environ['run_path'],'meteorology','wrfout_d0{}'.format(os.environ['max_dom']))+'*'
-	logging.debug('...linking wrf data: {}'.format(metpath))
-	os.system('ln -sf {} ./wrfout.nc'.format(metpath))
+	logging.debug(f'Linking wrf data: {metpath}')
+	os.system(f'ln -sf {metpath} ./wrfout.nc')
 
 
 	return
@@ -79,9 +79,9 @@ def get_met_data(ds,hr,met_idx):
 	#get indecies in two differet formats for convenience
 	iz,ilat,ilon =  np.unravel_index(met_idx[0],shape = np.shape(ds.variables['XLAT']))
 
-	#get time index
+	#get time index (accounting for possible resart run)
 	min_from_start = hr * 60
-	it = np.argmin(abs(ds.variables['XTIME'][:] - min_from_start))
+	it = np.argmin(abs(ds.variables['XTIME'][:] - ds.variables['XTIME'][0]- min_from_start))
 	time = str(wrf.extract_times(ds,it))
 	logging.debug(f'Getting data for time: {time}')
 
@@ -97,6 +97,7 @@ def get_met_data(ds,hr,met_idx):
 
 	#get wind magnitude profile 
 	M  = (ds.variables['U'][it,:,ilat,ilon].squeeze()**2 + ds.variables['V'][it,:,ilat,ilon].squeeze()**2)**(0.5)
+	M10 = (ds.variables['U10'][it,ilat,ilon]**2 + ds.variables['V10'][it,ilat,ilon]**2)**(0.5)
 
 	#get zi
 	pblh = ds.variables['PBLH'][it,ilat,ilon]
@@ -112,6 +113,7 @@ def get_met_data(ds,hr,met_idx):
 	metdata['Z'] = agl_height.squeeze().tolist()
 	metdata['U'] = M.squeeze().tolist()
 	metdata['HFX'] = int(hfx)
+	metdata['U10'] = float(M10)
 
 	return metdata
 
@@ -125,23 +127,51 @@ def parse_timestamp(json_data,hr):
 
 	return tstamp_str
 
+
+def get_intensity_hc(source, metdata, hr):
+	'''
+	Calculate equivalent cross-wind intensity using heat transfer estimates
+	'''
+
+	#calculate heat flux using relationship identified in Keszthelyi et al., 2003
+	#estimate is based on 3D surface fit to 1-, 5- and 10- m/s wind speeds
+	parameters = [8.52891637, 1.00889672, 0.50909336]
+
+	#get mean heat flux
+	src_T = source['temperature'][hr]
+	logging.debug(f'Source temperature is: {src_T} deg C')
+	src_U = metdata['U10']
+	logging.debug(f'Near-vent windspeed is: {src_U} m/s')
+
+	#surface fit
+	H = parameters[0] * (src_T**parameters[1]) * (src_U**parameters[2])
+	logging.debug(f'H is: {H} W/m2')
+
+	#get intensity
+	diameter = 2* ((source['area'][hr]/3.14)**0.5)	
+	I = H * diameter / (1.2 * 1005)
+	#logging.debug(f'Cross-wind intensity I for hour {hr}:  {int(I)} K m2/s')
+
+	return I
+
+"""
 def get_intensity_hc(source, metdata, hr):
 	'''
 	Calculate equivalent cross-wind intensity using heat transfer estimate
 	'''
 	#get mean heat flux
-	logging.debug('... BL height is: {}'.format(metdata['PBLH']))
+	logging.debug('BL height is: {}'.format(metdata['PBLH']))
 	delT = (source['temperature'][hr] + 273) - metdata['T'][0]
-	logging.debug('... delT is: {} K'.format(delT))
 	H = delT * source['hc']
-	logging.debug('... H is: {} W/m2'.format(H))
+	logging.debug('H is: {} W/m2'.format(H))
 
 	#convert to kinematic flux and integrate along the diameter
 	diameter = 2* ((source['area'][hr]/3.14)**0.5)
 	I = H * diameter / (1.2 * 1005)
-	logging.info(f'... Cross-wind intensity I for hour {hr}:  {int(I)} K m2/s')
+	logging.info(f'Cross-wind intensity I for hour {hr}:  {int(I)} K m2/s')
 
 	return I
+"""
 
 def get_intensity_mass(source, metdata, emissions, hr):
 	'''
@@ -162,7 +192,7 @@ def get_intensity_mass(source, metdata, emissions, hr):
 	mass_flux_cw = mass_flux * 2* ((source['area'][hr]/3.14)**0.5)
 	I = mass_flux_cw * (source['temperature'][hr] + 273)
 	
-	logging.info(f'...Cross-wind intensity I for hour {hr}: {int(I)} K m2/s')
+	logging.info(f'Cross-wind intensity I for hour {hr}: {int(I)} K m2/s')
 
 	return I
 
@@ -171,7 +201,8 @@ def main():
 	'''
 	Preprocess src location for cwwipp run
 	'''
-	logging.info('...Preprocessing source locations for CWIPP')	
+	logging.info('Preprocessing source locations for CWIPP')	
+	logging.info('All vents will be processed at the same time')
 
 
 	#set up cwipp directory
@@ -187,20 +218,26 @@ def main():
 	
 	#loop through sources
 	num_src = len(json_data['user_defined']['source'])
+	tags = json_data['user_defined']['source'].keys()
 
 	#create slot for data in run_json
-	#json_data['vent'] = {}
 	vent_data = {}
 
-	for iSrc in range(num_src):
-		tag = 'src'+str(iSrc+1)
+	#for iSrc in range(num_src):
+		#tag = 'src'+str(iSrc+1)
+	for iSrc, tag in enumerate(tags):
 		source = json_data['user_defined']['source'][tag]
+		
+		if source['pr_model'] != 'cwipp':
+			logging.critical('ERROR: if using CWIPP plume-rise in must be applied to all source locations. Aborting!')	
+			sys.exit(1)
+
 		emissions = json_data['emissions'][tag]
 
 		#get source location
 		lat, lon = float(source['lat']),float(source['lon'])
 		src_loc = np.array([lat,lon]).reshape(1, -1)
-		logging.info('...getting source conditions for {}: {},{}'.format(tag,lat,lon))
+		logging.info(f'Getting source conditions for {tag}: {lat},{lon}')
 
 
 		#get loc index nearest to fire
@@ -209,14 +246,13 @@ def main():
 		cwippjson[tag] = {}
 
 		#get vent parameters
-		#json_data['vent'][tag] = {}
 		vent_data[tag] = {}
 		if source['vent_params'] == 'flir':
 			logging.info('...pulling latest thermal image of the vent from HVO')
 			#update source dictionary
 			source = get_hvo_flir.main(source)
 		elif source['vent_params'] == 'prescribed':
-			logging.info('....using prescribed vent temperature and area')
+			logging.info('...using prescribed vent temperature and area')
 			#assume static vent conditions for all run hours
 			source['temperature'] = [source['temperature']] * int(os.environ['runhrs'])
 			source['area'] = [source['area']] * int(os.environ['runhrs'])
@@ -253,7 +289,7 @@ def main():
 	#update run json
 	#update_run_json(json_data)
 
-	logging.info('... cwipp preprocessing is complete')
+	logging.info('CWIPP preprocessing is complete')
 
 	return vent_data
 

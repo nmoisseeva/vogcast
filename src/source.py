@@ -41,16 +41,15 @@ def locate_source():
 	x, y = wrf.ll_to_xy(nc_file, lat, lon, timeidx=wrf.ALL_TIMES)
 
 	return nc_file, x, y
-
+"""
+#THIS IS LEGACY CODE FOR REFERENCE ONLY (will not work edit CONTROL lines properly)
 	
 def static_line(source, emissions):
-	'''
-	Performs static legacy ops routine for defining an emission source line:
-		-assumes fixed BL day and night of 700m
-		-fairly strange vertical level selections
-		-uses undocumented fudge factors
-		-must be ran with the following CONTROL settings: 1500m mixing depth, isobaric vertical motion
-	'''
+	#Performs static legacy ops routine for defining an emission source line:
+	#	-assumes fixed BL day and night of 700m
+	#	-fairly strange vertical level selections
+	#	-uses undocumented fudge factors
+	#	-must be ran with the following CONTROL settings: 1500m mixing depth, isobaric vertical motion
 	### inputs (historic ops settings) ###
 	bias = 0.2314 * 1.458e7 	#obscure historic bias correction factors
 	distribution = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.02, 0.9] 	#fixed vertical distribution
@@ -74,10 +73,11 @@ def static_line(source, emissions):
 	update_run_json(json_data)
 
 	return
+"""
 
 def static_area(source, emissions,iSrc):
 	'''
-	New "low buoyancy" approach for a single level area source
+	"Low buoyancy" approach for a single level area source
 	'''
 	### inputs (conversion of emisisons ###
 	to_mg_per_hr = (1./24) * 1e9 	#converstion factor from tonnes/day to mg/hr
@@ -89,15 +89,25 @@ def static_area(source, emissions,iSrc):
 	lines = lat + ' ' + lon + ' ' + height + ' ' + so2 + ' ' + area
 
 	#append main run json with area source data
-	json_data = read_run_json()
-	if iSrc == 0:
-		json_data['plumerise'] = {'sources': lines, 'src_cnt' : 1}
-	else:
-		json_data['plumerise']['sources'] = json_data['plumerise']['sources'] + '\\n' + lines
-		json_data['plumerise']['src_cnt'] = iSrc + 1
-	update_run_json(json_data)
+	#json_data = read_run_json()
+	#if iSrc == 0:
+	#	json_data['plumerise'] = {'sources': lines, 'src_cnt' : 1}
+	#else:
+	#	json_data['plumerise']['sources'] = json_data['plumerise']['sources'] + '\\n' + lines
+	#	json_data['plumerise']['src_cnt'] = iSrc + 1
+	#update_run_json(json_data)
 
-	return
+	#get source count and lines for CONTROL file
+	if iSrc == 0:
+		#json_data['plumerise'] = {'sources': lines, 'src_cnt' : 1}
+		src_lines = lines
+	else:
+		src_lines = '\\n' + lines
+		#json_data['plumerise']['sources'] = json_data['plumerise']['sources'] + '\\n' + lines
+		#json_data['plumerise']['src_cnt'] = iSrc + 1
+	
+
+	return src_lines
 
 def run_cwipp():
 	'''
@@ -120,7 +130,7 @@ def run_cwipp():
 
 	#loop through available timestamps
 	for tag in cwippinputs.keys():
-		logging.debug('...processing source: {}'.format(tag))
+		logging.debug(f'Processing source: {tag}')
 		output[tag] = {}
 		
 		hires_out[tag] = {}
@@ -186,30 +196,40 @@ def generate_emitimes(vent,emissions):
 	with open('../hysplit/EMITIMES', 'w') as emitimes:
 		emitimes.write(info_lines)
 
-		#TODO the loops must be flipped, HYSPLIT will likely fail with multipe records for same hour
-		#loop through available timestamps
-		for tag in cwippdata.keys():
-			logging.debug('...processing source: {}'.format(tag))
-
-			#loop through aemitimes
-			for t, dtime in enumerate(cwippdata[tag].keys()):
-				#convert to datetime for convenience
-				emitdate = dt.datetime.strptime(dtime, '%Y%m%d%H')
+		#EMITIMES wants all sources under one time block, our data is all times under single source block
+		#pull the first tag (shouldn't matter cuz all times are the same)
+		tags = list(cwippdata.keys())
+		datetimes = cwippdata[tags[0]].keys()
 		
-				#generate block header			
-				header = emitdate.strftime('%Y %m %d %H ') + '0001 10 \n'
-				emitimes.write(header)
 
-				#TODO check if this is what hysplit is looking for
-				control_lines = ''			
+		##loop through available timestamps
+		#for tag in cwippdata.keys():
+		#	logging.debug('...processing source: {}'.format(tag))
+
+		#loop through emission cyles
+		#for t, dtime in enumerate(cwippdata[tag].keys()):
+		for t, dtime in enumerate(datetimes):
+			#convert to datetime for convenience
+			emitdate = dt.datetime.strptime(dtime, '%Y%m%d%H')
+			spnp = int(os.environ['spinup'])			
+
+			rec_cnt = int(emit_levels * 2 * len(tags))
+
+			#generate block header			
+			header = emitdate.strftime('%Y %m %d %H ') + f'0001 {rec_cnt} \n'
+			emitimes.write(header)
+
+			loc_lines = ''
+
+			for tag in cwippdata.keys():
 				for layer in range(emit_levels):
 					# conversion of emisisons
 					to_mg_per_hr = (1./24) * 1e9    #converstion factor from tonnes/day to mg/hr
-					so2 = str(int(to_mg_per_hr * emissions['so2'] * cwippdata[tag][dtime]['fractions'][layer])) 
+					so2 = str(int(to_mg_per_hr * emissions[tag]['so2'] * cwippdata[tag][dtime]['fractions'][layer])) 
 
 					#get height and location data as strings
 					hgt = str(int(cwippdata[tag][dtime]['heights'][layer]))
-					lat, lon, area = str(vent[tag]['lat']), str(vent[tag]['lon']), str(vent[tag]['area'][t])					
+					lat, lon, area = str(vent[tag]['lat']), str(vent[tag]['lon']), str(vent[tag]['area'][t+spnp])					
 
 					#generate source lines for SO2 and SO4
 					#TODO THIS IS SO HARDCODED!! FIX!!
@@ -217,9 +237,13 @@ def generate_emitimes(vent,emissions):
 					emitimes.write(so2_line)	
 					so4_line = emitdate.strftime('%Y %m %d %H ') + '00 0100 ' + lat + ' ' + lon  + ' ' + hgt  + ' 0 ' + area + ' 0\n'
 					emitimes.write(so4_line)
-
+	
 					#generate lines for hysplit CONTROL file
-					control_lines = control_lines + lat + ' ' + lon + ' ' + hgt + ' ' + so2 + ' ' + area + '\\n'
+					loc_lines = loc_lines + lat + ' ' + lon + ' ' + hgt + ' ' + so2 + ' ' + area + '\\n'
+				
+
+		#update control lines
+		control_lines = control_lines + loc_lines
 
 	#count total number of source lines for control file
 	src_cnt = len(cwippdata.keys()) * emit_levels
@@ -228,13 +252,13 @@ def generate_emitimes(vent,emissions):
 	control_lines = control_lines[:-2]
 
 	#append main run json with area source data
-	json_data = read_run_json()
-	json_data['plumerise'] = {'sources': control_lines, 'src_cnt' : src_cnt}
-	json_data['vent'] = vent
-	update_run_json(json_data)
+	#json_data = read_run_json()
+	#json_data['plumerise'] = {'sources': control_lines, 'src_cnt' : src_cnt}
+	#json_data['vent'] = vent
+	#update_run_json(json_data)
 
 
-	return
+	return src_cnt, control_lines
 
 def check_model_compatibility(json_data,tag):
 	'''
@@ -245,7 +269,7 @@ def check_model_compatibility(json_data,tag):
 
 	if (pr_model == 'cwipp') and (met_model not in ['wrf','prerun']):
 		logging.critical('ERROR: "cwipp" plume-rise model currently requires WRF meteorology. Aborting!')
-		sys.exit()		
+		sys.exit(1)		
 
 	return
 
@@ -262,35 +286,62 @@ def main():
 
 	#get number of sources
 	num_src = len(json_data['user_defined']['source'])
+	src_tags = json_data['user_defined']['source'].keys()
 
 	logging.info('Running source model: {} emissions sources'.format(num_src))
 
+	#storage lists for source counts and lines (eventually added to hysplit CONTROL file)
+	hys_src_cnt = 0
+	hys_src_lines = ''
+
+	cwipp_done = 0
+
+	emissions = json_data['emissions']
+	
 	#run source model for each emissions location
-	for iSrc in range(num_src):
-		tag = 'src'+str(iSrc+1)
+	#for iSrc in range(num_src):
+	for iSrc, tag in enumerate(src_tags):
+		#tag = 'src'+str(iSrc+1)
 		source = json_data['user_defined']['source'][tag]
-		emissions = json_data['emissions'][tag]
+		#emissions = json_data['emissions'][tag]
 
 		#call the selected plume rise approach
 		logging.info('{} plumerise model: {}'.format(tag,source['pr_model']))
 		check_model_compatibility(json_data,tag)
 		
-		if source['pr_model']=='ops':
-			#this is legacy option up to 2021 (NOTE: not included in config)
-			static_line(source, emissions)
-		elif source['pr_model']=='static_area':
+		if source['pr_model']=='static_area':
 			#standard hysplit area source option
-			static_area(source, emissions,iSrc)
+			lines = static_area(source, emissions[tag], iSrc)
+	
+			#update vent info for control file
+			hys_src_cnt = hys_src_cnt + 1
+			hys_src_lines = hys_src_lines + lines
+
 		elif source['pr_model']=='cwipp':
 			#dynamic plume rise model adapted from widlfire
-			vent = prepcwipp.main()
-			run_cwipp()
-			generate_emitimes(vent,emissions)
-		else:
-			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "ops", "static_area" and "cwipp". Aborting!')
-			sys.exit()
+			#if any of the sources use cwipp, run the preprocessor (but only the first time)
+			if cwipp_done==0:
+				vent = prepcwipp.main()
+				run_cwipp()
+				src_cnt, lines = generate_emitimes(vent,emissions)
+				cwipp_done = 1
+				json_data['vent'] = vent
 
-	return
+				#update vent info for control file
+				hys_src_cnt = hys_src_cnt + src_cnt
+				hys_src_lines = hys_src_lines + lines
+			else:
+				logging.info('...completed on previous step')
+		else:
+			logging.critical('ERROR: Plume-rise model not recognized. Available options are: "static_area" and "cwipp". Aborting!')
+			sys.exit(1)
+
+	#append main run json with vent data data
+	json_data['plumerise'] = {'sources': hys_src_lines, 'src_cnt' : hys_src_cnt}
+	update_run_json(json_data)
+
+
+	return 
 
  ### Main ###
 
