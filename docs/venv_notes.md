@@ -30,6 +30,8 @@ linecache
 netCDF4
 cartopy
 sklearn
+hjson
+
 
 Which modules use what? 
 ----------------------
@@ -55,3 +57,7 @@ Just making a start now... Need to go back and complete this list
 	- sklearn (nearest neighbour search)
 
 
+Notes
+---------
+Cartopy is tricky to install. Need to load cluster GEOS and PROJ libraries. Standard shapely install throws errors:
+* reinstall with: pip install shapely --no-binary :all:

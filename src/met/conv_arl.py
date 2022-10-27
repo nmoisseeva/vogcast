@@ -61,23 +61,21 @@ def convert_to_arl():
 		if d > 1:
 			try:
 				os.remove('ARLDATA.CFG')
+				os.remove('WRFDATA.CFG')
+				os.remove('hybrid_wrfvcoords.txt')
+				os.remove('WRFRAIN.BIN')
 			except:
 				logging.critical('ERROR: WRF to ARL conversion failed, check logs in "hysplit" subforlder')
 				sys.exit(1)
-		
 		
 		nc_file = glob.glob(wrf_rundir + '/wrfout_d0' + str(d) + '*')[0]
 		logging.debug('... met file: %s' %nc_file)
 		arl_file = 'd0' + str(d) + '.arl'
 		
-		#TODO remove this (MAUNA LOA ONLY FOR NOW)
-		#os.system(f'cp ~/vmap_lts/maunaloa/vogcast/ARLDATA.CFG.d0{d} ARLDATA.CFG')
-		#os.system(f'./arw2arl ../../2018062200/meteorology/wrfout_d0{d}_2018-06-22_00:00:00 > d0{d}_met.log' )
-
 		#run the conversion
 		#NOTE: usage with explicit options throws too many errors, testing USAGE1 with just file name
 		#os.system('./arw2arl -i%s -o%s -c1 > arw2arl_d0%s.log' %(nc_file, os.path.join(os.environ['hys_rundir'],  arl_file), d))
-		os.system(f'./arw2arl {nc_file} > arw2arl_d0{d}.log')		
+		os.system(f'./arw2arl -d {nc_file} > arw2arl_d0{d}.log')		
 		os.rename('ARLDATA.BIN', arl_file)		
 
 		lines = lines + '.\/\\n' + arl_file + '\\n'
