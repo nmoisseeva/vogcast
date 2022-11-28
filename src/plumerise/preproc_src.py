@@ -89,6 +89,7 @@ def get_met_data(ds,hr,met_idx):
 	zstag = (ds.variables['PHB'][it,:,ilat,ilon] + ds.variables['PH'][it,:,ilat,ilon])//9.81
 	z0 = wrf.destagger(zstag,0)
 	sfc_elev = ds.variables['HGT'][it,ilat,ilon]
+	logging.debug(f'Source elevation: {sfc_elev}')
 	agl_height = z0 - sfc_elev
 
 	#get vertical temperature profile
@@ -114,6 +115,7 @@ def get_met_data(ds,hr,met_idx):
 	metdata['U'] = M.squeeze().tolist()
 	metdata['HFX'] = int(hfx)
 	metdata['U10'] = float(M10)
+	logging.debug(f'Near-vent windspeed is: {M10} m/s') 
 
 	return metdata
 
@@ -176,18 +178,29 @@ def get_intensity_hc(source, metdata, hr):
 def get_intensity_mass(source, metdata, emissions, hr):
 	'''
 	Calculate equivalent cross-wind intensity using mass-flux method
-	NOTE: this assumes constnant plume composition of 88% H20, 2% CO2, 10% SO2 (ref. Tricia Nadeau)
+	NOTE: this assumes default plume composition of 88% H20, 2% CO2, 10% SO2 in mols (ref. Tricia Nadeau)
 	'''
 
 	#prescribe gas densities
 	rho_so2 = 2.28
 	rho_co2 = 1.84
 	rho_h2o = 0.8
-	mean_rho = 0.88 * 0.8 + 1.84 * 0.02 + 2.28 * 0.1
+
+	#if plume composition is profided use assigned gas fractions
+	if 'gas_fractions' in source.keys():
+		logging.info('User-assigned plume gas fractions found in config. Overwriting defaults.')
+		frac = source['gas_fractions']
+		frac_so2 = frac['SO2']
+		mean_rho = frac['H2O'] * rho_h2o + frac['CO2'] * rho_co2 + frac_so2 * rho_so2
+	else:
+		#use default for Kilauea summit
+		#mean_rho = 0.88 * 0.8 + 1.84 * 0.02 + 2.28 * 0.1 
+		frac_so2 = 0.1
+		mean_rho = 0.88 * rho_h2o + 0.02 * rho_co2 + frac_so2 * rho_so2
 
 	#get kinemtaic mass flux
 	so2_kg_per_sec = emissions['so2'] * 1000 / ( 24 * 60 * 60 )
-	tot_mass = (mean_rho/rho_so2) * so2_kg_per_sec / 0.1
+	tot_mass = (mean_rho/rho_so2) * so2_kg_per_sec / frac_so2
 	mass_flux = tot_mass / (mean_rho * source['area'][hr])
 	mass_flux_cw = mass_flux * 2* ((source['area'][hr]/3.14)**0.5)
 	I = mass_flux_cw * (source['temperature'][hr] + 273)

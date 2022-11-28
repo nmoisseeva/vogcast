@@ -34,7 +34,8 @@ def make_fcst_json(json_name):
 
 	#copy emissions info for display
 	json_data = read_run_json()
-	fcstjson['emissions'] = str(json_data['emissions']['LERZ']['so2']) + ' tonnes/day'
+	src1 = list(json_data['emissions'].keys())[0]
+	fcstjson['emissions'] = str(json_data['emissions'][src1]['so2']) + ' tonnes/day'
 	#fcstjson['emissions'] = str(json_data['emissions']['src1']['so2']) + ' tonnes/day'
 
 	#create a tag for the first animation slide
@@ -78,6 +79,9 @@ def main(web_path):
 
 	logging.info('Generating and copying web display data')
 
+	#ensure one is in hysplit subdir
+	os.chdir(os.environ['hys_rundir'])
+	
 	#create a config json for Leaflet display
 	#TODO currently writes to local "src" folder
 	json_name = 'vogfcst.json'

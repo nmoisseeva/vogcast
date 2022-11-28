@@ -10,7 +10,7 @@ g = 9.81		#gravity constant
 
 #vertical level settings
 dz = 20             	#height interpolation step for analysis (in meteres)
-zmax = 10000        	#max height m AGL for analysis
+zmax = 12000        	#max height m AGL for analysis
 BLfrac = 0.75       	#fraction of BL height to use as reference height z_s (default = 0.75)
 
 #-----------end of parameters-----------
@@ -171,7 +171,7 @@ class Plume:
 				self.zi = 200
 			else:
 				#z0 = self.zi
-				z0 = np.max([1200,self.zi])
+				z0 = np.max([1600,self.zi])
 			try:
 				diagnostics = fsolve(toSolve, z0, factor=0.1, full_output=True)
 				zCL = diagnostics[0][0]

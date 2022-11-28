@@ -60,7 +60,7 @@ def assemble_hourly_data(settings, pollutant):
 
 		tdim = get_tdim(ds)
 
-		#set up empty arrays for mean, in case save is requested
+		#set up empty arrays for mean
 		fcst_mean = []	
 
 		#loop through availble hours
@@ -81,28 +81,28 @@ def assemble_hourly_data(settings, pollutant):
 		hysdims = {'lats': hyslat, 'lons': hyslon}	
 
 		#average forecast data
-		fc_mean = np.mean(np.array(fcst_mean), 0)
+		fc_mean = np.median(np.array(fcst_mean), 0)
 		averaged_data[fcst_tag] = fc_mean
 
 	if 'dump_nc' in settings.keys():
 		if settings['dump_nc']:
 			logging.info(f'Averaged data dump requested: preparing netcdf output')
 			generate_nc_output(averaged_data, hysdims, settings, pollutant)
-
+			#generate_nc_output(compiled_data, hysdims, settings, pollutant)
 
 	return compiled_data
 
 
-def generate_nc_output(averaged_data, hysdims, settings, pollutant):
+def generate_nc_output(save_data, hysdims, settings, pollutant):
 	'''
 	Create an output netcdf file for compiled hourly data
 	'''
 	zflag = settings['zflag']
-	save_path = f'./daily_means_{pollutant}_z{zflag}.nc'
+	save_path = f'./compile_data_{pollutant}_z{zflag}.nc'
 
 	with nc.Dataset(save_path, 'w') as ncf:	
 		#set up dimensions
-		time = ncf.createDimension('time', len(averaged_data.keys()))
+		time = ncf.createDimension('time', len(save_data.keys()))
 		lat = ncf.createDimension('lat', len(hysdims['lats']) )
 		lon = ncf.createDimension('lon', len(hysdims['lons']) )
 
@@ -113,7 +113,7 @@ def generate_nc_output(averaged_data, hysdims, settings, pollutant):
 		values = ncf.createVariable(settings['plot'], 'f4', ('time', 'lat', 'lon',))
 
 		if 'cbar_units' in settings.keys():
-			values.units = settings['cbar_units']
+			values.units = settings['cbar_units'][pollutant]
 		
 		#assign values
 		xlat[:] = hysdims['lats']
@@ -123,9 +123,9 @@ def generate_nc_output(averaged_data, hysdims, settings, pollutant):
 		#date_str =  nc.stringtochar(averaged_data.keys(), 'S8')
 		#xtime[:] = date_str
 
-		for f,fcst_tag in enumerate(averaged_data.keys()):
-			values[f,:,:] = averaged_data[fcst_tag][:,:]
-			xtime[f] = int(fcst_tag)
+		for f,fcst_time in enumerate(save_data.keys()):
+			values[f,:,:] = save_data[fcst_time][:,:]
+			xtime[f] = int(fcst_time)
 		logging.debug(xtime[:])
 		logging.debug(f'...saving as {save_path}')
 	return
@@ -245,7 +245,7 @@ def plot_hazard(mean_field, settings, pollutant):
 		save_path = os.path.join(fig_path,f'conc_{pollutant}_{settings["start"]}_{settings["end"]}.png')
 		ax.set(title = f'MEAN {pollutant} CONCENTRATION | {settings["start"]} - {settings["end"]}')
 		im = ax.imshow(mean_field, origin='lower',cmap=cm,vmin=0,  extent=bounds, transform=ccrs.PlateCarree())
-		#plt.colorbar(label = f'concentration ({settings["cbar_units"]})')
+		#plt.colorbar(label = f'concentration ({settings["cbar_units"][pollutant]})')
 	
 	plt.tight_layout()
 	
