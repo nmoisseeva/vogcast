@@ -132,8 +132,11 @@ def main():
 		#run wrf to arl conversion 
 		logging.info(f"Using existing WRF data: {met_settings['prerun_path']}")
 		met_dir = os.path.join(os.environ['run_path'],'meteorology')
-		os.system(f'mkdir -p {met_dir}')
-		os.system(f'ln -sf {met_settings["prerun_path"]}/wrfout* {met_dir}') 
+		#if use points the the same location avoid overwrite
+		if not os.path.isdir(met_dir):
+			os.system(f'mkdir -p {met_dir}')
+		if not os.path.samefile(met_dir, met_settings["prerun_path"]):
+			os.system(f'ln -sf {met_settings["prerun_path"]}/wrfout* {met_dir}') 
 		conv_arl.main()
 
 if __name__ == '__main__':

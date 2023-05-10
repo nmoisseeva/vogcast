@@ -9,6 +9,7 @@ from set_vog_env import *
 import pproc.to_webserver as web
 import pproc.archive as archive
 import pproc.hazard_map as hazard
+import pproc.to_ldm as ldm
 #import met.met_from_arl as arlmet
 import met.stn_met as stn_met
 import logging
@@ -45,6 +46,8 @@ def main():
 	extras = json_data['user_defined']['extras']
 	if 'web' in extras.keys():
 		web.main(extras['web'])
+	if 'ldm' in extras.keys():
+		ldm.main(extras['ldm'])
 	if 'archive' in extras.keys():
 		archive.main(extras['archive'])
 	if 'hazard_map' in extras.keys():

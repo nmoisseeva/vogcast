@@ -97,9 +97,13 @@ def get_met_data(ds,hr,met_idx):
 	P = (ds.variables['P'][it,:,ilat,ilon] + ds.variables['PB'][it,:,ilat,ilon]) * 0.01
 
 	#get wind magnitude profile 
-	M  = (ds.variables['U'][it,:,ilat,ilon].squeeze()**2 + ds.variables['V'][it,:,ilat,ilon].squeeze()**2)**(0.5)
+	#M  = (ds.variables['U'][it,:,ilat,ilon].squeeze()**2 + ds.variables['V'][it,:,ilat,ilon].squeeze()**2)**(0.5)
 	M10 = (ds.variables['U10'][it,ilat,ilon]**2 + ds.variables['V10'][it,ilat,ilon]**2)**(0.5)
 
+	#get wind  direction from wrf functions
+	WDIR = wrf.g_uvmet.get_uvmet_wdir(ds, timeidx=it, meta=False)[:,ilat,ilon]
+	WSPD = wrf.g_uvmet.get_uvmet_wspd(ds, timeidx=it, meta=False)[:,ilat,ilon]
+	
 	#get zi
 	pblh = ds.variables['PBLH'][it,ilat,ilon]
 	
@@ -112,9 +116,11 @@ def get_met_data(ds,hr,met_idx):
 	metdata['P'] = P.squeeze().tolist()
 	metdata['PBLH'] = int(pblh)
 	metdata['Z'] = agl_height.squeeze().tolist()
-	metdata['U'] = M.squeeze().tolist()
+	#metdata['U'] = M.squeeze().tolist()
 	metdata['HFX'] = int(hfx)
 	metdata['U10'] = float(M10)
+	metdata['WDIR'] = WDIR.squeeze().tolist()
+	metdata['WSPD'] = WSPD.squeeze().tolist()
 	logging.debug(f'Near-vent windspeed is: {M10} m/s') 
 
 	return metdata
@@ -203,7 +209,7 @@ def get_intensity_mass(source, metdata, emissions, hr):
 	tot_mass = (mean_rho/rho_so2) * so2_kg_per_sec / frac_so2
 	mass_flux = tot_mass / (mean_rho * source['area'][hr])
 	mass_flux_cw = mass_flux * 2* ((source['area'][hr]/3.14)**0.5)
-	I = mass_flux_cw * (source['temperature'][hr] + 273)
+	I = mass_flux_cw * (source['temperature'][hr] + 273 - metdata['T'][0])
 	
 	logging.info(f'Cross-wind intensity I for hour {hr}: {int(I)} K m2/s')
 

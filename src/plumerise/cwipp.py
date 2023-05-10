@@ -239,7 +239,7 @@ class Plume:
 		i_half_zi = np.nanargmin(abs(self.interpZ - (self.zi*0.5)))
 		
 		
-		uBL = np.mean(inputs['U'][i_half_zi:i_zi])
+		uBL = np.mean(inputs['WSPD'][i_half_zi:i_zi])
 		hfx = float(inputs['HFX'])
 
 		self.uBL = uBL
@@ -295,7 +295,8 @@ class Plume:
 			#formulation of daytime	
 			if self.zi > 400:
 				#spread above zCL
-				sigma_top = (self.zCL - self.zs)/3.
+				#sigma_top = (self.zCL - self.zs)/3.
+				sigma_top = (self.zCL - self.zs)/5.
 
 				#spread below zCL
 				#if no surface heat flux, avoid div by 0
@@ -315,7 +316,9 @@ class Plume:
 			#shallow/nocturnal BL's
 			else:
 				#theoretical spread above
-				sigma_top = self.zCL/3.
+				#NOTE this corre
+				#sigma_top = self.zCL/3.
+				sigma_top = (self.zCL - self.zs)/5.
 				logging.debug(f'NOTE: shallow BL, sigma_top = {sigma_top}')
 
 				#spread below zCL (no deadorff's velocity effects)

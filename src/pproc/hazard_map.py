@@ -85,10 +85,12 @@ def assemble_hourly_data(settings, pollutant):
 		averaged_data[fcst_tag] = fc_mean
 
 	if 'dump_nc' in settings.keys():
-		if settings['dump_nc']:
-			logging.info(f'Averaged data dump requested: preparing netcdf output')
+		if settings['dump_nc']=='daily':
+			logging.info(f'Averaged (median daily) data dump requested: preparing netcdf output')
 			generate_nc_output(averaged_data, hysdims, settings, pollutant)
-			#generate_nc_output(compiled_data, hysdims, settings, pollutant)
+		if settings['dump_nc']=='hourly':
+			logging.info(f'Hourly data dump requested: preparing netcdf output')
+			generate_nc_output(compiled_data, hysdims, settings, pollutant)
 
 	return compiled_data
 

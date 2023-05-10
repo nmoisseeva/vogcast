@@ -23,7 +23,6 @@
  io_form_input                       = 2,
  io_form_boundary                    = 2,
  iofields_filename		     = 'removefields.txt', 'removefields.txt',
- debug_level 			     = 300,
 /
 
 &domains
