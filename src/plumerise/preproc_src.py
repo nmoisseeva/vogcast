@@ -114,6 +114,7 @@ def get_met_data(ds,hr,met_idx):
 	metdata = {}
 	metdata['T'] = T0.squeeze().tolist()
 	metdata['P'] = P.squeeze().tolist()
+	metdata['ELEV'] = int(sfc_elev)
 	metdata['PBLH'] = int(pblh)
 	metdata['Z'] = agl_height.squeeze().tolist()
 	#metdata['U'] = M.squeeze().tolist()
