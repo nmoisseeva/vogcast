@@ -225,12 +225,11 @@ def plot_hazard(mean_field, settings, pollutant):
 
 	plt.figure()
 	ax = plt.axes(projection=ccrs.PlateCarree())
-	#ax = plt.axes(projection=stamen_terrain.crs)
 	im = ax.imshow(mean_field, origin='lower',cmap=cm,vmin=0,  extent=bounds, transform=ccrs.PlateCarree())
 	ax.set_extent(bounds, crs=ccrs.Geodetic())
-	#ax.add_image(stamen_terrain, 5, cmap='gray',alpha=0.4)	
-	#ax.coastlines()
-	#ax.add_feature(cfeature.OCEAN,color='white')
+	ax.add_image(stamen_terrain, 5, cmap='gray',alpha=0.4)	
+	ax.coastlines()
+	ax.add_feature(cfeature.OCEAN,color='white')
 	#prettify gridline
 	gl = ax.gridlines(crs=ccrs.PlateCarree(),draw_labels=True,linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 	gl.top_labels = False

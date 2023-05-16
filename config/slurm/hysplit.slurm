@@ -12,8 +12,10 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --exclude=node-[0269]
 
-# usage: sbatch hysplit.slurm #ensemblemember
+#----------------CONFIGURE LOCAL ENVIRONMENT (OPTIONAL)----------------
 source ~/.bash_profile
+#------------------------end of optional config------------------------
 
+#MAIN HYSPLIT CALLS
 ./hycs_ens ${SLURM_ARRAY_TASK_ID}
 touch hys_member.${SLURM_ARRAY_TASK_ID}.OK

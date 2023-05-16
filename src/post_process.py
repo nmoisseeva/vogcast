@@ -25,13 +25,7 @@ def link_exec(hysexec):
 
 	#create symlink
 	symlink_force(exec_path, local_path)
-	'''
-	try:
-		os.symlink(exec_path, local_path)
-	except:
-		os.remove(local_path)
-		os.symlink(exec_path, local_path)
-	'''
+	
 	return
 
 def ensmean(pproc_settings):
@@ -55,7 +49,7 @@ def ensmean(pproc_settings):
 		#flat for pollutant number
 		pflag = '-p{}'.format(str(iP + 1))
 		#flag for concentration conversion
-		xflag = '-x{}'.format(conv[pollutant])
+		xflag = '-x{}'.format(conv[pollutant][0])
 		#run calculation for first non-deposition layer (-z2)
 		#os.system(f'./conprob -bcdump {pflag} -z2 {xflag}')
 		os.system(f'./conprob -bcdump {pflag} {xflag}') 
@@ -90,7 +84,7 @@ def get_poe(pproc_settings):
 		#flag for pollutant number
 		pflag = '-p{}'.format(str(iP + 1)) 
 		#flag for concentration conversion
-		xflag = '-x{}'.format(conv[pollutant])
+		xflag = '-x{}'.format(conv[pollutant][0])
 		lvls = np.sort(poe_settings[pollutant])[::-1]
 		#flag for concentration levels
 		cflag = '-c{}:{}:{}'.format(lvls[0],lvls[1],lvls[2])
@@ -110,28 +104,20 @@ def get_poe(pproc_settings):
 		logging.debug('...saving as cmean_{} for future use'.format(pollutant))
 		os.system('mv cmean cmean_{}'.format(pollutant))
 
-		#extract QUALITATIVE column integrated smoke for SO4
-		#TODO check if the xflag is applied like you'd imagine
-		#ci_cmd = './conprob -bcdump {} {}'.format(pflag,xflag)
-		#logging.debug('...getting CI valuess for {}: {}'.format(pollutant, ci_cmd))
-		#os.system(ci_cmd)
-		#to_netcdf('cmean', 'CI_{}.nc'.format(pollutant))
-
 	return
 
 
 
-def stn_traces(tag, stn_file, conv):
+def stn_traces(tag, stn_file):
 	'''
 	Script extracts ensmean concentrations from user-defined stations
 	'''
 	logging.info('Creating station traces')
 	
-	#TODO extend this to multiple pollutants: corrently assumes SO2
-
 	#link executables
 	link_exec('con2stn')
 
+	#TODO change station naming
 	#extract station data
 	out_file = 'hysplit.haw.{}.so2.{}.txt'.format(tag,os.environ['forecast'])
 	#con2stn_cmd = './con2stn -d2 -icmean_SO2 -o{} -s{} -xi'.format(out_file,stn_file)
@@ -162,7 +148,6 @@ def clean_hysdir():
 	#clean up dispersion folder
 
 	logging.debug('...cleaning up HYSPLIT direcotry')
-	#os.system('find -type l -delete')
 	os.system('rm *.OK VMSDIST* PARDUMP* MESSAGE* WARNING* *.out *.err *.log > /dev/null 2>&1')
 
 	return
@@ -184,7 +169,7 @@ def main():
 	pproc_settings = json_data['user_defined']['post_process']
 	unit_conv = pproc_settings['conversion']
 	vert_lvls = json_data['user_defined']['dispersion']['lvls']
-
+	'''	
 	#create POE for user-defined thresholds, if requested 
 	if 'poe' in pproc_settings.keys():
 		get_poe(pproc_settings)
@@ -197,24 +182,24 @@ def main():
 	if 'stns' in pproc_settings.keys():
 		stn_settings = pproc_settings['stns']
 		for pollutant in stn_settings:
-			stn_traces(stn_settings[pollutant]['tag'],stn_settings[pollutant]['stn_file'], unit_conv[pollutant])
+			stn_traces(stn_settings[pollutant]['tag'],stn_settings[pollutant]['stn_file'])
 	else:
 		logging.info('No station traces requested in config file')
-
+	'''
+	os.chdir(os.environ['hys_rundir'])
 
 	#create graphics
 	if 'plots' in pproc_settings.keys():
 		plot_settings = pproc_settings['plots']
 		for pollutant in plot_settings['concentration']:
 			con_file = './cmean_{}.nc'.format(pollutant)
-			make_con_plots(con_file, pollutant, 'png', unit_conv[pollutant])
+			make_con_plots(con_file, pollutant, 'png', unit_conv[pollutant],plot_settings['leaflet'])
 		if 'poe' in plot_settings.keys():
 			for pollutant in plot_settings['poe']:
-				make_poe_plots('./poe_', pollutant, 'png')
+				make_poe_plots('./poe_', pollutant, 'png',plot_settings['leaflet'])
 		if 'ci' in plot_settings.keys():
 			for pollutant in plot_settings['ci']:
-				#make_ci_contours('CI_{}.nc'.format(pollutant), pollutant, vert_lvls, 'png')
-				make_ci_contours(f'cmean_{pollutant}.nc', pollutant, vert_lvls, 'png')
+				make_ci_contours(f'cmean_{pollutant}.nc', pollutant, vert_lvls, 'png',plot_settings['leaflet'])
 	else:
 		logging.info('No plots requested in config file')	
 	

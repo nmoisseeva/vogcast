@@ -1,0 +1,115 @@
+#============# VogCast Configuration file==========
+# NOTES: This config file uses HJSON fromat
+#	-use quotes where string values (str) are requested 
+# 	-block comments for masking unused otpions are permitted  (/*  */)
+
+{
+	vog_root : "/home/user/apps/vogcast/"			#path to pipeline directory (str)
+	run_dir : "/home/user/data/vogcast/"			#specify working directory (str)
+	runhrs: 24						#total simulation length
+	spinup : 6 						#spinup hours (from beginning of met)
+	max_dom : 3 						#total number of met domains
+	rerun: true						#partial rerun using existing vog_run.json (boolean)
+	keys : "/home/user/code/vogcast/config/api.keys"        #path to login details (optional, if required for automated authentification)
+	modules: ['post_process','extras']			 #which modules to run (optional for reruns only)
+        meteorology : {
+		model: "wrf" 					#met option (str): "wrf"/"nam"/"prerun"
+		##-----Settings for "nam"---------
+		#type : "archive"				#type of arl file (str): "prod"/"archive"
+		#arl_path : "/home/user/data/arl"		#path to arl file folder (str)
+		#------Settings for "prerun"------
+		#prerun_path : "/home/user/data/wrf"		#path to wrfout files (str)
+		#-------Settings for "wrf"--------
+                wrf_path : "/home/user/apps/wrfv4.3"		#path to wrf installation (str)
+		wps_path : "/home/user/apps/wps4.3"		#path to wps (str)
+		ibc_path : "/home/user/data/ibc"		#path to initial conditions  (str)
+		ibc : "historic"				#ibc input analysis (str): "nam"/"gfs"/"historic"
+       },
+	source : {
+		VENT1 : {
+			lat : 19.463				#emissions source lat
+			lon : -155.599				#emissions source lon
+			pr_model : "cwipp"			#plume rise model options (str): "static_area"/"cwipp"
+			#----Setttings for "cwipp"-------
+			method : "mass"				#how to calculate intensity (str): "mass"/"hc"
+			gas_fractions : {			#percent plume compostion as decimal (by mol) (optional)
+				H2O : 0.8			
+				CO2 : 0.05
+				SO2 : 0.15
+			}
+			vent_params: "prescribed"		#vent parameters source (str): "flir"/"prescribed"
+			temperature : 1100			#lava surface temperature (degrees C; "prescribed" vent_params only)
+			area : 10000				#source area (m2; "prescribed" vent_params only)
+			#flir_path : "/home/user/data/flir"	#path to thermal data (VMAP only)
+			##--Settings for "static_area"----
+			#height : 600				#emission hight mAGL
+			#area : 500				# source area m2
+		},
+	},
+        emissions : {
+		VENT1 : {
+			input : "manual"			#how to obtain emissions (str): "manual"/"hvo"
+			##----Setting for "hvo"-------		#HVO permission required!!!
+			#stream : "campaign"			#data source (str): "flyspec"/"campaign"
+			#channel : "SUMDFW"			#channel (str): "SUMDFW"/"COC"/"LERZ" (for "campaign" stream only)
+			#----Settings for "manual"----
+			rate: 8000 				#SO2 emission rate in tonnes/day 
+		},
+	},
+	dispersion : {
+		hys_path : "/home/user/apps/hysplit.v5.1.0" 		#path to hysplit model (str)
+		carryover_path : "/home/user/data/carryover"		#path to carryover vog files (str)
+		freq : 24						#dump frequency for carryover in hours, chould equal run freq
+		vert_motion : 1						#vertical motion setting for hysplit 2=isothermal 
+		min_zi : 250						#hysplit min mixing depth
+		numpar: 500 						#particle count per source (x5 for cwipp sources)
+		lvls: [0, 100, 1000, 2000, 5000, 10000]			#vertical levels for output (include 0 for deposition)
+	},
+	post_process : {
+		conversion : {				#unit conversion: model assumes mg/m3: format [float, str]
+			SO2 : [0.38,'ppm']		#conversion to ppm for comparison with obs
+			SO4 : [1000,'ug/m3']		#conversion to ug/m3 for comparison with obs
+		},
+		poe :  {				#calculate probabilities of exceedance (optional)
+			SO2 : [0.1, 1, 5]		#exceedance thresholds (3 max) in obs units (ppm) 
+			SO4 : [39, 139, 527]            #exceedance thresholds (3 max) in obs units (ug/m3)
+		},
+		stns : {				#extract station traces (optional)
+			SO2 : { 			#pollutant 
+				tag : "sample"		#file naming tag (str)
+				stn_file : "/home/user/apps/vogcast/config/hysplit/obs_stns.txt"	#stn locations file (str)
+			}
+		},
+		plots : { 				#specify which plots to create
+			concentration : ["SO2","SO4"]	#concentration ensmble mean plots (list of strings)
+			poe : ["SO5","SO4"]		#probability of exceedance plots (list of strings)
+			ci : ["SO4"]			#column integrated contours (list of strings)
+			#leaflet : true			#TODO flag to make transparent pngs for leaflet web display
+		}
+	},
+	extras : {					#other actions
+		##-------VMAP internal------------
+		#ldm : "ldm@uila.soest.hawaii.edu"       #push to remote ldm server (str)
+		#web : "vmap@mkwc2.ifa.hawaii.edu:/home/vmap/www/testing/data"				#copy data to webserver path (str)
+		#archive : "moisseev@thredds.soest.hawaii.edu:/export/thredds/archives/vog-pipeline"	#archive data on server path (str)
+		##---------Exposure/hazard Maps---
+		/* 	#remove block quotes, if in use				
+		hazard_map: {
+                        pollutants: ['SO2', 'SO4']	#pollutants to plot (list of str)
+                        plot : 'concentration'          #plot type (str): "concentration"/"poe"
+                        start : '2018-06-22'		#start date in UTC (YYYY-mm-DD)
+                        end : '2018-06-29'		#end date in UTC (YYYY-mm-DD)
+                        freq : '24h'			#cycle frequency  (str, pandas format e.g. '12h' )
+                        skiphrs: 0			#number of hours to exclude from start of dispersion output
+                        dump_nc : 'hourly'              #save compiled data as netcdf (str): "hourly"/"daily" (optional)
+                        zflag : 1                       #vertical level to extract (0 for deposition)
+                        poe_lvl: 1                      #exceedance threshold to plot (post_process poe levels: 1, 2 or 3)
+                        cbar_units : {                  #units for concentration plots
+                                SO2 : 'ppm'
+                                SO4: 'ug/m3'
+			}
+		*/
+		}
+
+	}
+}

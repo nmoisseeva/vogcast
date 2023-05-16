@@ -13,7 +13,9 @@ import numpy as np
 from matplotlib import colors
 from scipy.ndimage import gaussian_filter
 import datetime as dt
-
+import cartopy.crs as ccrs
+import cartopy.io.img_tiles as cimgt
+import cartopy.feature as cfeature
 
 #turn off font warnings for logging
 logging.getLogger('matplotlib.font_manager').disabled = True
@@ -96,7 +98,7 @@ def make_aqi_cmap(pollutant):
 
 	return aqi, norm
 
-def make_ci_contours(nc_path, pollutant, cz, fmt):
+def make_ci_contours(nc_path, pollutant, cz, fmt, leaflet):
 	'''
 	Create crude (qualitative) contours of column-integrated smoke, for user-defined layers cz
 	'''
@@ -125,21 +127,28 @@ def make_ci_contours(nc_path, pollutant, cz, fmt):
 	for iZ,z in enumerate(mass_layers):
 		layer_tot = converted_fields[:,deposition+iZ,:,:] * z
 		ci_con.append(layer_tot)
-	cum_mass = np.sum(np.array(ci_con), axis = 0)	
+	cum_mass = np.sum(np.array(ci_con), axis = 0)		
 
 	#loop through all frames, smoothing and saving
 	for t,time in enumerate(tdim):
-		ctr1 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[5000,1e20], vmin=5000, vmax=1e100,alpha=0.05)
-		ctr2 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[1000,1e20], vmin=1000, vmax=1e100,alpha=0.05)
-		ctr3 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[10,1e20],  vmin=10, vmax=1e100,alpha=0.08)
-		#hide all padding, margins and axes
-		plt.axis('off')
-		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-		plt.margins(0,0)
-		plt.gca().xaxis.set_major_locator(plt.NullLocator())
-		plt.gca().yaxis.set_major_locator(plt.NullLocator())
-		plt.savefig('./ci_{}.{}'.format(time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
-		plt.close()
+		
+		if leaflet:
+			ctr1 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[5000,1e20], vmin=5000, vmax=1e100,alpha=0.05)
+			ctr2 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[1000,1e20], vmin=1000, vmax=1e100,alpha=0.05)
+			ctr3 = plt.contourf(cum_mass[t,:,:],cmap='copper', origin='lower', levels=[10,1e20],  vmin=10, vmax=1e100,alpha=0.08)
+
+			#hide all padding, margins and axes
+			plt.axis('off')
+			plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+			plt.margins(0,0)
+			plt.gca().xaxis.set_major_locator(plt.NullLocator())
+			plt.gca().yaxis.set_major_locator(plt.NullLocator())
+			plt.savefig('./ci_{}.{}'.format(time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
+			plt.close()
+		else:
+			plt.figure()
+			ax = plt.axes(projection=ccrs.PlateCarree())
+			#TODO FINISH THIS	
 
 	return
 
@@ -160,7 +169,7 @@ def get_tdim(ds):
 	return tdim
 
 
-def make_con_plots(nc_path, pollutant, fmt, conv):
+def make_con_plots(nc_path, pollutant, fmt, unit, leaflet):
 	'''
 	Create surface concentration plots for all available timesteps
 	'''
@@ -172,31 +181,53 @@ def make_con_plots(nc_path, pollutant, fmt, conv):
 	#get readable time dimension
 	tdim = get_tdim(ds)
 
+	#get bounds
+	lons, lats = ds.variables['longitude'][:], ds.variables['latitude'][:]
+	bounds = [np.min(lons), np.max(lons),np.min(lats), np.max(lats)]
+
 	#get colormap
 	aqi, norm = make_aqi_cmap(pollutant)
 
-	#convert dataset fields to correct units
-	#converted_fields = ds.variables[pollutant][:,0,:,:] * conv 
+	#get fields
 	logging.debug('...REMINDER: first vertical layer is assumed to be deposition only, extracting second layer')
 	converted_fields = ds.variables[pollutant][:,1,:,:]
 	
 	#loop through all frames, smoothing and saving
-	for t,time in enumerate(tdim):
+	for t,time in enumerate(tdim):	
 		smooth_con = gaussian_filter(converted_fields[t,:,:], sigma=1)
-		img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
-		#hide all padding, margins and axes
-		plt.axis('off')
-		plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-		plt.margins(0,0)
-		plt.gca().xaxis.set_major_locator(plt.NullLocator())
-		plt.gca().yaxis.set_major_locator(plt.NullLocator())
-		plt.savefig('./{}_{}.{}'.format(pollutant,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
-		#plt.savefig('./{}.{}'.format(time,fmt), dpi=200, bbox_inches = 'tight', pad_inches = 0)
-		plt.close()
+
+		if leaflet:
+			img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
+			#hide all padding, margins and axes
+			plt.axis('off')
+			plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+			plt.margins(0,0)
+			plt.gca().xaxis.set_major_locator(plt.NullLocator())
+			plt.gca().yaxis.set_major_locator(plt.NullLocator())
+			plt.savefig('./{}_{}.{}'.format(pollutant,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
+			plt.close()
+		else:
+			stamen_terrain = cimgt.Stamen(desired_tile_form='L', style='terrain-background')
+			fig = plt.figure()
+			ax = plt.axes(projection=ccrs.PlateCarree())
+			ax.add_image(stamen_terrain, 7, cmap='gray',alpha=0.4,zorder=2)
+			ax.add_feature(cfeature.OCEAN,color='white',zorder=3)
+			im = ax.imshow(smooth_con, origin='lower',cmap=aqi,norm=norm, extent=bounds, transform=ccrs.PlateCarree())
+			ax.set_extent(bounds, crs=ccrs.Geodetic())
+			gl = ax.gridlines(crs=ccrs.PlateCarree(),draw_labels=True,linewidth=0.5, color='gray', alpha=0.5, linestyle='--',zorder=10)
+			gl.top_labels = False
+			gl.right_labels = False
+			ax.coastlines(zorder=4)
+			plt.title(f'ENSEMBLE MEAN {pollutant} CONCENTRATION | {time}', fontsize=10)
+			plt.colorbar(im, label = f'{pollutant} concentration ({unit[1]})', fraction=0.05, pad = 0.07, orientation = 'horizontal', extend='max')
+			plt.tight_layout()
+			plt.savefig('./{}_{}.{}'.format(pollutant,time,fmt),dpi=200)
+			plt.close()
+
 	return
 
 
-def make_poe_plots(nc_prefix, pollutant, fmt):
+def make_poe_plots(nc_prefix, pollutant, fmt, leaflet):
 	'''
 	Create surface POE plots
 	'''
