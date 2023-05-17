@@ -187,6 +187,7 @@ def make_con_plots(nc_path, pollutant, fmt, unit, plot_settings):
 	#get bounds
 	lons, lats = ds.variables['longitude'][:], ds.variables['latitude'][:]
 	bounds = [np.min(lons), np.max(lons),np.min(lats), np.max(lats)]
+	logging.debug(f'...extracting map bounds from dispersion data: {bounds}')
 
 	#get colormap
 	aqi, norm = make_aqi_cmap(pollutant)
