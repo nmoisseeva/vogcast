@@ -84,7 +84,8 @@
 			concentration : ["SO2","SO4"]	#concentration ensmble mean plots (list of strings)
 			poe : ["SO5","SO4"]		#probability of exceedance plots (list of strings)
 			ci : ["SO4"]			#column integrated contours (list of strings)
-			#leaflet : true			#TODO flag to make transparent pngs for leaflet web display
+			smooth : true			#flat to smooth plots: default = true
+			leaflet : false			#flag to make transparent pngs for leaflet web display
 		}
 	},
 	extras : {					#other actions
@@ -104,12 +105,8 @@
                         dump_nc : 'hourly'              #save compiled data as netcdf (str): "hourly"/"daily" (optional)
                         zflag : 1                       #vertical level to extract (0 for deposition)
                         poe_lvl: 1                      #exceedance threshold to plot (post_process poe levels: 1, 2 or 3)
-                        cbar_units : {                  #units for concentration plots
-                                SO2 : 'ppm'
-                                SO4: 'ug/m3'
-			}
-		*/
 		}
+		*/
 
 	}
 }

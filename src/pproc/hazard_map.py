@@ -26,7 +26,7 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 
 ### Functions ###
 
-def assemble_hourly_data(settings, pollutant):
+def assemble_hourly_data(settings, pollutant, units):
 	'''
 	Compile an array of hourly data for the entire analysys period
 	'''
@@ -79,6 +79,7 @@ def assemble_hourly_data(settings, pollutant):
 		hyslat = ds.variables['latitude'][:]
 		hyslon = ds.variables['longitude'][:]	
 		hysdims = {'lats': hyslat, 'lons': hyslon}	
+		bounds = [np.min(hyslon), np.max(hyslon),np.min(hyslat), np.max(hyslat)]
 
 		#average forecast data
 		fc_mean = np.median(np.array(fcst_mean), 0)
@@ -87,15 +88,15 @@ def assemble_hourly_data(settings, pollutant):
 	if 'dump_nc' in settings.keys():
 		if settings['dump_nc']=='daily':
 			logging.info(f'Averaged (median daily) data dump requested: preparing netcdf output')
-			generate_nc_output(averaged_data, hysdims, settings, pollutant)
+			generate_nc_output(averaged_data, hysdims, settings, pollutant, units)
 		if settings['dump_nc']=='hourly':
 			logging.info(f'Hourly data dump requested: preparing netcdf output')
-			generate_nc_output(compiled_data, hysdims, settings, pollutant)
+			generate_nc_output(compiled_data, hysdims, settings, pollutant, units)
 
-	return compiled_data
+	return compiled_data, bounds
 
 
-def generate_nc_output(save_data, hysdims, settings, pollutant):
+def generate_nc_output(save_data, hysdims, settings, pollutant, units):
 	'''
 	Create an output netcdf file for compiled hourly data
 	'''
@@ -114,8 +115,7 @@ def generate_nc_output(save_data, hysdims, settings, pollutant):
 		xlon = ncf.createVariable('xlon', 'f4', ('lon',))
 		values = ncf.createVariable(settings['plot'], 'f4', ('time', 'lat', 'lon',))
 
-		if 'cbar_units' in settings.keys():
-			values.units = settings['cbar_units'][pollutant]
+		values.units = units[pollutant][1]
 		
 		#assign values
 		xlat[:] = hysdims['lats']
@@ -200,38 +200,26 @@ def make_poe_cmap():
 	return hazard
 
 
-def plot_hazard(mean_field, settings, pollutant):
+def plot_hazard(mean_field, bounds, settings, pollutant, units):
 	'''
 	Create surface hazard plots plots for averaged conditions
 	'''
 
-	#TODO this is hardcoded: remove for future and provide as input
-	#NOTE: consider adding bounds in hysplit step (calculate from settings)
-	bounds =   [-160.5, -154.5, 18.25, 22.75]
-	#stamen_terrain = cimgt.Stamen(desired_tile_form='L', style='terrain-background')
+	stamen_terrain = cimgt.Stamen(desired_tile_form='L', style='terrain-background')
 
-
-	#plot as separate figure (assumes lat/lon coordiantes from HYSPLIT)
-	#plt.figure()
-	#ax = plt.axes(projection=ccrs.PlateCarree())
-	#im = ax.imshow(mean_poe, origin='lower',cmap=hazard_cmap,vmin=0, vmax=100, extent=bounds, transform=ccrs.PlateCarree())	
-	#ax.coastlines(resolution='50m',color='grey', linewidth=0.5)
-	#plt.colorbar()
-	#plt.title('ANALYSIS PERIOD: {} - {}'.format(settings['start'], settings['end']))
-        
 	fig_path = os.path.join(os.environ['run_dir'],os.environ['forecast'],'output')
 	os.system(f'mkdir -p {fig_path}')
 	cm = make_poe_cmap()
 
 	plt.figure()
 	ax = plt.axes(projection=ccrs.PlateCarree())
-	im = ax.imshow(mean_field, origin='lower',cmap=cm,vmin=0,  extent=bounds, transform=ccrs.PlateCarree())
+	im = ax.imshow(mean_field, origin='lower',cmap=cm,vmin=0,  extent=bounds, transform=ccrs.PlateCarree(),zorder=5)
 	ax.set_extent(bounds, crs=ccrs.Geodetic())
-	ax.add_image(stamen_terrain, 5, cmap='gray',alpha=0.4)	
-	ax.coastlines()
-	ax.add_feature(cfeature.OCEAN,color='white')
+	ax.add_image(stamen_terrain, 7, cmap='gray',alpha=0.4,zorder=2)	
+	ax.coastlines(zorder=4)
+	ax.add_feature(cfeature.OCEAN,color='white',zorder=3)
 	#prettify gridline
-	gl = ax.gridlines(crs=ccrs.PlateCarree(),draw_labels=True,linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+	gl = ax.gridlines(crs=ccrs.PlateCarree(),draw_labels=True,linewidth=0.5, color='gray', alpha=0.5, linestyle='--',zorder=10)
 	gl.top_labels = False
 	gl.right_labels = False
 
@@ -240,13 +228,13 @@ def plot_hazard(mean_field, settings, pollutant):
 				settings['poe_lvl'], settings['start'], settings['end']))
 		ax.set(title = 'MEAN {} POE | {} - {}'.format(pollutant,settings['start'], settings['end']))
 		im = ax.imshow(mean_field, origin='lower',cmap=cm,vmin=0, vmax=100, extent=bounds, transform=ccrs.PlateCarree())
-		plt.colorbar(label = 'POE (%)')
+		plt.colorbar(im, label = 'POE (%)')
 	
 	elif settings['plot'] == 'concentration':
 		save_path = os.path.join(fig_path,f'conc_{pollutant}_{settings["start"]}_{settings["end"]}.png')
 		ax.set(title = f'MEAN {pollutant} CONCENTRATION | {settings["start"]} - {settings["end"]}')
 		im = ax.imshow(mean_field, origin='lower',cmap=cm,vmin=0,  extent=bounds, transform=ccrs.PlateCarree())
-		#plt.colorbar(label = f'concentration ({settings["cbar_units"][pollutant]})')
+		plt.colorbar(im, label = f'concentration ({units[pollutant][1]})')
 	
 	plt.tight_layout()
 	
@@ -277,7 +265,7 @@ def plot_hazard(mean_field, settings, pollutant):
 
 
 
-def main(settings):
+def main(settings, units):
 	'''
 	Create a time-averaged hazard map based on user-specified settings
 	'''
@@ -286,11 +274,11 @@ def main(settings):
 	
 	#collect data from the user-specified forecast range
 	for pollutant in settings['pollutants']:
-		compiled_data = assemble_hourly_data(settings,pollutant)
+		compiled_data, bounds  = assemble_hourly_data(settings, pollutant, units)
 		mean_field = sum(compiled_data.values()) / int(len(compiled_data.keys()))
 
 		#do plotting
-		plot_hazard(mean_field, settings, pollutant)
+		plot_hazard(mean_field, bounds, settings, pollutant, units)
 
 	return
 

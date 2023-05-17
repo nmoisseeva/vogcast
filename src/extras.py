@@ -31,19 +31,20 @@ def main():
 	'''
 	Main script for additional user-specific modules. 
 	
-	Current extras:
+	Current extras (VMAP):
 	- graphics copy to web server
 	- data cleanup and archiving to thredds
 	- create hazard maps	
-	- extract met at point locations from arl or wrf file
+	- archiving
+	- push to ldm 
 	'''
 
 	logging.info('===========EXTRAS: USER-SPECIFIC SUBMODULES=========')
 
 	json_data = read_run_json()
 	
-	#extras: archive and move to webserver if requested
 	extras = json_data['user_defined']['extras']
+	
 	if 'web' in extras.keys():
 		web.main(extras['web'])
 	if 'ldm' in extras.keys():
@@ -51,9 +52,10 @@ def main():
 	if 'archive' in extras.keys():
 		archive.main(extras['archive'])
 	if 'hazard_map' in extras.keys():
-		hazard.main(extras['hazard_map'])
-	if 'stn_met' in extras.keys():
-		stn_met.main(extras['stn_met'])
+		units = json_data['user_defined']['post_process']['conversion']
+		hazard.main(extras['hazard_map'], units)
+	#if 'stn_met' in extras.keys():
+		#stn_met.main(extras['stn_met'])
 	#FOR ADDITIONAL SUBMODULES ADD AN EXTRA CALL HERE
 	else:
 		logging.info('No other modules requested')

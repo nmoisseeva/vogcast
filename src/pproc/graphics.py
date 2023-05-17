@@ -98,7 +98,7 @@ def make_aqi_cmap(pollutant):
 
 	return aqi, norm
 
-def make_ci_contours(nc_path, pollutant, cz, fmt, leaflet):
+def make_ci_contours(nc_path, pollutant, cz, fmt, unit, leaflet):
 	'''
 	Create crude (qualitative) contours of column-integrated smoke, for user-defined layers cz
 	'''
@@ -169,11 +169,14 @@ def get_tdim(ds):
 	return tdim
 
 
-def make_con_plots(nc_path, pollutant, fmt, unit, leaflet):
+def make_con_plots(nc_path, pollutant, fmt, unit, plot_settings):
 	'''
 	Create surface concentration plots for all available timesteps
 	'''
 	logging.info('...creating surface concentration plots for: {}'.format(pollutant))
+
+	leaflet = plot_settings['leaflet']
+	smooth = plot_settings['smooth']
 
 	#open netcdf file
 	ds = nc.Dataset(nc_path)
@@ -193,11 +196,14 @@ def make_con_plots(nc_path, pollutant, fmt, unit, leaflet):
 	converted_fields = ds.variables[pollutant][:,1,:,:]
 	
 	#loop through all frames, smoothing and saving
-	for t,time in enumerate(tdim):	
-		smooth_con = gaussian_filter(converted_fields[t,:,:], sigma=1)
+	for t,time in enumerate(tdim):
+		if smooth:
+			con_frame = gaussian_filter(converted_fields[t,:,:], sigma=1)
+		else:
+			con_frame = converted_fields[t,:,:]
 
 		if leaflet:
-			img = plt.imshow(smooth_con,cmap=aqi, origin='lower', norm = norm)
+			img = plt.imshow(con_frame,cmap=aqi, origin='lower', norm = norm)
 			#hide all padding, margins and axes
 			plt.axis('off')
 			plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
@@ -212,7 +218,7 @@ def make_con_plots(nc_path, pollutant, fmt, unit, leaflet):
 			ax = plt.axes(projection=ccrs.PlateCarree())
 			ax.add_image(stamen_terrain, 7, cmap='gray',alpha=0.4,zorder=2)
 			ax.add_feature(cfeature.OCEAN,color='white',zorder=3)
-			im = ax.imshow(smooth_con, origin='lower',cmap=aqi,norm=norm, extent=bounds, transform=ccrs.PlateCarree())
+			im = ax.imshow(con_frame, origin='lower',cmap=aqi,norm=norm, extent=bounds, transform=ccrs.PlateCarree())
 			ax.set_extent(bounds, crs=ccrs.Geodetic())
 			gl = ax.gridlines(crs=ccrs.PlateCarree(),draw_labels=True,linewidth=0.5, color='gray', alpha=0.5, linestyle='--',zorder=10)
 			gl.top_labels = False
@@ -227,13 +233,16 @@ def make_con_plots(nc_path, pollutant, fmt, unit, leaflet):
 	return
 
 
-def make_poe_plots(nc_prefix, pollutant, fmt, leaflet):
+def make_poe_plots(nc_prefix, pollutant, fmt, plot_settings):
 	'''
 	Create surface POE plots
 	'''
 	
 	logging.info('...creating surface POE plots for: {}'.format(pollutant))
 	
+	leaflet = plot_settings['leaflet']
+	smooth = plot_settings['smooth']	
+
 	#manually create tags to match HYSPLIT's very particular namting
 	hys_keys = ['CM01', 'CM10', 'CM00']
 
@@ -249,6 +258,10 @@ def make_poe_plots(nc_prefix, pollutant, fmt, leaflet):
 		#open netcdf file
 		ds = nc.Dataset(poe_file)
 		tdim = get_tdim(ds)
+
+		#get bounds
+		lons, lats = ds.variables['longitude'][:], ds.variables['latitude'][:]
+		bounds = [np.min(lons), np.max(lons),np.min(lats), np.max(lats)]
 		
 		#deal with Hysplit's weird naming: -p1 has keys CM00 etc, -pX uses pollutnat as key
 		logging.debug('...REMINDER: first vertical layer is assumed to be deposition only, extracting second layer')
@@ -259,15 +272,35 @@ def make_poe_plots(nc_prefix, pollutant, fmt, leaflet):
 
 		#loop through all frams with smoothing
 		for t,time in enumerate(tdim):
-			smooth_poe = gaussian_filter(poe_field[t,:,:], sigma=2)
-			img = plt.imshow(smooth_poe, cmap=poe, vmin=0, vmax=100, origin='lower')
-			#hide all padding, margins and axes
-			plt.axis('off')
-			plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-			plt.margins(0,0)
-			plt.gca().xaxis.set_major_locator(plt.NullLocator())
-			plt.gca().yaxis.set_major_locator(plt.NullLocator())
-			plt.savefig('./{}_{}_{}.{}'.format(pollutant,tag,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
-			plt.close()
-	
-	return
+			if smooth:
+				poe_frame = gaussian_filter(poe_field[t,:,:], sigma=2)
+			else:
+				poe_frame = poe_field[t,:,:]
+
+			if leaflet:
+				img = plt.imshow(poe_frame, cmap=poe, vmin=0, vmax=100, origin='lower')
+				#hide all padding, margins and axes
+				plt.axis('off')
+				plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+				plt.margins(0,0)
+				plt.gca().xaxis.set_major_locator(plt.NullLocator())
+				plt.gca().yaxis.set_major_locator(plt.NullLocator())
+				plt.savefig('./{}_{}_{}.{}'.format(pollutant,tag,time,fmt), transparent=True, bbox_inches = 'tight', pad_inches = 0, dpi=200)
+				plt.close()
+			else:
+				stamen_terrain = cimgt.Stamen(desired_tile_form='L', style='terrain-background')
+				fig = plt.figure()
+				ax = plt.axes(projection=ccrs.PlateCarree())
+				ax.add_image(stamen_terrain, 7, cmap='gray',alpha=0.4,zorder=2)
+				ax.add_feature(cfeature.OCEAN,color='white',zorder=3)
+				im = ax.imshow(poe_frame, origin='lower',cmap=poe, extent=bounds,vmin=0, vmax=100, transform=ccrs.PlateCarree())
+				ax.set_extent(bounds, crs=ccrs.Geodetic())
+				gl = ax.gridlines(crs=ccrs.PlateCarree(),draw_labels=True,linewidth=0.5, color='gray', alpha=0.5, linestyle='--',zorder=10)
+				gl.top_labels = False
+				gl.right_labels = False
+				ax.coastlines(zorder=4)
+				plt.title(f'POE {pollutant} {tag} | {time}', fontsize=10)
+				plt.colorbar(im, label = f'probability of exceedance (%)', fraction=0.05, pad = 0.07, orientation = 'horizontal')
+				plt.tight_layout()
+				plt.savefig('./{}_{}_{}.{}'.format(pollutant,tag,time,fmt),  dpi=200)
+				plt.close()

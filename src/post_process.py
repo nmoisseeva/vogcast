@@ -169,7 +169,7 @@ def main():
 	pproc_settings = json_data['user_defined']['post_process']
 	unit_conv = pproc_settings['conversion']
 	vert_lvls = json_data['user_defined']['dispersion']['lvls']
-	'''	
+	
 	#create POE for user-defined thresholds, if requested 
 	if 'poe' in pproc_settings.keys():
 		get_poe(pproc_settings)
@@ -185,21 +185,21 @@ def main():
 			stn_traces(stn_settings[pollutant]['tag'],stn_settings[pollutant]['stn_file'])
 	else:
 		logging.info('No station traces requested in config file')
-	'''
-	os.chdir(os.environ['hys_rundir'])
+
+	#os.chdir(os.environ['hys_rundir'])
 
 	#create graphics
 	if 'plots' in pproc_settings.keys():
 		plot_settings = pproc_settings['plots']
 		for pollutant in plot_settings['concentration']:
 			con_file = './cmean_{}.nc'.format(pollutant)
-			make_con_plots(con_file, pollutant, 'png', unit_conv[pollutant],plot_settings['leaflet'])
+			make_con_plots(con_file, pollutant, 'png', unit_conv[pollutant], plot_settings)
 		if 'poe' in plot_settings.keys():
 			for pollutant in plot_settings['poe']:
-				make_poe_plots('./poe_', pollutant, 'png',plot_settings['leaflet'])
+				make_poe_plots('./poe_', pollutant, 'png', plot_settings)
 		if 'ci' in plot_settings.keys():
 			for pollutant in plot_settings['ci']:
-				make_ci_contours(f'cmean_{pollutant}.nc', pollutant, vert_lvls, 'png',plot_settings['leaflet'])
+				make_ci_contours(f'cmean_{pollutant}.nc', pollutant, vert_lvls, 'png',unit_conv[pollutant],plot_settings['leaflet'])
 	else:
 		logging.info('No plots requested in config file')	
 	
