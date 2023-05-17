@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Initial Setup &mdash; VogCast May 2023 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Workflow Configuration" href="workflow.html" />
+    <link rel="prev" title="Installation" href="requirements.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            VogCast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Initial Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#config-files">Config Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-a-test-case">Running a Test Case</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graphics.html">Output Graphics</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VogCast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Initial Setup</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/setup.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="initial-setup">
+<span id="setup"></span><h1>Initial Setup<a class="headerlink" href="#initial-setup" title="Permalink to this headline">¶</a></h1>
+<p>Initial setup of the framework involves installation and configuration of the required software and Python dependencies. At the minimum, the local HPC system must have <strong>slurm</strong> and <strong>HYSPLIT</strong> installed (see <a class="reference internal" href="requirements.html#requirements"><span class="std std-ref">Installation</span></a>). If using Weather Research and Forecasting Model (WRF) for Meteorology (see <a class="reference internal" href="modules.html#id1"><span class="std std-ref">Modules</span></a>), working versions of <strong>WPS</strong> and <strong>WRF</strong> are also required.</p>
+<p>Once installed, follow the instructions below to perform the initial framework setup. These steps only need to be competed once. Following initial domain setup, the workflow is controlled via a centralized configuration file (see <a class="reference internal" href="workflow.html#workflow"><span class="std std-ref">Workflow Configuration</span></a>).</p>
+<div class="section" id="config-files">
+<h2>Config Files<a class="headerlink" href="#config-files" title="Permalink to this headline">¶</a></h2>
+<p>When running the framework for the first time, various components of system need to be configured for the local HPC environment and modelling domain. The files to be edited are located in the <code class="docutils literal notranslate"><span class="pre">./config</span></code> subdirectory of the VogCast repository.</p>
+<ol class="arabic simple">
+<li><p>In <code class="docutils literal notranslate"><span class="pre">./config/slurm/</span></code> subdirectory back up and modify the slurm headers of <code class="docutils literal notranslate"><span class="pre">hysplit.slurm</span></code> and <code class="docutils literal notranslate"><span class="pre">wrf.slurm</span></code> (if using <strong>WRF</strong> for Meteorology) scripts to match your local HPC system. Note, that both <strong>HYSPLIT</strong> and <strong>WRF</strong> within VogCast require MPI support.  Do not modify the main calls to HYSPLIT and WRF executables.</p></li>
+<li><p>In <code class="docutils literal notranslate"><span class="pre">./config/hysplit/</span></code> subdirectory back up and modify the <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> and <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> files to desired dispersion simulation parameters. Definitions and details about each parameter can be found in <a class="reference external" href="https://www.arl.noaa.gov/documents/reports/hysplit_user_guide.pdf">HYSPLIT User Manual</a>.</p></li>
+</ol>
+<blockquote>
+<div><div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>DO NOT modify any named parameters in <code class="docutils literal notranslate"><span class="pre">{...}</span></code>. These are configured automatically via a centralized framework configuration file <code class="docutils literal notranslate"><span class="pre">vog.config</span></code>.</p>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>If using <strong>WRF</strong> for Meteorology module, back up and configure <code class="docutils literal notranslate"><span class="pre">namelist.wps</span></code> and <code class="docutils literal notranslate"><span class="pre">namelist.input</span></code> files in the <code class="docutils literal notranslate"><span class="pre">./config/wrf/</span></code> subdirectory to you desired domain. Definitions and details about each parameter can be found in <strong>WRF</strong> and <strong>WPS</strong> respositories (see <a class="reference internal" href="requirements.html#requirements"><span class="std std-ref">Installation</span></a>).</p></li>
+</ol>
+<blockquote>
+<div><div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>DO NOT modify any named parameters in <code class="docutils literal notranslate"><span class="pre">{...}</span></code>. These are configured automatically via a centralized framework configuration file <code class="docutils literal notranslate"><span class="pre">vog.config</span></code>.</p>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="running-a-test-case">
+<h2>Running a Test Case<a class="headerlink" href="#running-a-test-case" title="Permalink to this headline">¶</a></h2>
+<p>Existing HYSPLIT and WRF configuration files can be used as-is to create a test forecast simulation for the State of Hawai’i. To run this test case, one only needs to adjust the slurm scripts located in <code class="docutils literal notranslate"><span class="pre">./config/slurm/</span></code>. Once configured, proceed to main workflow settings as described in <a class="reference internal" href="workflow.html#workflow"><span class="std std-ref">Workflow Configuration</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="requirements.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="workflow.html" class="btn btn-neutral float-right" title="Workflow Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Nadya Moisseeva.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

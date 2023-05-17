@@ -2,7 +2,6 @@ run/**
 venv/**
 vmap/**
 __pycache__/
-config/api.keys
+vogcast/config/api.keys
 **/*.out
 **/*.log
-**/*.png

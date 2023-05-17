@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workflow Configuration &mdash; VogCast May 2023 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Output Graphics" href="graphics.html" />
+    <link rel="prev" title="Initial Setup" href="setup.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            VogCast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Initial Setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Workflow Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-settings">Configuration Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-vogcast">Running VogCast</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="graphics.html">Output Graphics</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VogCast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Workflow Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/workflow.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="workflow-configuration">
+<span id="workflow"></span><h1>Workflow Configuration<a class="headerlink" href="#workflow-configuration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="configuration-settings">
+<h2>Configuration Settings<a class="headerlink" href="#configuration-settings" title="Permalink to this headline">¶</a></h2>
+<p>The main configuration file <code class="docutils literal notranslate"><span class="pre">vog.config</span></code> uses <a class="reference external" href="https://hjson.github.io/">hjson</a> format. The table below details the availble options for each module of the framework. Where <code class="docutils literal notranslate"><span class="pre">str</span></code> arguments are requested use single/double quotes. Block comments <code class="docutils literal notranslate"><span class="pre">/*</span>&#160; <span class="pre">*/</span></code> for masking unused options are also permitted. Sample <code class="docutils literal notranslate"><span class="pre">vog.config</span></code> file is located in the main repository directory.</p>
+<p>When defining emissions sources, ensure the same user-defined tags (denoted <strong>&lt;KEY&gt;</strong> in the table below) are used for both <code class="docutils literal notranslate"><span class="pre">source</span></code> and <code class="docutils literal notranslate"><span class="pre">emissions</span></code> module blocks. Multiple sources are permitted.</p>
+<table class="docutils align-default" id="vog-config-table">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 6%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>vog_root</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to VogCast directory</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>run_dir</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to working directory for storing run data</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>runhrs</strong></p></td>
+<td><p>int</p></td>
+<td><p>total simulation length in hours</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>max_dom</strong></p></td>
+<td><p>int</p></td>
+<td><p>total number of meteorological domains</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>spinup</strong></p></td>
+<td><p>int</p></td>
+<td><p>spinup hours (from beginning of met)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>rerun</strong></p></td>
+<td><p>bool</p></td>
+<td><p>flag for partial rerun using existing <code class="docutils literal notranslate"><span class="pre">vog_run.json</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>modules</strong></p></td>
+<td><p>list</p></td>
+<td><p>which modules to re-run (optional for reruns only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>keys</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to api credentials (optional for HVO-API access)</p></td>
+</tr>
+<tr class="row-even"><td colspan="3"><p><strong>‘meteorology’</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>model</strong></p></td>
+<td><p>str</p></td>
+<td><div class="line-block">
+<div class="line">meteorological input model: <em>‘wrf’/’nam’/’prerun’</em></div>
+<div class="line"><em>wrf</em>: run WRF model</div>
+<div class="line"><em>nam</em>: use NAM forecast analysis data</div>
+<div class="line"><em>prerun</em>: use existing <code class="docutils literal notranslate"><span class="pre">wrfout_*</span></code> files</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>wrf_path</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to WRF model (model: <em>‘wrf’</em>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>wps_path</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to WPS (model: <em>‘wrf’</em>)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>ibc_path</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to initial conditions (model: <em>‘wrf’</em>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>ibc</strong></p></td>
+<td><p>str</p></td>
+<td><p>ibc analysis type: <em>nam/gfs/historic</em> (model: <em>‘wrf’</em>)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>type</strong></p></td>
+<td><p>str</p></td>
+<td><div class="line-block">
+<div class="line">type of arl file: <em>‘prod’/’archive’</em> (model: <em>‘nam’</em>)</div>
+<div class="line"><em>prod</em>: production/current data</div>
+<div class="line"><em>archive</em>: historic data</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><strong>arl_path</strong></p></td>
+<td><p>str</p></td>
+<td><p>local path to store arl data (model: <em>‘nam’</em>)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>prerun_path</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to <code class="docutils literal notranslate"><span class="pre">wrfout_*</span></code> files (model : <em>‘prerun’</em>)</p></td>
+</tr>
+<tr class="row-odd"><td colspan="3"><p><strong>‘source’</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>&lt;KEY&gt;</strong></p></td>
+<td colspan="2"><p>user-defined tag for emission source (e.g. VENT1)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>lat</strong></p></td>
+<td><p>float</p></td>
+<td><p>emissions source lat</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>lon</strong></p></td>
+<td><p>float</p></td>
+<td><p>emissions source lon</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>pr_model</strong></p></td>
+<td><p>str</p></td>
+<td><div class="line-block">
+<div class="line">plume-rise model: <em>‘static_area’/’cwipp’</em></div>
+<div class="line"><em>static_area</em>: constant height emissions</div>
+<div class="line"><em>cwipp</em>: dynamic plume-rise model (requires WRF met)</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>height</strong></p></td>
+<td><p>int</p></td>
+<td><p>emissions height in m (pr_model: <em>static_area</em>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>area</strong></p></td>
+<td><p>int</p></td>
+<td><p>emissions area in sqm (pr_model: <em>static_area</em>)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>method</strong></p></td>
+<td><p>str</p></td>
+<td><div class="line-block">
+<div class="line">intensity algorithm: <em>‘hc’/’mass’</em> (pr_model: <em>cwipp</em>)</div>
+<div class="line"><em>mass</em>: based on mass flux</div>
+<div class="line"><em>hc</em>: based on heat transfer</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><strong>gas_fractions</strong></p></td>
+<td><p>dict</p></td>
+<td><p>plume composition {H2O,CO2,SO2} as decimal (by mol, optional)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>vent_params</strong></p></td>
+<td><p>str</p></td>
+<td><div class="line-block">
+<div class="line">vent parameter source: <em>‘prescribed’/’flir’</em></div>
+<div class="line">(pr_model: <em>cwipp</em>)</div>
+<div class="line"><em>prescribed</em>: user-defined temperature/area</div>
+<div class="line"><em>flir</em>: use thermal imagery (VMAP only)</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><strong>flir_path</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to thermal images (VMAP only, vent_params: <em>flir</em>)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>temperature</strong></p></td>
+<td><p>int</p></td>
+<td><p>lava surface temperature in degC (vent_params: <em>prescribed</em>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>area</strong></p></td>
+<td><p>int</p></td>
+<td><p>lava surface are in m2 (vent_params: <em>prescribed</em>)</p></td>
+</tr>
+<tr class="row-even"><td colspan="3"><p><strong>‘emissions’</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>&lt;KEY&gt;</strong></p></td>
+<td colspan="2"><p>user-defined tag for emission source (e.g. VENT1)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>input</strong></p></td>
+<td><p>str</p></td>
+<td><div class="line-block">
+<div class="line">source of emissions data: <em>‘hvo’/’manual’</em></div>
+<div class="line"><em>hvo</em>: use HVO-API (permission required)</div>
+<div class="line"><em>manual</em>:  prescribed emission rate</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><strong>rate</strong></p></td>
+<td><p>int</p></td>
+<td><p>SO2 emission rate in tonnes/day (input: <em>manual</em>)</p></td>
+</tr>
+<tr class="row-even"><td colspan="3"><p><strong>‘dispersion’</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>hys_path</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to HYSPLIT model</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>carryover_path</strong></p></td>
+<td><p>str</p></td>
+<td><p>path to carryover vog HYSPLIT binary files</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>freq</strong></p></td>
+<td><p>int</p></td>
+<td><p>forecast cycle frequency in hours (for carryover dump)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>vert_motion</strong></p></td>
+<td><p>int</p></td>
+<td><p>HYSPLIT vertical motion setting</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>min_zi</strong></p></td>
+<td><p>int</p></td>
+<td><p>minimum mixing depth in meters</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>numpar</strong></p></td>
+<td><p>int</p></td>
+<td><p>particle count per source (x5 for ‘cwipp’ sources)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>lvls</strong></p></td>
+<td><p>list</p></td>
+<td><p>vertical output levels in m AGL (include 0 for deposition)</p></td>
+</tr>
+<tr class="row-even"><td colspan="3"><p><strong>‘post_process’</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>conversion</strong></p></td>
+<td><p>dict</p></td>
+<td><div class="line-block">
+<div class="line">conversions for comparsion with obs (model assumes mg/m3)</div>
+<div class="line">for each pollutant: format [factor, ‘unit name’]</div>
+<div class="line">eg: SO2 : [0.38,’ppm’]</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>peo</strong></p></td>
+<td><p>list</p></td>
+<td><p>exceedance thresholds (3 max) in obs units (optional)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>stns</strong></p></td>
+<td><p>str</p></td>
+<td><div class="line-block">
+<div class="line">extract station traces for a pollutant(optional)</div>
+<div class="line"><em>tag</em>: file naming tag</div>
+<div class="line"><em>stn_file</em>: path to stations location file</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>plots</strong></p></td>
+<td><p>dict</p></td>
+<td><div class="line-block">
+<div class="line">which plots to create for which pollutant</div>
+<div class="line"><em>concentration</em>: ensemble mean surface concentration</div>
+<div class="line"><em>poe</em>: probability of exceeedance plots</div>
+<div class="line"><em>ci</em>: column-integrated shading (qualitative currently)</div>
+<div class="line"><em>smooth</em>: smooth plots (default = true)</div>
+<div class="line"><em>leaflet</em>: make transparent pngs for web (default = false)</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td colspan="3"><p><strong>‘extras’</strong> (optional)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>hazard_map</strong></p></td>
+<td><p>dict</p></td>
+<td><div class="line-block">
+<div class="line">generate a hazard map (optional)</div>
+<div class="line"><em>pollutants</em>: which pollutants to plot (list of str)</div>
+<div class="line"><em>plot</em>: plot type  <em>‘concentration’/’poe’</em></div>
+<div class="line"><em>start</em>: analysis period start date in UTC (‘YYYY-mm-DD’)</div>
+<div class="line"><em>end</em>: analysis period end date in UTC (‘YYYY-mm-DD’)</div>
+<div class="line"><em>freq</em>: cycle frequency in pandas format (e.g. ‘12h’)</div>
+<div class="line"><em>skiphrs</em>: number of hrs to exclude from dispersion start</div>
+<div class="line"><em>dump_nc</em>: save compiled data as netcdf: <em>‘hourly’/’daily’</em></div>
+<div class="line"><em>zflag</em>: vertical level to extract (0 for deposition)</div>
+<div class="line"><em>poe_lvl</em>: exceedance threshold to plot (‘poe’ plots only)</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="running-vogcast">
+<h2>Running VogCast<a class="headerlink" href="#running-vogcast" title="Permalink to this headline">¶</a></h2>
+<p>The framework is ran by executing a python <code class="docutils literal notranslate"><span class="pre">vog-run</span></code> script located in <code class="docutils literal notranslate"><span class="pre">&lt;vog_root&gt;/src/vog-run</span></code> as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; python &lt;path to vog-run&gt; -c &lt;path to vog.config&gt; -d &lt;date&gt; &lt;cycle&gt;
+</pre></div>
+</div>
+<p>For example, to run a 0Z forecast for 2020-01-01:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; python /home/user/vogcast/src/vog-run -c /home/user/runs/vog.config -d <span class="m">20200101</span> <span class="m">0</span>
+</pre></div>
+</div>
+<p>If running operationally for current day, the date flag can be omitted (using 12Z cycle as example):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; python /home/user/vogcast/src/vog-run -c /home/user/runs/vog.config <span class="m">12</span>
+</pre></div>
+</div>
+<p>Each run will create a storage directory named <code class="docutils literal notranslate"><span class="pre">YYYYmmDDCC</span></code>, in location specified under <code class="docutils literal notranslate"><span class="pre">run_dir</span></code> by the user. If <code class="docutils literal notranslate"><span class="pre">rerun</span></code> is set to <code class="docutils literal notranslate"><span class="pre">false</span></code>, yet directory under a matching name already exists, VogCast will overwrite its contents and generate a new <code class="docutils literal notranslate"><span class="pre">vog_run.json</span></code> file controlling the parameters of the simulation.
+If set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, the framework will use existing <code class="docutils literal notranslate"><span class="pre">vog_run.json</span></code> and only overwite the contents of modules specified in <code class="docutils literal notranslate"><span class="pre">modules</span></code>  in <code class="docutils literal notranslate"><span class="pre">vog.config</span></code>.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="setup.html" class="btn btn-neutral float-left" title="Initial Setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="graphics.html" class="btn btn-neutral float-right" title="Output Graphics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Nadya Moisseeva.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

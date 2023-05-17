@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modules &mdash; VogCast May 2023 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="requirements.html" />
+    <link rel="prev" title="VogCast Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            VogCast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#meteorology">Meteorology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#emissions">Emissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-plume-rise">Source/Plume Rise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Dispersion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#post-processing-and-extras">Post-Processing and Extras</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Initial Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graphics.html">Output Graphics</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">VogCast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Modules</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="id1">
+<h1>Modules<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<p>VogCast is a modular, Python-based air quality framework, that links together multiple state-of-art models and data streams to create regional forecasts of volcanic pollution. The main components, or modules, of the framework are shown in the top row of the figure below. Each module provides the user with multiple model and method options, allowing for various pathways to create a forecast.</p>
+<img alt="_images/pipeline.jpg" class="align-center" src="_images/pipeline.jpg" />
+<p>Following <a class="reference internal" href="setup.html#setup"><span class="std std-ref">Initial Setup</span></a>, the workflow is controlled with a single centralized configuration file (see <a class="reference internal" href="workflow.html#workflow"><span class="std std-ref">Workflow Configuration</span></a>), which specifies the parameters of the simulation, including model options, emission source locations, and desired forecast output. The following subsections provide a general description of the individual modules of the framework.</p>
+<div class="section" id="meteorology">
+<span id="id2"></span><h2>Meteorology<a class="headerlink" href="#meteorology" title="Permalink to this headline">¶</a></h2>
+<p>VogCast system uses Weather Research and Forecasting Model (WRF) output as its default source of meteorological fields. Following initial domain configuration, the WRF runs are subsequently automated and controlled via the framework’s wrapper scripts within the Meteorology module. As an alternative, the framework provides an option for using archived gridded data in ARL format available from National Oceanic
+and Atmospheric Administration’s (NOAA) Operational Model Archive and Distribution System (NOMADS) or Air Resource Laboratory’s FTP server.</p>
+</div>
+<div class="section" id="emissions">
+<span id="id3"></span><h2>Emissions<a class="headerlink" href="#emissions" title="Permalink to this headline">¶</a></h2>
+<p>The Emissions module is responsible for obtaining the most current SO2 emission
+rates available from the United States Geological Survey’s Hawaiian Volcano Observatory’s (HVO) API (HVO permission required). Optionally, these rates can be manually prescribed by the user.</p>
+</div>
+<div class="section" id="source-plume-rise">
+<h2>Source/Plume Rise<a class="headerlink" href="#source-plume-rise" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Details to be added.</p>
+<p>Scientific background for Source/Plume-rise algorithms can be found [link to be added post-submission]</p>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>Dispersion<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>Dispersion and basic chemistry of volcanic emissions are modelled using the HYbrid
+Single-Particle Lagrangian Integrated Trajectory model (HYSPLIT). The simulations are performed in particle mode using a meteorology grid offset ensemble approach . SO2 and SO4 concentrations are output at an hourly interval on constant user-defined above-ground levels (AGL).</p>
+</div>
+<div class="section" id="post-processing-and-extras">
+<h2>Post-Processing and Extras<a class="headerlink" href="#post-processing-and-extras" title="Permalink to this headline">¶</a></h2>
+<p>The remaining modules of the VogCast framework offer several graphing (see <a class="reference internal" href="graphics.html#graphics"><span class="std std-ref">Output Graphics</span></a>) and post-processing options. Typical output includes plots of ensemble-averaged surface concentrations of SO2 and SO4. Optionally, surface maps of probability of exceedance (POE) can be generated, based on user-defined air quality thresholds for each pollutant (e.g. based on federal, state or local air quality standards).</p>
+<p>Extras module offers the flexibility to support the incorporation of user-specific tasks
+directly into the main workflow. For example, UHM’s operational implementation of VogCast
+includes archiving, web-publishing and data distribution tasks. In addition, the module
+offers functionality to perform hazard assessment studies using historic model output data.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="VogCast Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="requirements.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Nadya Moisseeva.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
