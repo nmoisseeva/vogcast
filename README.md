@@ -1,4 +1,5 @@
 # vogcast
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10035712.svg)](https://doi.org/10.5281/zenodo.10035712)
 
 VogCast is an open-source volcanic air pollution modelling framework developed by the Vog Measurement and Prediction Program (VMAP) at the University of Hawaii at Manoa. It combines multiple existing models and data streams to create a flexible unified workflow designed for deployment on an HPC system. 
 
