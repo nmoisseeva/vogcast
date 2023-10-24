@@ -28,7 +28,6 @@ Full documentation is here: https://nmoisseeva.github.io/vogcast/
 * pandas 1.5.0+
 * Cartopy 0.21.0+
 * sklearn 0.0+
-* pymatreader 0.0.30+
 
 -----------------
 
