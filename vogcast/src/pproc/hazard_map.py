@@ -276,6 +276,13 @@ def main(settings, units):
 	for pollutant in settings['pollutants']:
 		compiled_data, bounds  = assemble_hourly_data(settings, pollutant, units)
 		mean_field = sum(compiled_data.values()) / int(len(compiled_data.keys()))
+		
+		#testing only
+		fields = []
+		for f in compiled_data.keys():
+			fields.append(compiled_data[f])
+		logging.debug(np.shape(np.array(fields)))
+		mean_field = np.median(fields,0)
 
 		#do plotting
 		plot_hazard(mean_field, bounds, settings, pollutant, units)

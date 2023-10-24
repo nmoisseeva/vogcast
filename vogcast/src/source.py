@@ -168,7 +168,7 @@ def run_cwipp():
 			plt.xlim(xmin=0)
 			plt.legend([l_sound[0],l_zi,l_zCL,l_cwipp[0]],['WRF sounding','boundary layer height','modelled injection height','modelled vog profile'],loc=2)
 			save_dir = os.path.join(os.environ['run_dir'],os.environ['forecast'],'plumerise')
-			plt.savefig(save_dir + '/{}.pdf'.format(dtime))
+			plt.savefig(save_dir + '/{}.png'.format(dtime))
 			plt.close()
 	write_json('cwipp_output.json',output)
 	write_json('hires_output.json',hires_out)

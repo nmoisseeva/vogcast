@@ -295,8 +295,9 @@ class Plume:
 			#formulation of daytime	
 			if self.zi > 400:
 				#spread above zCL
-				#sigma_top = (self.zCL - self.zs)/3.
-				sigma_top = (self.zCL - self.zs)/5.
+				
+				sigma_top = (self.zCL - self.zs)/3.
+				#sigma_top = (self.zCL - self.zs)/5.	#NOTE: current ops!!!
 
 				#spread below zCL
 				#if no surface heat flux, avoid div by 0
@@ -308,25 +309,27 @@ class Plume:
 					else:
 						Rw = self.uBL/(self.wf - wD)
 
+				#NOTE: adding 0.5 fudge factor for bottom spread, to reduce near-surface bias
 				if Rw > 1:
-					sigma_bottom = Rw * sigma_top
+					sigma_bottom = Rw * sigma_top*0.5
 				else:
-					sigma_bottom = sigma_top
+					sigma_bottom = sigma_top*0.5
 
 			#shallow/nocturnal BL's
 			else:
 				#theoretical spread above
-				#NOTE this corre
-				#sigma_top = self.zCL/3.
-				sigma_top = (self.zCL - self.zs)/5.
+				sigma_top = self.zCL/3.
+				#sigma_top = (self.zCL - self.zs)/5.	#NOTE: current ops!!!
 				logging.debug(f'NOTE: shallow BL, sigma_top = {sigma_top}')
 
 				#spread below zCL (no deadorff's velocity effects)
 				Rw = self.uBL/self.wf
+
+				#NOTE: adding 0.5 fudge factor for bottom spread, to reduce near-surface bias
 				if Rw > 1:
-					sigma_bottom = Rw * sigma_top
+					sigma_bottom = Rw * sigma_top*0.5
 				else:
-					sigma_bottom = sigma_top
+					sigma_bottom = sigma_top*0.5
 
 
 			#if self.zi < 400:

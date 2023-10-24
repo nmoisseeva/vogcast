@@ -99,6 +99,14 @@ def get_poe(pproc_settings):
 		to_netcdf('cmax01', 'poe_lvl1_{}.nc'.format(pollutant))
 		to_netcdf('cmax10', 'poe_lvl2_{}.nc'.format(pollutant))
 		to_netcdf('cmax00', 'poe_lvl3_{}.nc'.format(pollutant))
+		
+		##convert individual percentiles to netcdf
+		#for j in ['05','10','25','50','75','90','95']:
+		#	to_netcdf(f'prob{j}',f'prob_{pollutant}_{j}.nc')
+
+		## convert individual member output to netcdf
+		#for j in range(1, 28):
+		#	to_netcdf(f'cdump.{j:03}', f'cdump_{pollutant}_{j:03}.nc')
 
 		#save ncmean for pollutants with requested stn traces
 		logging.debug('...saving as cmean_{} for future use'.format(pollutant))
